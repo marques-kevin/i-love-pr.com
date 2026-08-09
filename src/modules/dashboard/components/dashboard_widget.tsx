@@ -12,6 +12,7 @@ import { PRSizeChart } from './pr_size_chart'
 import { ReviewLatency } from './review_latency'
 import { ReviewRounds } from './review_rounds'
 import { ReviewerChart } from './reviewer_chart'
+import { SizeReviewCostChart } from './size_review_cost_chart'
 import { SizeReviewScatterChart } from './size_review_scatter_chart'
 import { SizeVsReviewChart } from './size_vs_review_chart'
 import { SummaryStats } from './summary_stats'
@@ -24,6 +25,7 @@ const WIDGET_COMPONENTS: Record<DashboardWidgetId, () => ReactNode> = {
   pr_size: () => <PRSizeChart />,
   reviewer_load: () => <ReviewerChart />,
   size_vs_review: () => <SizeVsReviewChart />,
+  size_review_cost: () => <SizeReviewCostChart />,
   size_review_scatter: () => <SizeReviewScatterChart />,
   open_prs: () => <OpenPRsList />,
   cycle_breakdown: () => <CycleBreakdown />,

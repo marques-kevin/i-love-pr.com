@@ -7,6 +7,7 @@ const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'pr_size',
   'reviewer_load',
   'size_vs_review',
+  'size_review_cost',
   'size_review_scatter',
   'open_prs',
   'cycle_breakdown',
@@ -29,6 +30,7 @@ export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayoutItem[] = [
   { instance_id: 'pr_size', widget_id: 'pr_size' },
   { instance_id: 'reviewer_load', widget_id: 'reviewer_load' },
   { instance_id: 'size_vs_review', widget_id: 'size_vs_review' },
+  { instance_id: 'size_review_cost', widget_id: 'size_review_cost' },
   { instance_id: 'size_review_scatter', widget_id: 'size_review_scatter' },
   { instance_id: 'open_prs', widget_id: 'open_prs' },
 ]

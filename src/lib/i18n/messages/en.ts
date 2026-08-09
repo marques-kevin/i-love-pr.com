@@ -81,6 +81,8 @@ export const en_messages = {
   'widget.reviewer_load.description': 'Reviews given vs received per person.',
   'widget.size_vs_review.label': 'Size vs review time',
   'widget.size_vs_review.description': 'Average review time by PR size bucket.',
+  'widget.size_review_cost.label': 'Approve cost per 100 lines',
+  'widget.size_review_cost.description': 'Approve hours normalized per 100 lines, by size bucket.',
   'widget.size_review_scatter.label': 'Size vs approve scatter',
   'widget.size_review_scatter.description': 'Lines changed vs request → approve.',
   'widget.open_prs.label': 'Open PRs',
@@ -141,9 +143,11 @@ export const en_messages = {
   'chart.reviewer.help':
     'For each person: reviews given (they reviewed someone else’s PR) vs reviews received (others reviewed their PRs) in the period.\n\nSelf-reviews and bots are excluded. Top 20 by total activity.',
   'chart.size_vs_review.title': 'Avg review time by size',
-  'chart.size_vs_review.cost_title': 'Approve cost per 100 lines',
   'chart.size_vs_review.help':
-    'Left: for each PR size bucket, average hours to first human review and average hours from review request to first APPROVED.\n\nRight: average approve hours per 100 lines changed in that bucket (normalize review cost by size).\n\nOnly merged PRs with the relevant timestamps are included.',
+    'For each PR size bucket, average hours to first human review and average hours from review request to first APPROVED.\n\nOnly merged PRs with the relevant timestamps are included.',
+  'chart.size_review_cost.title': 'Approve cost per 100 lines',
+  'chart.size_review_cost.help':
+    'For each PR size bucket, average approve hours per 100 lines changed.\n\nThis normalizes review cost by size so XS vs XL can be compared fairly. Only merged PRs with an APPROVED review and lines_changed > 0 are included.',
   'chart.scatter.title': 'Scatter: lines vs request → approve',
   'chart.scatter.help':
     'Each point is one merged PR with a human APPROVED review.\n\nX: lines changed. Y: hours from review-wait start to first approve.\n\nOutliers far up/right are large and/or slow-to-approve PRs.',

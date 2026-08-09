@@ -85,6 +85,9 @@ export const fr_messages = define_locale_messages({
   'widget.reviewer_load.description': 'Reviews données vs reçues par personne.',
   'widget.size_vs_review.label': 'Taille vs temps de review',
   'widget.size_vs_review.description': 'Temps de review moyen par bucket de taille.',
+  'widget.size_review_cost.label': 'Coût d’approve pour 100 lignes',
+  'widget.size_review_cost.description':
+    'Heures d’approve normalisées pour 100 lignes, par bucket de taille.',
   'widget.size_review_scatter.label': 'Nuage taille vs approve',
   'widget.size_review_scatter.description': 'Lignes changées vs demande → approve.',
   'widget.open_prs.label': 'PRs ouvertes',
@@ -147,9 +150,11 @@ export const fr_messages = define_locale_messages({
   'chart.reviewer.help':
     'Pour chaque personne : reviews données (a reviewé la PR de quelqu’un d’autre) vs reviews reçues (d’autres ont reviewé ses PRs) sur la période.\n\nSelf-reviews et bots exclus. Top 20 par activité totale.',
   'chart.size_vs_review.title': 'Temps de review moyen par taille',
-  'chart.size_vs_review.cost_title': 'Coût d’approve pour 100 lignes',
   'chart.size_vs_review.help':
-    'À gauche : pour chaque bucket de taille de PR, moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nÀ droite : moyenne d’heures d’approve pour 100 lignes changées dans ce bucket (coût de review normalisé par la taille).\n\nUniquement les PRs mergées avec les timestamps pertinents.',
+    'Pour chaque bucket de taille de PR : moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nUniquement les PRs mergées avec les timestamps pertinents.',
+  'chart.size_review_cost.title': 'Coût d’approve pour 100 lignes',
+  'chart.size_review_cost.help':
+    'Pour chaque bucket de taille de PR : moyenne d’heures d’approve pour 100 lignes changées.\n\nÇa normalise le coût de review par la taille pour comparer XS et XL équitablement. Uniquement les PRs mergées avec un APPROVED et lines_changed > 0.',
   'chart.scatter.title': 'Nuage : lignes vs demande → approve',
   'chart.scatter.help':
     'Chaque point est une PR mergée avec un APPROVED humain.\n\nX : lignes changées. Y : heures du début d’attente de review au premier approve.\n\nLes outliers en haut/à droite sont de grosses PRs et/ou lentes à approve.',

@@ -21,6 +21,7 @@ export type DashboardWidgetId =
   | 'pr_size'
   | 'reviewer_load'
   | 'size_vs_review'
+  | 'size_review_cost'
   | 'size_review_scatter'
   | 'open_prs'
   | 'cycle_breakdown'
