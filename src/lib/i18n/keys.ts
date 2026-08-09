@@ -92,4 +92,9 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   ...Object.values(PERIOD_MESSAGE_KEYS),
   ...Object.values(WIDGET_LABEL_KEYS),
   ...Object.values(WIDGET_DESCRIPTION_KEYS),
+  'onboarding.step.token',
+  'onboarding.step.repos',
+  'onboarding.scope.public_repo',
+  'onboarding.scope.repo',
+  'onboarding.scope.read_user',
 ]
