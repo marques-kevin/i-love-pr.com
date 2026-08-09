@@ -1,4 +1,4 @@
-import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
+import type { DashboardLayoutItem, DashboardTab, DashboardWidgetId } from '@/lib/types'
 
 const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'summary_stats',
@@ -11,6 +11,8 @@ const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'size_review_scatter',
   'open_prs',
 ])
+
+export const DEFAULT_DASHBOARD_ID = 'default'
 
 /** Default layout matches the previous fixed dashboard. */
 export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayoutItem[] = [
@@ -50,5 +52,82 @@ export function create_layout_item(widget_id: DashboardWidgetId): DashboardLayou
   return {
     instance_id: crypto.randomUUID(),
     widget_id,
+  }
+}
+
+export function create_default_dashboard(
+  layout?: DashboardLayoutItem[] | null,
+): DashboardTab {
+  return {
+    id: DEFAULT_DASHBOARD_ID,
+    name: '',
+    layout: normalize_dashboard_layout(layout),
+  }
+}
+
+export function create_dashboard_tab(name: string): DashboardTab {
+  return {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    layout: [],
+  }
+}
+
+function normalize_dashboard_tab(tab: DashboardTab): DashboardTab | null {
+  if (!tab?.id) return null
+  return {
+    id: String(tab.id),
+    name: typeof tab.name === 'string' ? tab.name.trim() : '',
+    layout: normalize_dashboard_layout(tab.layout ?? []),
+  }
+}
+
+/**
+ * Prefer `dashboards` when present.
+ * Otherwise migrate legacy `dashboard_layout` into a single default tab.
+ */
+export function normalize_dashboards(
+  dashboards: DashboardTab[] | null | undefined,
+  legacy_layout?: DashboardLayoutItem[] | null,
+): DashboardTab[] {
+  if (Array.isArray(dashboards) && dashboards.length > 0) {
+    const normalized = dashboards
+      .map(normalize_dashboard_tab)
+      .filter((tab): tab is DashboardTab => tab != null)
+    if (normalized.length > 0) return normalized
+  }
+  return [create_default_dashboard(legacy_layout)]
+}
+
+export function normalize_active_dashboard_id(
+  active_id: string | null | undefined,
+  dashboards: DashboardTab[],
+): string {
+  if (active_id && dashboards.some((tab) => tab.id === active_id)) return active_id
+  return dashboards[0]?.id ?? DEFAULT_DASHBOARD_ID
+}
+
+export function get_active_dashboard(
+  dashboards: DashboardTab[],
+  active_id: string,
+): DashboardTab {
+  return dashboards.find((tab) => tab.id === active_id) ?? dashboards[0] ?? create_default_dashboard()
+}
+
+/** Settings row may still carry legacy `dashboard_layout` from older IndexedDB writes. */
+export type SettingsDashboardsInput = {
+  dashboards?: DashboardTab[] | null
+  active_dashboard_id?: string | null
+  dashboard_layout?: DashboardLayoutItem[] | null
+}
+
+export function normalize_settings_dashboards(input: SettingsDashboardsInput): {
+  dashboards: DashboardTab[]
+  active_dashboard_id: string
+} {
+  const dashboards = normalize_dashboards(input.dashboards, input.dashboard_layout)
+  return {
+    dashboards,
+    active_dashboard_id: normalize_active_dashboard_id(input.active_dashboard_id, dashboards),
   }
 }

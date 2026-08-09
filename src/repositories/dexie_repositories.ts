@@ -1,8 +1,12 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
-import type { AppSettings, MemberTeam, SyncState } from '@/lib/types'
-import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
+import type { AppSettings, DashboardLayoutItem, MemberTeam, SyncState } from '@/lib/types'
+import {
+  create_dashboard_tab,
+  normalize_dashboard_layout,
+  normalize_settings_dashboards,
+} from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
   PullRequestRepository,
@@ -27,13 +31,22 @@ function empty_sync_state(repo_full_name: string): SyncState {
   }
 }
 
-function normalize_settings(settings: AppSettings): AppSettings {
+function normalize_settings(
+  settings: AppSettings & { dashboard_layout?: DashboardLayoutItem[] | null },
+): AppSettings {
+  const dashboards_fields = normalize_settings_dashboards(settings)
   return {
-    ...settings,
+    id: settings.id,
+    token: settings.token,
+    repos: settings.repos,
+    sync_interval_hours: settings.sync_interval_hours,
+    backfill_limit: settings.backfill_limit,
+    ignored_bots: settings.ignored_bots,
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
-    dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
+    ...dashboards_fields,
     locale: normalize_stored_locale(settings.locale),
+    onboarded_at: settings.onboarded_at,
   }
 }
 
@@ -41,11 +54,15 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
   const get = async (): Promise<AppSettings | undefined> => {
     const settings = await database.settings.get('settings')
     if (!settings) return undefined
-    return normalize_settings(settings as AppSettings)
+    return normalize_settings(settings as AppSettings & { dashboard_layout?: DashboardLayoutItem[] })
   }
 
   const save = async (partial: SaveSettingsInput): Promise<AppSettings> => {
     const existing = await get()
+    const dashboards_fields = normalize_settings_dashboards({
+      dashboards: partial.dashboards ?? existing?.dashboards,
+      active_dashboard_id: partial.active_dashboard_id ?? existing?.active_dashboard_id,
+    })
     const next: AppSettings = {
       id: 'settings',
       token: partial.token,
@@ -57,9 +74,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       business_hours: normalizeBusinessHours(
         partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
       ),
-      dashboard_layout: normalize_dashboard_layout(
-        partial.dashboard_layout ?? existing?.dashboard_layout,
-      ),
+      ...dashboards_fields,
       locale:
         partial.locale !== undefined
           ? normalize_stored_locale(partial.locale)
@@ -78,15 +93,39 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     return next
   }
 
-  const save_dashboard_layout = async (
-    layout: AppSettings['dashboard_layout'],
-  ): Promise<AppSettings> => {
+  const save_dashboard_layout = async (layout: DashboardLayoutItem[]): Promise<AppSettings> => {
     const existing = await get()
     if (!existing) throw new Error('Settings not initialized')
+    const normalized_layout = normalize_dashboard_layout(layout)
+    const dashboards = existing.dashboards.map((tab) =>
+      tab.id === existing.active_dashboard_id ? { ...tab, layout: normalized_layout } : tab,
+    )
+    const next: AppSettings = { ...existing, dashboards }
+    await database.settings.put(next)
+    return next
+  }
+
+  const create_dashboard = async (name: string): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    const tab = create_dashboard_tab(name)
+    if (!tab.name) throw new Error('Dashboard name is required')
     const next: AppSettings = {
       ...existing,
-      dashboard_layout: normalize_dashboard_layout(layout),
+      dashboards: [...existing.dashboards, tab],
+      active_dashboard_id: tab.id,
     }
+    await database.settings.put(next)
+    return next
+  }
+
+  const set_active_dashboard = async (dashboard_id: string): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    if (!existing.dashboards.some((tab) => tab.id === dashboard_id)) {
+      throw new Error('Dashboard not found')
+    }
+    const next: AppSettings = { ...existing, active_dashboard_id: dashboard_id }
     await database.settings.put(next)
     return next
   }
@@ -107,6 +146,8 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     save,
     save_teams,
     save_dashboard_layout,
+    create_dashboard,
+    set_active_dashboard,
     save_locale,
     upsert_team: async (input) => {
       const existing = await get()

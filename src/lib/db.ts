@@ -1,8 +1,13 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
-import { normalize_dashboard_layout } from './dashboard_layout'
+import {
+  normalize_active_dashboard_id,
+  normalize_dashboards,
+} from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
 import type {
   AppSettings,
+  DashboardLayoutItem,
+  DashboardTab,
   PrFactRecord,
   PullRequestRecord,
   RepoRecord,
@@ -35,6 +40,14 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
         ? (row.businessHours as LegacyRow)
         : {}
 
+  const legacy_layout = Array.isArray(row.dashboard_layout)
+    ? (row.dashboard_layout as DashboardLayoutItem[])
+    : undefined
+  const dashboards = normalize_dashboards(
+    Array.isArray(row.dashboards) ? (row.dashboards as DashboardTab[]) : undefined,
+    legacy_layout,
+  )
+
   return {
     id: 'settings',
     token: String(row.token ?? ''),
@@ -56,10 +69,10 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
       start_minutes: Number(business.start_minutes ?? business.startMinutes ?? 9 * 60),
       end_minutes: Number(business.end_minutes ?? business.endMinutes ?? 18 * 60),
     },
-    dashboard_layout: normalize_dashboard_layout(
-      Array.isArray(row.dashboard_layout)
-        ? (row.dashboard_layout as AppSettings['dashboard_layout'])
-        : undefined,
+    dashboards,
+    active_dashboard_id: normalize_active_dashboard_id(
+      typeof row.active_dashboard_id === 'string' ? row.active_dashboard_id : undefined,
+      dashboards,
     ),
     locale: normalize_stored_locale(row.locale),
     onboarded_at: String(row.onboarded_at ?? row.onboardedAt ?? new Date().toISOString()),

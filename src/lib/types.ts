@@ -31,6 +31,13 @@ export interface DashboardLayoutItem {
   widget_id: DashboardWidgetId
 }
 
+export interface DashboardTab {
+  id: string
+  /** Display name; empty for the built-in default tab (label from i18n). */
+  name: string
+  layout: DashboardLayoutItem[]
+}
+
 export interface AppSettings {
   id: 'settings'
   token: string
@@ -42,8 +49,10 @@ export interface AppSettings {
   /** Saved member filter presets (teams) */
   teams: MemberTeam[]
   business_hours: BusinessHoursConfig
-  /** Ordered custom dashboard widgets (empty = blank canvas). */
-  dashboard_layout: DashboardLayoutItem[]
+  /** Named dashboard tabs (first is the default). */
+  dashboards: DashboardTab[]
+  /** Selected dashboard tab id. */
+  active_dashboard_id: string
   /** Explicit UI language; `null` = follow browser on each app init. */
   locale: AppLocale | null
   onboarded_at: string

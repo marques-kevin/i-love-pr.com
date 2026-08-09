@@ -88,10 +88,24 @@ export const delete_team = create_app_async_thunk<AppSettings, string>(
 
 export const save_dashboard_layout = create_app_async_thunk<
   AppSettings,
-  AppSettings['dashboard_layout']
+  AppSettings['dashboards'][number]['layout']
 >('settings/save_dashboard_layout', async (layout, { extra }) => {
   return extra.repositories.settings.save_dashboard_layout(layout)
 })
+
+export const create_dashboard = create_app_async_thunk<AppSettings, string>(
+  'settings/create_dashboard',
+  async (name, { extra }) => {
+    return extra.repositories.settings.create_dashboard(name)
+  },
+)
+
+export const set_active_dashboard = create_app_async_thunk<AppSettings, string>(
+  'settings/set_active_dashboard',
+  async (dashboard_id, { extra }) => {
+    return extra.repositories.settings.set_active_dashboard(dashboard_id)
+  },
+)
 
 export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
@@ -178,6 +192,12 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(save_dashboard_layout.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(create_dashboard.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(set_active_dashboard.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {

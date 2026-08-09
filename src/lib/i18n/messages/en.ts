@@ -45,6 +45,14 @@ export const en_messages = {
   'dashboard.move_up': 'Move up',
   'dashboard.move_down': 'Move down',
   'dashboard.remove': 'Remove {label}',
+  'dashboard.default_name': 'Default',
+  'dashboard.add_tab': 'Add dashboard',
+  'dashboard.create_title': 'New dashboard',
+  'dashboard.create_description': 'Name this dashboard, then add the charts you want.',
+  'dashboard.create_name_label': 'Name',
+  'dashboard.create_name_placeholder': 'e.g. Reviewers',
+  'dashboard.create_cancel': 'Cancel',
+  'dashboard.create_confirm': 'Create',
 
   'widget.summary_stats.label': 'Summary stats',
   'widget.summary_stats.description':

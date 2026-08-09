@@ -1,7 +1,11 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
-import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
+import {
+  create_dashboard_tab,
+  normalize_dashboard_layout,
+  normalize_settings_dashboards,
+} from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
   AppSettings,
@@ -34,13 +38,22 @@ function empty_sync_state(repo_full_name: string): SyncState {
   }
 }
 
-function normalize_settings(settings: AppSettings): AppSettings {
+function normalize_settings(
+  settings: AppSettings & { dashboard_layout?: DashboardLayoutItem[] | null },
+): AppSettings {
+  const dashboards_fields = normalize_settings_dashboards(settings)
   return {
-    ...settings,
+    id: settings.id,
+    token: settings.token,
+    repos: settings.repos,
+    sync_interval_hours: settings.sync_interval_hours,
+    backfill_limit: settings.backfill_limit,
+    ignored_bots: settings.ignored_bots,
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
-    dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
+    ...dashboards_fields,
     locale: normalize_stored_locale(settings.locale),
+    onboarded_at: settings.onboarded_at,
   }
 }
 
@@ -79,6 +92,10 @@ export function create_memory_repositories(seed?: {
     get: async () => (bag.settings ? normalize_settings(structuredClone(bag.settings)) : undefined),
     save: async (partial) => {
       const existing = bag.settings
+      const dashboards_fields = normalize_settings_dashboards({
+        dashboards: partial.dashboards ?? existing?.dashboards,
+        active_dashboard_id: partial.active_dashboard_id ?? existing?.active_dashboard_id,
+      })
       bag.settings = {
         id: 'settings',
         token: partial.token,
@@ -91,9 +108,7 @@ export function create_memory_repositories(seed?: {
         business_hours: normalizeBusinessHours(
           partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
         ),
-        dashboard_layout: normalize_dashboard_layout(
-          partial.dashboard_layout ?? existing?.dashboard_layout,
-        ),
+        ...dashboards_fields,
         locale:
           partial.locale !== undefined
             ? normalize_stored_locale(partial.locale)
@@ -105,10 +120,34 @@ export function create_memory_repositories(seed?: {
     save_teams,
     save_dashboard_layout: async (layout: DashboardLayoutItem[]) => {
       if (!bag.settings) throw new Error('Settings not initialized')
+      const normalized_layout = normalize_dashboard_layout(layout)
       bag.settings = {
         ...bag.settings,
-        dashboard_layout: normalize_dashboard_layout(layout),
+        dashboards: bag.settings.dashboards.map((tab) =>
+          tab.id === bag.settings!.active_dashboard_id
+            ? { ...tab, layout: normalized_layout }
+            : tab,
+        ),
       }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    create_dashboard: async (name: string) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      const tab = create_dashboard_tab(name)
+      if (!tab.name) throw new Error('Dashboard name is required')
+      bag.settings = {
+        ...bag.settings,
+        dashboards: [...bag.settings.dashboards, tab],
+        active_dashboard_id: tab.id,
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    set_active_dashboard: async (dashboard_id: string) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      bag.settings = { ...bag.settings, active_dashboard_id: dashboard_id }
       return normalize_settings(structuredClone(bag.settings))
     },
     save_locale: async (locale) => {

@@ -20,12 +20,22 @@ describe('create_memory_repositories settings', () => {
     expect(loaded?.token).toBe('ghp_test')
   })
 
-  it('saves dashboard layout', async () => {
+  it('saves dashboard layout on the active tab', async () => {
     const repositories = create_memory_repositories()
     await repositories.settings.save({ token: 't', repos: ['a/b'] })
     const next = await repositories.settings.save_dashboard_layout([
       { instance_id: '1', widget_id: 'cycle_time' },
     ])
-    expect(next.dashboard_layout).toEqual([{ instance_id: '1', widget_id: 'cycle_time' }])
+    expect(next.dashboards[0].layout).toEqual([{ instance_id: '1', widget_id: 'cycle_time' }])
+  })
+
+  it('creates a named dashboard and switches to it', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({ token: 't', repos: ['a/b'] })
+    const next = await repositories.settings.create_dashboard('Reviewers')
+    expect(next.dashboards).toHaveLength(2)
+    expect(next.dashboards[1].name).toBe('Reviewers')
+    expect(next.dashboards[1].layout).toEqual([])
+    expect(next.active_dashboard_id).toBe(next.dashboards[1].id)
   })
 })

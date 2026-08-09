@@ -60,7 +60,8 @@ const sample_settings: AppSettings = {
     start_minutes: 9 * 60,
     end_minutes: 18 * 60,
   },
-  dashboard_layout: [],
+  dashboards: [{ id: 'default', name: '', layout: [] }],
+  active_dashboard_id: 'default',
   locale: null,
   onboarded_at: '2026-01-01T00:00:00.000Z',
 }
