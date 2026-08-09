@@ -64,3 +64,9 @@ src/
 ## GitHub
 
 - **Board tickets** (GitHub Projects / issues) and **pull requests** (titles + descriptions) must be written in **English**
+- **Commits** use [Conventional Commits](https://www.conventionalcommits.org/) so they map to SemVer:
+  - `feat:` → minor
+  - `fix:` → patch
+  - `feat!:` / `fix!:` / `BREAKING CHANGE:` → major
+  - Also allowed: `docs:`, `chore:`, `refactor:`, `test:`, `ci:`, `style:` (no release bump unless marked breaking)
+  - Subject in English, imperative, no trailing period (e.g. `feat: add dashboard tabs`)
