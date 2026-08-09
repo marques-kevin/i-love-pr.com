@@ -1,7 +1,6 @@
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import { Dashboard, DashboardTabs } from '@/modules/dashboard'
-import { LocaleSwitcher } from '@/modules/i18n'
 import { Onboarding } from '@/modules/onboarding'
 import { Settings } from '@/modules/settings'
 import { SyncStatus } from '@/modules/sync'
@@ -35,7 +34,6 @@ export function Wrapper({ settings, settings_loading, set_show_settings }: Conne
         <div className="flex flex-col items-start gap-3 sm:items-end">
           <SyncStatus />
           <div className="flex flex-wrap items-center gap-3">
-            <LocaleSwitcher />
             <Button variant="link" className="h-auto p-0" onClick={() => set_show_settings(true)}>
               {intl.formatMessage({ id: 'app.settings' })}
             </Button>
