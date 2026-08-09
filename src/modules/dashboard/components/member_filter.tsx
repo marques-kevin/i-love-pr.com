@@ -32,24 +32,30 @@ import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import type { MemberTeam } from '@/lib/types'
+import { connector, type ConnectorProps } from './member_filter.connector'
 
-interface MemberFilterProps {
-  contributors: string[]
-  selected: string[]
-  onChange: (members: string[]) => void
-  teams: MemberTeam[]
-  onSaveTeam: (name: string, members: string[], id?: string) => Promise<void>
-  onDeleteTeam: (id: string) => Promise<void>
-}
-
-export function MemberFilter({
+export function Wrapper({
   contributors,
   selected,
-  onChange,
   teams,
-  onSaveTeam,
-  onDeleteTeam,
-}: MemberFilterProps) {
+  set_members,
+  upsert_team,
+  delete_team,
+}: ConnectorProps) {
+  const onChange = set_members
+
+  async function onSaveTeam(name: string, members: string[], id?: string) {
+    const next = await upsert_team({ name, members, id }).unwrap()
+    const team =
+      (id ? next.teams.find((t) => t.id === id) : null) ??
+      next.teams.find((t) => t.name.toLowerCase() === name.trim().toLowerCase())
+    if (team) set_members([...team.members])
+  }
+
+  async function onDeleteTeam(id: string) {
+    await delete_team(id)
+  }
+
   const [memberOpen, setMemberOpen] = useState(false)
   const [teamsOpen, setTeamsOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -75,8 +81,7 @@ export function MemberFilter({
       return
     }
     const same =
-      selected.length === team.members.length &&
-      team.members.every((m) => selected.includes(m))
+      selected.length === team.members.length && team.members.every((m) => selected.includes(m))
     if (!same) {
       // Selection diverged manually — drop team mode
       setActiveTeamId(null)
@@ -159,9 +164,9 @@ export function MemberFilter({
     }
   }
 
-  const managePool = [
-    ...new Set([...contributors, ...manageMembers]),
-  ].sort((a, b) => a.localeCompare(b))
+  const managePool = [...new Set([...contributors, ...manageMembers])].sort((a, b) =>
+    a.localeCompare(b),
+  )
 
   return (
     <div className="flex flex-col gap-2">
@@ -230,10 +235,7 @@ export function MemberFilter({
                           }}
                         >
                           <CheckIcon
-                            className={cn(
-                              'size-4',
-                              isSelected ? 'opacity-100' : 'opacity-0',
-                            )}
+                            className={cn('size-4', isSelected ? 'opacity-100' : 'opacity-0')}
                           />
                           @{c}
                         </CommandItem>
@@ -251,9 +253,7 @@ export function MemberFilter({
             <Button type="button" variant="outline" size="sm" className="h-7 gap-1">
               <UsersIcon className="size-3.5" />
               Teams
-              {teams.length > 0 && (
-                <span className="text-muted-foreground">({teams.length})</span>
-              )}
+              {teams.length > 0 && <span className="text-muted-foreground">({teams.length})</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72 p-0" align="start">
@@ -428,8 +428,7 @@ export function MemberFilter({
           <DialogHeader>
             <DialogTitle>Manage members</DialogTitle>
             <DialogDescription>
-              Add or remove people from{' '}
-              <strong>{manageTeam?.name ?? 'this team'}</strong>.
+              Add or remove people from <strong>{manageTeam?.name ?? 'this team'}</strong>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -462,10 +461,7 @@ export function MemberFilter({
                         )}
                       >
                         <CheckIcon
-                          className={cn(
-                            'size-4',
-                            checked ? 'opacity-100' : 'opacity-0',
-                          )}
+                          className={cn('size-4', checked ? 'opacity-100' : 'opacity-0')}
                         />
                         @{login}
                       </button>
@@ -473,9 +469,7 @@ export function MemberFilter({
                   })
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {manageMembers.length} selected
-              </p>
+              <p className="text-xs text-muted-foreground">{manageMembers.length} selected</p>
             </div>
             {saveError && <p className="text-sm text-destructive">{saveError}</p>}
           </div>
@@ -496,3 +490,5 @@ export function MemberFilter({
     </div>
   )
 }
+
+export const MemberFilter = connector(Wrapper)

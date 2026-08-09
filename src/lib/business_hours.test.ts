@@ -13,11 +13,10 @@ describe('business_hours helpers', () => {
   })
 
   it('uses calendar hours when business hours disabled', () => {
-    const hours = elapsedHours(
-      '2026-08-07T15:00:00.000Z',
-      '2026-08-10T08:00:00.000Z',
-      { ...DEFAULT_BUSINESS_HOURS, enabled: false },
-    )
+    const hours = elapsedHours('2026-08-07T15:00:00.000Z', '2026-08-10T08:00:00.000Z', {
+      ...DEFAULT_BUSINESS_HOURS,
+      enabled: false,
+    })
     expect(hours).toBe(65)
   })
 
@@ -31,11 +30,7 @@ describe('business_hours helpers', () => {
       endMinutes: 18 * 60,
     }
     // Fri 17:00 -> Mon 10:00 Paris ≈ 2 business hours
-    const hours = elapsedHours(
-      '2026-08-07T15:00:00.000Z',
-      '2026-08-10T08:00:00.000Z',
-      cfg,
-    )
+    const hours = elapsedHours('2026-08-07T15:00:00.000Z', '2026-08-10T08:00:00.000Z', cfg)
     expect(hours).toBe(2)
   })
 
@@ -48,11 +43,7 @@ describe('business_hours helpers', () => {
       startMinutes: 9 * 60,
       endMinutes: 18 * 60,
     }
-    const hours = elapsedHours(
-      '2026-08-06T07:00:00.000Z',
-      '2026-08-06T10:00:00.000Z',
-      cfg,
-    )
+    const hours = elapsedHours('2026-08-06T07:00:00.000Z', '2026-08-06T10:00:00.000Z', cfg)
     expect(hours).toBe(3)
   })
 })

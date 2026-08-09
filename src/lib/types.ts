@@ -1,11 +1,6 @@
 export type PrState = 'OPEN' | 'CLOSED' | 'MERGED'
 
-export type ReviewState =
-  | 'APPROVED'
-  | 'CHANGES_REQUESTED'
-  | 'COMMENTED'
-  | 'DISMISSED'
-  | 'PENDING'
+export type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED' | 'DISMISSED' | 'PENDING'
 
 export type { BusinessHoursConfig } from './business-hours'
 import type { BusinessHoursConfig } from './business-hours'

@@ -1,11 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type {
-  AppSettings,
-  PullRequestRecord,
-  RepoRecord,
-  ReviewRecord,
-  SyncState,
-} from './types'
+import type { AppSettings, PullRequestRecord, RepoRecord, ReviewRecord, SyncState } from './types'
 
 export class IlovePrDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>

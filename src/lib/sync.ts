@@ -1,10 +1,5 @@
 import { GitHubApiError, GitHubClient, parseRepoFullName } from './github-client'
-import type {
-  AppSettings,
-  RateLimitInfo,
-  SyncProgress,
-  SyncState,
-} from './types'
+import type { AppSettings, RateLimitInfo, SyncProgress, SyncState } from './types'
 import type { Repositories } from '@/repositories'
 import { persist_normalized_page } from '@/repositories'
 
@@ -97,16 +92,11 @@ async function sync_repo(
     return { rate_limit: ctx.client.getRateLimit() }
   }
 
-  const stop_before =
-    mode === 'incremental' && state.cursorUpdatedAt ? state.cursorUpdatedAt : null
+  const stop_before = mode === 'incremental' && state.cursorUpdatedAt ? state.cursorUpdatedAt : null
 
   const resume_mid_batch = mode === 'backfill' && resume_paused
   let page_cursor: string | null =
-    mode === 'backfill'
-      ? resume_mid_batch || continue_deeper
-        ? state.pageCursor
-        : null
-      : null
+    mode === 'backfill' ? (resume_mid_batch || continue_deeper ? state.pageCursor : null) : null
   let fetched_this_run = 0
   let batch_fetched = resume_mid_batch ? (state.backfillFetched ?? 0) : 0
   let newest_updated_at = state.cursorUpdatedAt
@@ -137,11 +127,7 @@ async function sync_repo(
     let hit_batch_limit = false
 
     while (has_next_page) {
-      const page = await ctx.client.fetchPullRequestsPage(
-        parsed.owner,
-        parsed.name,
-        page_cursor,
-      )
+      const page = await ctx.client.fetchPullRequestsPage(parsed.owner, parsed.name, page_cursor)
 
       let page_items = page.items
       let reached_cursor = false
@@ -219,8 +205,7 @@ async function sync_repo(
           pageCursor: page_cursor,
           cursorUpdatedAt: newest_updated_at,
           backfillFetched: batch_fetched,
-          lastError:
-            'Paused: rate limit low. Sync history again once it resets to continue.',
+          lastError: 'Paused: rate limit low. Sync history again once it resets to continue.',
           totalFetched: state.totalFetched,
         })
         ctx.on_progress?.({
@@ -268,8 +253,7 @@ async function sync_repo(
           ? error.message
           : 'Unknown sync error'
 
-    const rate_limit =
-      error instanceof GitHubApiError ? error.rateLimit : ctx.client.getRateLimit()
+    const rate_limit = error instanceof GitHubApiError ? error.rateLimit : ctx.client.getRateLimit()
 
     await repositories.sync_state.update(full_name, {
       mode: 'paused',

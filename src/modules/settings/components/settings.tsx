@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { RepoPicker } from '@/components/RepoPicker'
+import { RepoPicker } from '@/components/repo_picker'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import {
   DEFAULT_BUSINESS_HOURS,
@@ -27,7 +27,7 @@ import {
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
 import { estimateStorage, formatBytes } from '@/lib/storage'
-import type { AppSettings } from '@/lib/types'
+import { connector, type ConnectorProps } from './settings.connector'
 
 const COMMON_TIMEZONES = [
   'Europe/Paris',
@@ -42,140 +42,132 @@ const COMMON_TIMEZONES = [
   'UTC',
 ]
 
-interface SettingsProps {
-  settings: AppSettings
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (data: {
-    token: string
-    repos: string[]
-    syncIntervalHours: number
-    backfillLimit: number
-    ignoredBots: string[]
-    businessHours: BusinessHoursConfig
-  }) => Promise<void>
-  onResetData: () => Promise<void>
-  onFactoryReset: () => Promise<void>
-  onResetComplete: () => void
-}
-
-export function Settings({
+export function Wrapper({
   settings,
   open,
-  onOpenChange,
-  onSave,
-  onResetData,
-  onFactoryReset,
-  onResetComplete,
-}: SettingsProps) {
-  const [token, setToken] = useState(settings.token)
-  const [repos, setRepos] = useState(settings.repos)
-  const [availableRepos, setAvailableRepos] = useState<GitHubRepoOption[]>([])
-  const [loadingRepos, setLoadingRepos] = useState(false)
-  const [syncIntervalHours, setSyncIntervalHours] = useState(settings.syncIntervalHours)
-  const [backfillLimit, setBackfillLimit] = useState(
-    settings.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
+  set_show_settings,
+  save_settings,
+  reset_sync_data,
+  clear_all_data,
+  load_settings,
+  set_bootstrapped,
+  refresh_metrics,
+  run_sync,
+}: ConnectorProps) {
+  const [token, set_token] = useState(settings?.token ?? '')
+  const [repos, set_repos] = useState(settings?.repos ?? [])
+  const [available_repos, set_available_repos] = useState<GitHubRepoOption[]>([])
+  const [loading_repos, set_loading_repos] = useState(false)
+  const [sync_interval_hours, set_sync_interval_hours] = useState(settings?.syncIntervalHours ?? 24)
+  const [backfill_limit, set_backfill_limit] = useState(
+    settings?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
   )
-  const [ignoredBots, setIgnoredBots] = useState(settings.ignoredBots.join('\n'))
-  const [businessHours, setBusinessHours] = useState<BusinessHoursConfig>(
-    normalizeBusinessHours(settings.businessHours),
+  const [ignored_bots, set_ignored_bots] = useState(
+    (settings?.ignoredBots ?? DEFAULT_IGNORED_BOTS).join('\n'),
   )
-  const [storageInfo, setStorageInfo] = useState<{
+  const [business_hours, set_business_hours] = useState<BusinessHoursConfig>(
+    normalizeBusinessHours(settings?.businessHours),
+  )
+  const [storage_info, set_storage_info] = useState<{
     usage: number
     quota: number
     usagePercent: number
   } | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [message, set_message] = useState<string | null>(null)
+  const [busy, set_busy] = useState(false)
 
-  const timeZoneOptions = Array.from(
-    new Set([
-      businessHours.timeZone,
-      DEFAULT_BUSINESS_HOURS.timeZone,
-      ...COMMON_TIMEZONES,
-    ]),
+  const time_zone_options = Array.from(
+    new Set([business_hours.timeZone, DEFAULT_BUSINESS_HOURS.timeZone, ...COMMON_TIMEZONES]),
   )
 
   useEffect(() => {
-    if (!open) return
-    setToken(settings.token)
-    setRepos(settings.repos)
-    setSyncIntervalHours(settings.syncIntervalHours)
-    setBackfillLimit(settings.backfillLimit ?? DEFAULT_BACKFILL_LIMIT)
-    setIgnoredBots(settings.ignoredBots.join('\n'))
-    setBusinessHours(normalizeBusinessHours(settings.businessHours))
-    setMessage(null)
-    void estimateStorage().then(setStorageInfo)
-    void loadRepos(settings.token)
+    if (!open || !settings) return
+    set_token(settings.token)
+    set_repos(settings.repos)
+    set_sync_interval_hours(settings.syncIntervalHours)
+    set_backfill_limit(settings.backfillLimit ?? DEFAULT_BACKFILL_LIMIT)
+    set_ignored_bots(settings.ignoredBots.join('\n'))
+    set_business_hours(normalizeBusinessHours(settings.businessHours))
+    set_message(null)
+    void estimateStorage().then(set_storage_info)
+    void load_repos(settings.token)
   }, [open, settings])
 
-  async function loadRepos(pat: string) {
+  async function load_repos(pat: string) {
     if (!pat.trim()) {
-      setAvailableRepos([])
+      set_available_repos([])
       return
     }
-    setLoadingRepos(true)
+    set_loading_repos(true)
     try {
       const client = new GitHubClient(pat.trim())
       const listed = await client.listRepositories()
-      setAvailableRepos(listed.repos)
+      set_available_repos(listed.repos)
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Failed to load repositories')
-      setAvailableRepos([])
+      set_message(err instanceof Error ? err.message : 'Failed to load repositories')
+      set_available_repos([])
     } finally {
-      setLoadingRepos(false)
+      set_loading_repos(false)
     }
   }
 
-  async function handleSave(e: FormEvent) {
+  if (!settings) return null
+
+  async function handle_save(e: FormEvent) {
     e.preventDefault()
-    setBusy(true)
-    setMessage(null)
+    set_busy(true)
+    set_message(null)
     try {
-      await onSave({
+      await save_settings({
         token: token.trim(),
         repos,
-        syncIntervalHours,
-        backfillLimit,
-        ignoredBots: ignoredBots
+        syncIntervalHours: sync_interval_hours,
+        backfillLimit: backfill_limit,
+        ignoredBots: ignored_bots
           .split(/[\n,]/)
           .map((s) => s.trim())
           .filter(Boolean),
-        businessHours: normalizeBusinessHours(businessHours),
+        businessHours: normalizeBusinessHours(business_hours),
       })
-      onOpenChange(false)
+      void refresh_metrics()
+      void run_sync({ force: false })
+      set_show_settings(false)
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Save failed')
+      set_message(err instanceof Error ? err.message : 'Save failed')
     } finally {
-      setBusy(false)
+      set_busy(false)
     }
   }
 
-  async function handleResetData() {
+  async function handle_reset_data() {
     if (!confirm('Clear all PR/review data and re-run a full backfill?')) return
-    setBusy(true)
+    set_busy(true)
     try {
-      await onResetData()
-      setMessage('Local PR data cleared. Sync will backfill on next refresh.')
-      onResetComplete()
+      await reset_sync_data()
+      set_message('Local PR data cleared. Sync will backfill on next refresh.')
+      set_bootstrapped(false)
+      set_show_settings(false)
+      void load_settings()
     } finally {
-      setBusy(false)
+      set_busy(false)
     }
   }
 
-  async function handleFactoryReset() {
+  async function handle_factory_reset() {
     if (!confirm('Erase ALL local data including token and settings?')) return
-    setBusy(true)
+    set_busy(true)
     try {
-      await onFactoryReset()
-      onResetComplete()
+      await clear_all_data()
+      set_bootstrapped(false)
+      set_show_settings(false)
+      void load_settings()
     } finally {
-      setBusy(false)
+      set_busy(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={set_show_settings}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Settings</DialogTitle>
@@ -184,25 +176,25 @@ export function Settings({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={(e) => void handleSave(e)} className="space-y-5">
+        <form onSubmit={(e) => void handle_save(e)} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="settings-token">GitHub token</Label>
             <Input
               id="settings-token"
               type="password"
               value={token}
-              onChange={(e) => setToken(e.target.value)}
-              onBlur={() => void loadRepos(token)}
+              onChange={(e) => set_token(e.target.value)}
+              onBlur={() => void load_repos(token)}
             />
           </div>
 
           <RepoPicker
             id="settings-repo"
-            availableRepos={availableRepos}
+            availableRepos={available_repos}
             selected={repos}
-            onChange={setRepos}
+            onChange={set_repos}
             token={token}
-            loading={loadingRepos}
+            loading={loading_repos}
             disabled={!token.trim()}
           />
 
@@ -214,8 +206,8 @@ export function Settings({
                 type="number"
                 min={1}
                 max={168}
-                value={syncIntervalHours}
-                onChange={(e) => setSyncIntervalHours(Number(e.target.value) || 24)}
+                value={sync_interval_hours}
+                onChange={(e) => set_sync_interval_hours(Number(e.target.value) || 24)}
               />
               <p className="text-xs text-muted-foreground">
                 Auto refresh only if cache is older than this.
@@ -229,14 +221,14 @@ export function Settings({
                 min={25}
                 max={5000}
                 step={25}
-                value={backfillLimit}
+                value={backfill_limit}
                 onChange={(e) =>
-                  setBackfillLimit(Math.max(25, Number(e.target.value) || DEFAULT_BACKFILL_LIMIT))
+                  set_backfill_limit(Math.max(25, Number(e.target.value) || DEFAULT_BACKFILL_LIMIT))
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Each Sync history pulls the next N PRs. Re-run later when the rate
-                limit resets to go deeper.
+                Each Sync history pulls the next N PRs. Re-run later when the rate limit resets to
+                go deeper.
               </p>
             </div>
           </div>
@@ -246,15 +238,15 @@ export function Settings({
             <Textarea
               id="bots"
               rows={5}
-              value={ignoredBots}
-              onChange={(e) => setIgnoredBots(e.target.value)}
+              value={ignored_bots}
+              onChange={(e) => set_ignored_bots(e.target.value)}
               className="font-mono text-sm"
             />
             <Button
               type="button"
               variant="link"
               className="h-auto p-0"
-              onClick={() => setIgnoredBots(DEFAULT_IGNORED_BOTS.join('\n'))}
+              onClick={() => set_ignored_bots(DEFAULT_IGNORED_BOTS.join('\n'))}
             >
               Reset to defaults
             </Button>
@@ -265,35 +257,33 @@ export function Settings({
               <div>
                 <Label htmlFor="business-hours">Business hours</Label>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Cycle time, time to first review, and request→approve count only
-                  working windows. No re-sync needed.
+                  Cycle time, time to first review, and request→approve count only working windows.
+                  No re-sync needed.
                 </p>
               </div>
               <Switch
                 id="business-hours"
-                checked={businessHours.enabled}
-                onCheckedChange={(enabled) =>
-                  setBusinessHours((prev) => ({ ...prev, enabled }))
-                }
+                checked={business_hours.enabled}
+                onCheckedChange={(enabled) => set_business_hours((prev) => ({ ...prev, enabled }))}
               />
             </div>
 
-            {businessHours.enabled && (
+            {business_hours.enabled && (
               <div className="space-y-4 pt-1">
                 <div className="space-y-2">
                   <Label htmlFor="bh-tz">Timezone</Label>
                   <select
                     id="bh-tz"
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    value={businessHours.timeZone}
+                    value={business_hours.timeZone}
                     onChange={(e) =>
-                      setBusinessHours((prev) => ({
+                      set_business_hours((prev) => ({
                         ...prev,
                         timeZone: e.target.value,
                       }))
                     }
                   >
-                    {timeZoneOptions.map((tz) => (
+                    {time_zone_options.map((tz) => (
                       <option key={tz} value={tz}>
                         {tz}
                       </option>
@@ -305,7 +295,7 @@ export function Settings({
                   <Label>Working days</Label>
                   <div className="flex flex-wrap gap-2">
                     {WEEKDAY_LABELS.map(({ day, label }) => {
-                      const active = businessHours.workdays.includes(day)
+                      const active = business_hours.workdays.includes(day)
                       return (
                         <Button
                           key={day}
@@ -314,7 +304,7 @@ export function Settings({
                           variant={active ? 'default' : 'outline'}
                           className="min-w-12"
                           onClick={() =>
-                            setBusinessHours((prev) => {
+                            set_business_hours((prev) => {
                               const set = new Set(prev.workdays)
                               if (set.has(day)) set.delete(day)
                               else set.add(day)
@@ -335,9 +325,9 @@ export function Settings({
                     <Input
                       id="bh-start"
                       type="time"
-                      value={minutesToTimeInput(businessHours.startMinutes)}
+                      value={minutesToTimeInput(business_hours.startMinutes)}
                       onChange={(e) =>
-                        setBusinessHours((prev) => ({
+                        set_business_hours((prev) => ({
                           ...prev,
                           startMinutes: timeInputToMinutes(e.target.value),
                         }))
@@ -349,9 +339,9 @@ export function Settings({
                     <Input
                       id="bh-end"
                       type="time"
-                      value={minutesToTimeInput(businessHours.endMinutes)}
+                      value={minutesToTimeInput(business_hours.endMinutes)}
                       onChange={(e) =>
-                        setBusinessHours((prev) => ({
+                        set_business_hours((prev) => ({
                           ...prev,
                           endMinutes: timeInputToMinutes(e.target.value),
                         }))
@@ -365,10 +355,10 @@ export function Settings({
 
           <div className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
             <p className="font-medium text-foreground">Local storage</p>
-            {storageInfo ? (
+            {storage_info ? (
               <p className="mt-1">
-                {formatBytes(storageInfo.usage)} used of {formatBytes(storageInfo.quota)} (
-                {storageInfo.usagePercent.toFixed(2)}%)
+                {formatBytes(storage_info.usage)} used of {formatBytes(storage_info.quota)} (
+                {storage_info.usagePercent.toFixed(2)}%)
               </p>
             ) : (
               <p className="mt-1">Storage estimate unavailable in this browser.</p>
@@ -389,7 +379,7 @@ export function Settings({
                 type="button"
                 variant="outline"
                 disabled={busy}
-                onClick={() => void handleResetData()}
+                onClick={() => void handle_reset_data()}
               >
                 Reset local data
               </Button>
@@ -397,7 +387,7 @@ export function Settings({
                 type="button"
                 variant="destructive"
                 disabled={busy}
-                onClick={() => void handleFactoryReset()}
+                onClick={() => void handle_factory_reset()}
               >
                 Factory reset
               </Button>
@@ -411,3 +401,5 @@ export function Settings({
     </Dialog>
   )
 }
+
+export const Settings = connector(Wrapper)

@@ -1,9 +1,7 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { sync_all_repos } from '@/lib/sync'
 import type { RateLimitInfo, SyncProgress, SyncState } from '@/lib/types'
-import type { ThunkExtra } from './thunk_extra'
-
-type ThunkConfig = { extra: ThunkExtra }
+import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SyncSliceState = {
   syncing: boolean
@@ -25,17 +23,16 @@ const initial_state: SyncSliceState = {
 
 let sync_lock = false
 
-export const refresh_sync_states = createAsyncThunk<SyncState[], void, ThunkConfig>(
+export const refresh_sync_states = create_app_async_thunk<SyncState[], void>(
   'sync/refresh_states',
   async (_, { extra }) => {
     return extra.repositories.sync_state.list()
   },
 )
 
-export const run_sync = createAsyncThunk<
+export const run_sync = create_app_async_thunk<
   { rate_limit: RateLimitInfo | null },
-  { force?: boolean },
-  ThunkConfig
+  { force?: boolean }
 >('sync/run', async ({ force = false }, { extra, dispatch }) => {
   if (sync_lock) {
     return { rate_limit: null }

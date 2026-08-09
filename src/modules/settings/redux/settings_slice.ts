@@ -1,11 +1,9 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { requestPersistentStorage } from '@/lib/storage'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
-import type { ThunkExtra } from './thunk_extra'
-
-type ThunkConfig = { extra: ThunkExtra }
+import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SettingsState = {
   settings: AppSettings | null
@@ -19,17 +17,16 @@ const initial_state: SettingsState = {
   error: null,
 }
 
-export const load_settings = createAsyncThunk<
-  AppSettings | null,
-  void,
-  ThunkConfig
->('settings/load', async (_, { extra }) => {
-  void requestPersistentStorage()
-  const settings = await extra.repositories.settings.get()
-  return settings ?? null
-})
+export const load_settings = create_app_async_thunk<AppSettings | null, void>(
+  'settings/load',
+  async (_, { extra }) => {
+    void requestPersistentStorage()
+    const settings = await extra.repositories.settings.get()
+    return settings ?? null
+  },
+)
 
-export const save_settings = createAsyncThunk<
+export const save_settings = create_app_async_thunk<
   AppSettings,
   {
     token: string
@@ -38,8 +35,7 @@ export const save_settings = createAsyncThunk<
     backfillLimit?: number
     ignoredBots?: string[]
     businessHours?: BusinessHoursConfig
-  },
-  ThunkConfig
+  }
 >('settings/save', async (input, { extra }) => {
   const payload: SaveSettingsInput = {
     token: input.token.trim(),
@@ -54,29 +50,28 @@ export const save_settings = createAsyncThunk<
   return next
 })
 
-export const upsert_team = createAsyncThunk<
+export const upsert_team = create_app_async_thunk<
   AppSettings,
-  { name: string; members: string[]; id?: string },
-  ThunkConfig
+  { name: string; members: string[]; id?: string }
 >('settings/upsert_team', async (input, { extra }) => {
   return extra.repositories.settings.upsert_team(input)
 })
 
-export const delete_team = createAsyncThunk<AppSettings, string, ThunkConfig>(
+export const delete_team = create_app_async_thunk<AppSettings, string>(
   'settings/delete_team',
   async (id, { extra }) => {
     return extra.repositories.settings.delete_team(id)
   },
 )
 
-export const reset_sync_data = createAsyncThunk<void, void, ThunkConfig>(
+export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
   async (_, { extra }) => {
     await extra.repositories.settings.reset_sync_data()
   },
 )
 
-export const clear_all_data = createAsyncThunk<void, void, ThunkConfig>(
+export const clear_all_data = create_app_async_thunk<void, void>(
   'settings/clear_all_data',
   async (_, { extra }) => {
     await extra.repositories.settings.clear_all_data()

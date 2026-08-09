@@ -1,9 +1,4 @@
-import type {
-  NormalizedPullRequest,
-  PrState,
-  RateLimitInfo,
-  ReviewState,
-} from './types'
+import type { NormalizedPullRequest, PrState, RateLimitInfo, ReviewState } from './types'
 
 const GRAPHQL_URL = 'https://api.github.com/graphql'
 
@@ -268,10 +263,9 @@ export class GitHubClient {
     }
 
     while (page < maxPages) {
-      const data: ListReposData = await this.graphql<ListReposData>(
-        LIST_REPOSITORIES_QUERY,
-        { cursor },
-      )
+      const data: ListReposData = await this.graphql<ListReposData>(LIST_REPOSITORIES_QUERY, {
+        cursor,
+      })
 
       for (const node of data.viewer.repositories.nodes) {
         if (!node?.nameWithOwner) continue
@@ -292,10 +286,7 @@ export class GitHubClient {
   }
 
   /** Resolve a public or accessible repo by owner/name (for manual add). */
-  async resolveRepository(
-    owner: string,
-    name: string,
-  ): Promise<GitHubRepoOption> {
+  async resolveRepository(owner: string, name: string): Promise<GitHubRepoOption> {
     const data = await this.graphql<{
       rateLimit: RateLimitInfo & { cost: number }
       repository: { nameWithOwner: string; isPrivate: boolean } | null
@@ -335,7 +326,11 @@ export class GitHubClient {
     })
 
     if (!data.repository) {
-      throw new GitHubApiError(`Repository ${owner}/${name} not found or inaccessible`, 404, this.lastRateLimit)
+      throw new GitHubApiError(
+        `Repository ${owner}/${name} not found or inaccessible`,
+        404,
+        this.lastRateLimit,
+      )
     }
 
     const repoFullName = `${owner}/${name}`
@@ -403,7 +398,9 @@ export class GitHubClient {
       )
     }
 
-    const payload = (await response.json()) as GraphQLResponse<T & { rateLimit?: RateLimitInfo & { cost?: number } }>
+    const payload = (await response.json()) as GraphQLResponse<
+      T & { rateLimit?: RateLimitInfo & { cost?: number } }
+    >
 
     if (payload.data && 'rateLimit' in payload.data && payload.data.rateLimit) {
       this.lastRateLimit = {

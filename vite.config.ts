@@ -14,6 +14,19 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'dev-react-scan',
+      apply: 'serve',
+      transformIndexHtml() {
+        return [
+          {
+            tag: 'script',
+            attrs: { type: 'module', src: '/src/dev_scan.ts' },
+            injectTo: 'head-prepend',
+          },
+        ]
+      },
+    },
     react(),
     tailwindcss(),
     VitePWA({
@@ -54,5 +67,21 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: [
+        'src/lib/**/*.ts',
+        'src/repositories/**/*.ts',
+        'src/store/**/*.ts',
+        'src/modules/**/redux/**/*.ts',
+      ],
+      exclude: [
+        'src/**/*.test.ts',
+        'src/lib/types.ts',
+        'src/lib/github-client.ts',
+        'src/lib/sync.ts',
+      ],
+    },
   },
 })

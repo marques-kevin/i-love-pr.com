@@ -16,11 +16,7 @@ export interface SettingsRepository {
   get: () => Promise<AppSettings | undefined>
   save: (partial: SaveSettingsInput) => Promise<AppSettings>
   save_teams: (teams: MemberTeam[]) => Promise<AppSettings>
-  upsert_team: (input: {
-    name: string
-    members: string[]
-    id?: string
-  }) => Promise<AppSettings>
+  upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>
   clear_all_data: () => Promise<void>
@@ -45,10 +41,7 @@ export interface SyncStateRepository {
   get: (repo_full_name: string) => Promise<SyncState | undefined>
   list: () => Promise<SyncState[]>
   put: (state: SyncState) => Promise<void>
-  update: (
-    repo_full_name: string,
-    patch: Partial<SyncState>,
-  ) => Promise<SyncState>
+  update: (repo_full_name: string, patch: Partial<SyncState>) => Promise<SyncState>
   ensure: (repo_full_name: string) => Promise<SyncState>
   reset_all: () => Promise<void>
   clear: () => Promise<void>

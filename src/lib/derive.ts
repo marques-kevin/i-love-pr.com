@@ -1,14 +1,6 @@
 import { isBotLogin } from './bots'
-import {
-  elapsedHours,
-  type BusinessHoursConfig,
-} from './business-hours'
-import type {
-  EnrichedPullRequest,
-  PrFacts,
-  PullRequestRecord,
-  ReviewRecord,
-} from './types'
+import { elapsedHours, type BusinessHoursConfig } from './business-hours'
+import type { EnrichedPullRequest, PrFacts, PullRequestRecord, ReviewRecord } from './types'
 
 /**
  * When review waiting starts: first "request review", else ready-for-review, else created.
@@ -50,10 +42,7 @@ export function derivePrFacts(
   const firstApprovedAt = firstApproval?.submittedAt ?? null
   let timeToApproveHours: number | null = null
   if (firstApprovedAt) {
-    timeToApproveHours = Math.max(
-      0,
-      elapsedHours(waitStart, firstApprovedAt, businessHours),
-    )
+    timeToApproveHours = Math.max(0, elapsedHours(waitStart, firstApprovedAt, businessHours))
   }
 
   return {

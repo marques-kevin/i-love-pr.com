@@ -1,5 +1,23 @@
 # Agent / contributor conventions
 
+## Structure
+
+```
+src/
+  modules/
+    dashboard/
+      components/   # UI + connectors
+      redux/        # slice + thunks
+    settings/
+    sync/
+    onboarding/
+    app/            # shell layout
+  store/            # create_store, create_app_async_thunk, ThunkExtra
+  repositories/
+  lib/
+  components/ui/    # shadcn only
+```
+
 ## Naming
 
 - **Variables, functions, Redux state keys, repository methods**: `snake_case` (`get_settings`, `map_state_to_props`, `elapsed_hours`)
@@ -14,6 +32,9 @@
 - Pattern:
   - `mon_fichier.connector.tsx` — `map_state_to_props`, `map_dispatch_to_props`, `connector`, `ConnectorProps`
   - `mon_fichier.tsx` — `export function Wrapper` + `export const MonFichier = connector(Wrapper)`
+- **One connector per component** that reads/writes Redux — never a god-connector on App that pipes everything as props
+- App / Dashboard stay thin layout shells that compose connected children — **no props drilling of Redux data**
+- Use `create_app_async_thunk` (typed `RootState` + `ThunkExtra`) — never raw `createAsyncThunk` with manual config
 - Inject repositories via `thunk.extraArgument` (`create_store({ repositories })`) — never import Dexie repos as singletons inside slices
 
 ## Data access
@@ -28,6 +49,7 @@
 - Vitest, `environment: 'node'`
 - Unit-test pure logic and repositories only
 - **Never** test React components — no `@testing-library/react`
+- Coverage: `npm run test:coverage` (v8, reports in `coverage/`)
 
 ## Tooling
 

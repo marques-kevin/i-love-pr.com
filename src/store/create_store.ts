@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { dashboard_reducer } from './dashboard_slice'
-import { settings_reducer } from './settings_slice'
-import { sync_reducer } from './sync_slice'
+import { dashboard_reducer } from '@/modules/dashboard/redux/dashboard_slice'
+import { settings_reducer } from '@/modules/settings/redux/settings_slice'
+import { sync_reducer } from '@/modules/sync/redux/sync_slice'
 import type { ThunkExtra } from './thunk_extra'
 
 export function create_store(extra: ThunkExtra) {

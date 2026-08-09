@@ -69,6 +69,7 @@ export function CycleTimeChart({ data }: { data: MetricsSnapshot['cycleTimeSerie
           stroke="var(--color-avgHours)"
           strokeWidth={2}
           dot={false}
+          isAnimationActive={false}
         />
       </LineChart>
     </ChartContainer>
@@ -83,7 +84,7 @@ export function PRSizeChart({ data }: { data: MetricsSnapshot['prSizeBuckets'] }
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="count" fill="var(--color-count)" radius={6} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
       </BarChart>
     </ChartContainer>
   )
@@ -95,17 +96,11 @@ export function ReviewerChart({ data }: { data: MetricsSnapshot['reviewerLoad'] 
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
         <CartesianGrid horizontal={false} />
         <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
-        <YAxis
-          type="category"
-          dataKey="reviewer"
-          width={96}
-          tickLine={false}
-          axisLine={false}
-        />
+        <YAxis type="category" dataKey="reviewer" width={96} tickLine={false} axisLine={false} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="given" fill="var(--color-given)" radius={4} />
-        <Bar dataKey="received" fill="var(--color-received)" radius={4} />
+        <Bar dataKey="given" fill="var(--color-given)" radius={4} isAnimationActive={false} />
+        <Bar dataKey="received" fill="var(--color-received)" radius={4} isAnimationActive={false} />
       </BarChart>
     </ChartContainer>
   )
@@ -127,17 +122,13 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
         <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="count" fill="var(--color-count)" radius={6} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
       </BarChart>
     </ChartContainer>
   )
 }
 
-export function SizeVsReviewTimeChart({
-  data,
-}: {
-  data: MetricsSnapshot['sizeVsReviewTime']
-}) {
+export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsReviewTime'] }) {
   const chartData = data.map((row) => ({
     ...row,
     avgTimeToFirstReviewHours:
@@ -145,9 +136,7 @@ export function SizeVsReviewTimeChart({
         ? Math.round(row.avgTimeToFirstReviewHours * 10) / 10
         : 0,
     avgTimeToApproveHours:
-      row.avgTimeToApproveHours != null
-        ? Math.round(row.avgTimeToApproveHours * 10) / 10
-        : 0,
+      row.avgTimeToApproveHours != null ? Math.round(row.avgTimeToApproveHours * 10) / 10 : 0,
   }))
 
   return (
@@ -162,22 +151,20 @@ export function SizeVsReviewTimeChart({
           dataKey="avgTimeToFirstReviewHours"
           fill="var(--color-avgTimeToFirstReviewHours)"
           radius={4}
+          isAnimationActive={false}
         />
         <Bar
           dataKey="avgTimeToApproveHours"
           fill="var(--color-avgTimeToApproveHours)"
           radius={4}
+          isAnimationActive={false}
         />
       </BarChart>
     </ChartContainer>
   )
 }
 
-export function SizeReviewScatterChart({
-  data,
-}: {
-  data: MetricsSnapshot['sizeReviewScatter']
-}) {
+export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeReviewScatter'] }) {
   const points = data
     .filter((p) => p.timeToApproveHours != null)
     .map((p) => ({
@@ -236,6 +223,7 @@ export function SizeReviewScatterChart({
           data={points}
           fill="var(--color-timeToApproveHours)"
           fillOpacity={0.55}
+          isAnimationActive={false}
         />
       </ScatterChart>
     </ChartContainer>
@@ -250,8 +238,7 @@ export function correlationInsight(
   if (r == null || sampleSize < 3) {
     return `Not enough approved PRs in this scope to correlate size with ${label}.`
   }
-  const strength =
-    Math.abs(r) < 0.2 ? 'weak / none' : Math.abs(r) < 0.5 ? 'moderate' : 'strong'
+  const strength = Math.abs(r) < 0.2 ? 'weak / none' : Math.abs(r) < 0.5 ? 'moderate' : 'strong'
   const direction = r > 0.05 ? 'positive' : r < -0.05 ? 'negative' : 'flat'
   if (direction === 'flat') {
     return `Correlation ≈ ${r.toFixed(2)} (${strength}, n=${sampleSize}): PR size barely predicts ${label}.`

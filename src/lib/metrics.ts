@@ -1,18 +1,7 @@
-import {
-  eachWeekOfInterval,
-  format,
-  isWithinInterval,
-  parseISO,
-  startOfWeek,
-} from 'date-fns'
+import { eachWeekOfInterval, format, isWithinInterval, parseISO, startOfWeek } from 'date-fns'
 import { isBotLogin } from './bots'
 import { enrichPullRequest } from './derive'
-import type {
-  EnrichedPullRequest,
-  MetricsSnapshot,
-  PeriodRange,
-  PullRequestRecord,
-} from './types'
+import type { EnrichedPullRequest, MetricsSnapshot, PeriodRange, PullRequestRecord } from './types'
 import type { Repositories } from '@/repositories'
 
 function in_period(iso: string | null | undefined, range: PeriodRange): boolean {
@@ -100,10 +89,7 @@ export async function compute_metrics(options: {
     (pr) => in_period(pr.createdAt, period) || in_period(pr.mergedAt, period),
   )
 
-  const weeks = eachWeekOfInterval(
-    { start: period.from, end: period.to },
-    { weekStartsOn: 1 },
-  )
+  const weeks = eachWeekOfInterval({ start: period.from, end: period.to }, { weekStartsOn: 1 })
   const cycle_time_series = weeks.map((week_start) => {
     const week_end = new Date(week_start)
     week_end.setDate(week_end.getDate() + 7)
@@ -111,9 +97,7 @@ export async function compute_metrics(options: {
       const m = parseISO(pr.mergedAt!)
       return m >= week_start && m < week_end
     })
-    const hours = week_merged
-      .map((pr) => pr.cycleTimeHours)
-      .filter((h): h is number => h != null)
+    const hours = week_merged.map((pr) => pr.cycleTimeHours).filter((h): h is number => h != null)
     return {
       date: format(week_start, 'yyyy-MM-dd'),
       avgHours: hours.length ? Math.round((avg(hours) ?? 0) * 10) / 10 : 0,
@@ -140,9 +124,7 @@ export async function compute_metrics(options: {
     const to_approve = in_bucket
       .map((pr) => pr.timeToApproveHours)
       .filter((h): h is number => h != null)
-    const cycle = in_bucket
-      .map((pr) => pr.cycleTimeHours)
-      .filter((h): h is number => h != null)
+    const cycle = in_bucket.map((pr) => pr.cycleTimeHours).filter((h): h is number => h != null)
     const per_hundred = in_bucket
       .filter((pr) => pr.timeToApproveHours != null && pr.linesChanged > 0)
       .map((pr) => (pr.timeToApproveHours! / pr.linesChanged) * 100)
@@ -210,11 +192,7 @@ export async function compute_metrics(options: {
     if (!pr) continue
     if (review.author === pr.author) continue
 
-    if (
-      has_member_filter &&
-      !member_set.has(review.author) &&
-      !member_set.has(pr.author)
-    ) {
+    if (has_member_filter && !member_set.has(review.author) && !member_set.has(pr.author)) {
       continue
     }
 
@@ -294,8 +272,7 @@ export async function list_contributors(
   for (const pr of prs) {
     if (!isBotLogin(pr.author, ignored_bots)) set.add(pr.author)
   }
-  const reviews =
-    repos.length === 0 ? [] : await repositories.reviews.list_by_repos(repos)
+  const reviews = repos.length === 0 ? [] : await repositories.reviews.list_by_repos(repos)
   for (const r of reviews) {
     if (!isBotLogin(r.author, ignored_bots)) set.add(r.author)
   }

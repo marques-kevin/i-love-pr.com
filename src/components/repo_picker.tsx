@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  CheckIcon,
-  ChevronsUpDownIcon,
-  Loader2Icon,
-  XIcon,
-} from 'lucide-react'
+import { CheckIcon, ChevronsUpDownIcon, Loader2Icon, XIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,11 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import {
-  GitHubClient,
-  parseRepoFullName,
-  type GitHubRepoOption,
-} from '@/lib/github-client'
+import { GitHubClient, parseRepoFullName, type GitHubRepoOption } from '@/lib/github-client'
 import { cn } from '@/lib/utils'
 
 interface RepoPickerProps {
@@ -98,11 +89,7 @@ export function RepoPicker({
       addRepo(resolved.fullName)
       setManualInput('')
     } catch (e) {
-      setManualError(
-        e instanceof Error
-          ? e.message
-          : 'Repository introuvable ou inaccessible',
-      )
+      setManualError(e instanceof Error ? e.message : 'Repository introuvable ou inaccessible')
     } finally {
       setAddingManual(false)
     }
@@ -154,10 +141,7 @@ export function RepoPicker({
                       onSelect={() => addRepo(repo.fullName)}
                     >
                       <CheckIcon
-                        className={cn(
-                          'size-4',
-                          isSelected ? 'opacity-100' : 'opacity-0',
-                        )}
+                        className={cn('size-4', isSelected ? 'opacity-100' : 'opacity-0')}
                       />
                       <span className="flex-1 truncate">{repo.fullName}</span>
                       {repo.isPrivate && (
@@ -208,9 +192,7 @@ export function RepoPicker({
           )}
         </Button>
       </div>
-      {manualError && (
-        <p className="text-sm text-destructive">{manualError}</p>
-      )}
+      {manualError && <p className="text-sm text-destructive">{manualError}</p>}
 
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-1">

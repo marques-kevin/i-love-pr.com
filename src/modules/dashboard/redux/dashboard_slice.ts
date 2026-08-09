@@ -1,16 +1,10 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { subDays } from 'date-fns'
 import { compute_metrics, list_contributors } from '@/lib/metrics'
 import type { MetricsSnapshot, PeriodKey, PeriodRange } from '@/lib/types'
-import type { ThunkExtra } from './thunk_extra'
+import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
-type ThunkConfig = { extra: ThunkExtra }
-
-function build_period(
-  key: PeriodKey,
-  custom_from?: string,
-  custom_to?: string,
-): PeriodRange {
+function build_period(key: PeriodKey, custom_from?: string, custom_to?: string): PeriodRange {
   const to = custom_to ? new Date(custom_to) : new Date()
   if (key === 'custom' && custom_from) {
     return { key, from: new Date(custom_from), to }
@@ -43,13 +37,11 @@ const initial_state: DashboardState = {
   show_settings: false,
 }
 
-export const refresh_metrics = createAsyncThunk<
+export const refresh_metrics = create_app_async_thunk<
   { metrics: MetricsSnapshot | null; contributors: string[] },
-  void,
-  ThunkConfig & { state: { dashboard: DashboardState } }
+  void
 >('dashboard/refresh_metrics', async (_, { extra, getState }) => {
-  const { selected_repos, members, period_key, custom_from, custom_to } =
-    getState().dashboard
+  const { selected_repos, members, period_key, custom_from, custom_to } = getState().dashboard
   if (selected_repos.length === 0) {
     return { metrics: null, contributors: [] }
   }

@@ -1,8 +1,5 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
-import {
-  DEFAULT_BUSINESS_HOURS,
-  normalizeBusinessHours,
-} from '@/lib/business-hours'
+import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import type { AppSettings, MemberTeam, SyncState } from '@/lib/types'
 import type {
@@ -27,9 +24,7 @@ function empty_sync_state(repo_full_name: string): SyncState {
   }
 }
 
-export function create_dexie_settings_repository(
-  database: IlovePrDatabase,
-): SettingsRepository {
+export function create_dexie_settings_repository(database: IlovePrDatabase): SettingsRepository {
   const get = async (): Promise<AppSettings | undefined> => {
     const settings = await database.settings.get('settings')
     if (!settings) return undefined
@@ -47,8 +42,7 @@ export function create_dexie_settings_repository(
       token: partial.token,
       repos: partial.repos,
       syncIntervalHours: partial.syncIntervalHours ?? existing?.syncIntervalHours ?? 24,
-      backfillLimit:
-        partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
+      backfillLimit: partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
       ignoredBots: partial.ignoredBots ?? existing?.ignoredBots ?? [...DEFAULT_IGNORED_BOTS],
       teams: partial.teams ?? existing?.teams ?? [],
       businessHours: normalizeBusinessHours(
@@ -185,9 +179,7 @@ export function create_dexie_pull_request_repository(
   }
 }
 
-export function create_dexie_review_repository(
-  database: IlovePrDatabase,
-): ReviewRepository {
+export function create_dexie_review_repository(database: IlovePrDatabase): ReviewRepository {
   return {
     list_by_pr_ids: async (pr_ids) => {
       let reviews = [] as Awaited<ReturnType<ReviewRepository['list_by_pr_ids']>>
@@ -223,9 +215,7 @@ export function create_dexie_review_repository(
   }
 }
 
-export function create_dexie_sync_state_repository(
-  database: IlovePrDatabase,
-): SyncStateRepository {
+export function create_dexie_sync_state_repository(database: IlovePrDatabase): SyncStateRepository {
   return {
     get: async (repo_full_name) => database.syncState.get(repo_full_name),
     list: async () => database.syncState.toArray(),

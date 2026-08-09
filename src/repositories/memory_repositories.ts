@@ -1,8 +1,5 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
-import {
-  DEFAULT_BUSINESS_HOURS,
-  normalizeBusinessHours,
-} from '@/lib/business-hours'
+import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import type {
   AppSettings,
@@ -69,8 +66,7 @@ export function create_memory_repositories(seed?: {
   }
 
   const settings: SettingsRepository = {
-    get: async () =>
-      bag.settings ? normalize_settings(structuredClone(bag.settings)) : undefined,
+    get: async () => (bag.settings ? normalize_settings(structuredClone(bag.settings)) : undefined),
     save: async (partial) => {
       const existing = bag.settings
       bag.settings = {
@@ -78,8 +74,7 @@ export function create_memory_repositories(seed?: {
         token: partial.token,
         repos: [...partial.repos],
         syncIntervalHours: partial.syncIntervalHours ?? existing?.syncIntervalHours ?? 24,
-        backfillLimit:
-          partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
+        backfillLimit: partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
         ignoredBots: partial.ignoredBots ?? existing?.ignoredBots ?? [...DEFAULT_IGNORED_BOTS],
         teams: partial.teams ?? existing?.teams ?? [],
         businessHours: normalizeBusinessHours(
@@ -147,8 +142,7 @@ export function create_memory_repositories(seed?: {
         .map((pr) => structuredClone(pr))
     },
     count_by_repo: async (repo_full_name) =>
-      [...bag.pull_requests.values()].filter((pr) => pr.repoFullName === repo_full_name)
-        .length,
+      [...bag.pull_requests.values()].filter((pr) => pr.repoFullName === repo_full_name).length,
     put_many: async (prs) => {
       for (const pr of prs) {
         bag.pull_requests.set(pr.id, structuredClone(pr))
@@ -162,9 +156,7 @@ export function create_memory_repositories(seed?: {
   const reviews: ReviewRepository = {
     list_by_pr_ids: async (pr_ids) => {
       const set = new Set(pr_ids)
-      return [...bag.reviews.values()]
-        .filter((r) => set.has(r.prId))
-        .map((r) => structuredClone(r))
+      return [...bag.reviews.values()].filter((r) => set.has(r.prId)).map((r) => structuredClone(r))
     },
     list_by_repos: async (repos) => {
       const set = new Set(repos)

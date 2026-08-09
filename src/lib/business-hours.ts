@@ -12,9 +12,7 @@ export interface BusinessHoursConfig {
 export const DEFAULT_BUSINESS_HOURS: BusinessHoursConfig = {
   enabled: false,
   timeZone:
-    typeof Intl !== 'undefined'
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
-      : 'UTC',
+    typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC',
   workdays: [1, 2, 3, 4, 5],
   startMinutes: 9 * 60,
   endMinutes: 18 * 60,
@@ -64,9 +62,10 @@ function getZonedParts(date: Date, timeZone: string): ZonedParts {
     hourCycle: 'h23',
     weekday: 'short',
   })
-  const parts = Object.fromEntries(
-    fmt.formatToParts(date).map((p) => [p.type, p.value]),
-  ) as Record<string, string>
+  const parts = Object.fromEntries(fmt.formatToParts(date).map((p) => [p.type, p.value])) as Record<
+    string,
+    string
+  >
 
   const weekdayMap: Record<string, number> = {
     Sun: 0,
@@ -180,13 +179,7 @@ export function elapsedHours(
         startMinutes,
         timeZone,
       )
-      const windowEnd = zonedTimeToUtc(
-        cursor.year,
-        cursor.month,
-        cursor.day,
-        endMinutes,
-        timeZone,
-      )
+      const windowEnd = zonedTimeToUtc(cursor.year, cursor.month, cursor.day, endMinutes, timeZone)
       const overlapStart = Math.max(start.getTime(), windowStart.getTime())
       const overlapEnd = Math.min(end.getTime(), windowEnd.getTime())
       if (overlapEnd > overlapStart) {

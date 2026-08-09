@@ -3,69 +3,63 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RepoPicker } from '@/components/RepoPicker'
-import {
-  GitHubClient,
-  type GitHubRepoOption,
-} from '@/lib/github-client'
+import { RepoPicker } from '@/components/repo_picker'
+import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
 import type { RateLimitInfo } from '@/lib/types'
+import { connector, type ConnectorProps } from './onboarding.connector'
 
-interface OnboardingProps {
-  onComplete: (data: { token: string; repos: string[] }) => Promise<void>
-}
+export function Wrapper({ save_settings }: ConnectorProps) {
+  const [token, set_token] = useState('')
+  const [repos, set_repos] = useState<string[]>([])
+  const [available_repos, set_available_repos] = useState<GitHubRepoOption[]>([])
+  const [loading_repos, set_loading_repos] = useState(false)
+  const [login, set_login] = useState<string | null>(null)
+  const [rate_limit, set_rate_limit] = useState<RateLimitInfo | null>(null)
+  const [validating, set_validating] = useState(false)
+  const [saving, set_saving] = useState(false)
+  const [error, set_error] = useState<string | null>(null)
 
-export function Onboarding({ onComplete }: OnboardingProps) {
-  const [token, setToken] = useState('')
-  const [repos, setRepos] = useState<string[]>([])
-  const [availableRepos, setAvailableRepos] = useState<GitHubRepoOption[]>([])
-  const [loadingRepos, setLoadingRepos] = useState(false)
-  const [login, setLogin] = useState<string | null>(null)
-  const [rateLimit, setRateLimit] = useState<RateLimitInfo | null>(null)
-  const [validating, setValidating] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const canSubmit = useMemo(
+  const can_submit = useMemo(
     () => Boolean(token.trim()) && repos.length > 0 && Boolean(login),
     [token, repos, login],
   )
 
-  async function validateToken() {
-    setError(null)
-    setValidating(true)
-    setLoadingRepos(true)
-    setLogin(null)
-    setAvailableRepos([])
+  async function validate_token() {
+    set_error(null)
+    set_validating(true)
+    set_loading_repos(true)
+    set_login(null)
+    set_available_repos([])
     try {
       const client = new GitHubClient(token.trim())
       const result = await client.validateToken()
-      setLogin(result.login)
-      setRateLimit(result.rateLimit)
+      set_login(result.login)
+      set_rate_limit(result.rateLimit)
 
       const listed = await client.listRepositories()
-      setAvailableRepos(listed.repos)
-      if (listed.rateLimit) setRateLimit(listed.rateLimit)
+      set_available_repos(listed.repos)
+      if (listed.rateLimit) set_rate_limit(listed.rateLimit)
       if (listed.repos.length === 0) {
-        setError('No repositories found for this token.')
+        set_error('No repositories found for this token.')
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Invalid token')
+      set_error(e instanceof Error ? e.message : 'Invalid token')
     } finally {
-      setValidating(false)
-      setLoadingRepos(false)
+      set_validating(false)
+      set_loading_repos(false)
     }
   }
 
-  async function handleSubmit(e: FormEvent) {
+  async function handle_submit(e: FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
-    setSaving(true)
-    setError(null)
+    if (!can_submit) return
+    set_saving(true)
+    set_error(null)
     try {
-      await onComplete({ token: token.trim(), repos })
+      await save_settings({ token: token.trim(), repos })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings')
-      setSaving(false)
+      set_error(err instanceof Error ? err.message : 'Failed to save settings')
+      set_saving(false)
     }
   }
 
@@ -80,7 +74,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </p>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={(e) => void handle_submit(e)} className="space-y-8">
         <div className="space-y-2">
           <Label htmlFor="token">GitHub Personal Access Token</Label>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -90,10 +84,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               autoComplete="off"
               value={token}
               onChange={(e) => {
-                setToken(e.target.value)
-                setLogin(null)
-                setAvailableRepos([])
-                setRepos([])
+                set_token(e.target.value)
+                set_login(null)
+                set_available_repos([])
+                set_repos([])
               }}
               placeholder="ghp_… or github_pat_…"
               className="h-10 flex-1"
@@ -102,7 +96,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               type="button"
               variant="secondary"
               className="h-10"
-              onClick={() => void validateToken()}
+              onClick={() => void validate_token()}
               disabled={!token.trim() || validating}
             >
               {validating ? 'Checking…' : 'Validate'}
@@ -115,10 +109,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           {login && (
             <p className="text-sm text-primary">
               Authenticated as <strong>@{login}</strong>
-              {rateLimit && (
+              {rate_limit && (
                 <>
                   {' '}
-                  · {rateLimit.remaining}/{rateLimit.limit} GraphQL points remaining
+                  · {rate_limit.remaining}/{rate_limit.limit} GraphQL points remaining
                 </>
               )}
             </p>
@@ -126,11 +120,11 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
 
         <RepoPicker
-          availableRepos={availableRepos}
+          availableRepos={available_repos}
           selected={repos}
-          onChange={setRepos}
+          onChange={set_repos}
           token={token}
-          loading={loadingRepos}
+          loading={loading_repos}
           disabled={!login}
         />
 
@@ -140,10 +134,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </Alert>
         )}
 
-        <Button type="submit" size="lg" disabled={!canSubmit || saving}>
+        <Button type="submit" size="lg" disabled={!can_submit || saving}>
           {saving ? 'Starting…' : 'Start analyzing'}
         </Button>
       </form>
     </div>
   )
 }
+
+export const Onboarding = connector(Wrapper)

@@ -3,35 +3,25 @@ import { RefreshCwIcon } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { RateLimitInfo, SyncProgress, SyncState } from '@/lib/types'
+import { connector, type ConnectorProps } from './sync_status.connector'
 
-interface SyncStatusProps {
-  syncing: boolean
-  progress: SyncProgress | null
-  rateLimit: RateLimitInfo | null
-  syncStates: SyncState[]
-  error: string | null
-  onRefresh: () => void
-}
-
-export function SyncStatus({
+export function Wrapper({
   syncing,
   progress,
-  rateLimit,
-  syncStates,
+  rate_limit,
+  sync_states,
   error,
-  onRefresh,
-}: SyncStatusProps) {
-  const lastSynced = syncStates
+  run_sync,
+}: ConnectorProps) {
+  const last_synced = sync_states
     .map((s) => s.lastSyncedAt)
     .filter(Boolean)
     .sort()
     .at(-1)
 
-  const pausedError = syncStates.find((s) => s.lastError)?.lastError
-  const isBackfilling =
-    syncing && (progress?.mode === 'backfill' || progress?.mode === 'paused')
-  const hasMoreHistory = syncStates.some((s) => Boolean(s.pageCursor))
+  const paused_error = sync_states.find((s) => s.lastError)?.lastError
+  const is_backfilling = syncing && (progress?.mode === 'backfill' || progress?.mode === 'paused')
+  const has_more_history = sync_states.some((s) => Boolean(s.pageCursor))
 
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -39,32 +29,30 @@ export function SyncStatus({
         <span>
           {syncing
             ? (progress?.message ?? 'Syncing…')
-            : lastSynced
-              ? `Last sync ${formatDistanceToNow(parseISO(lastSynced), { addSuffix: true })}`
+            : last_synced
+              ? `Last sync ${formatDistanceToNow(parseISO(last_synced), { addSuffix: true })}`
               : 'Never synced'}
         </span>
-        {rateLimit && (
+        {rate_limit && (
           <Badge variant="secondary">
-            API {rateLimit.remaining}/{rateLimit.limit}
+            API {rate_limit.remaining}/{rate_limit.limit}
           </Badge>
         )}
-        {!syncing && hasMoreHistory && (
-          <Badge variant="outline">More history available</Badge>
-        )}
+        {!syncing && has_more_history && <Badge variant="outline">More history available</Badge>}
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={onRefresh}
+          onClick={() => void run_sync({ force: true })}
           disabled={syncing}
           title="Pull the next batch of PRs. Re-run after the rate limit resets to go deeper into history."
         >
           <RefreshCwIcon className={syncing ? 'animate-spin' : undefined} />
           {syncing
-            ? isBackfilling
+            ? is_backfilling
               ? 'Backfilling…'
               : 'Syncing…'
-            : hasMoreHistory
+            : has_more_history
               ? 'Sync more history'
               : 'Sync history'}
         </Button>
@@ -74,11 +62,13 @@ export function SyncStatus({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {!error && pausedError && (
+      {!error && paused_error && (
         <Alert className="max-w-md py-2">
-          <AlertDescription>{pausedError}</AlertDescription>
+          <AlertDescription>{paused_error}</AlertDescription>
         </Alert>
       )}
     </div>
   )
 }
+
+export const SyncStatus = connector(Wrapper)
