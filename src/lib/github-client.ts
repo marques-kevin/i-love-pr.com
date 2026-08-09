@@ -409,9 +409,7 @@ export class GitHubClient {
       )
     }
 
-    const payload = (await response.json()) as GraphQLResponse<
-      T & { rateLimit?: GraphQLRateLimit }
-    >
+    const payload = (await response.json()) as GraphQLResponse<T & { rateLimit?: GraphQLRateLimit }>
 
     if (payload.data && 'rateLimit' in payload.data && payload.data.rateLimit) {
       this.lastRateLimit = to_rate_limit_info(payload.data.rateLimit)

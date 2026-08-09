@@ -19,12 +19,10 @@ const SRC_ROOT = path.join(ROOT, 'src')
 const SCAN_EXTENSIONS = new Set(['.ts', '.tsx'])
 const IGNORE_DIR_NAMES = new Set(['messages', 'node_modules', 'dist', 'coverage'])
 
-const LITERAL_ID_RE =
-  /\bid\s*[:=]\s*(?:['"]([^'"]+)['"]|`([^`$]+)`)/g
+const LITERAL_ID_RE = /\bid\s*[:=]\s*(?:['"]([^'"]+)['"]|`([^`$]+)`)/g
 
 /** Catches `id: cond ? 'a' : 'b'` style message ids. */
-const TERNARY_ID_RE =
-  /\bid\s*[:=]\s*[^?{\n]+\?\s*['"]([^'"]+)['"]\s*:\s*['"]([^'"]+)['"]/g
+const TERNARY_ID_RE = /\bid\s*[:=]\s*[^?{\n]+\?\s*['"]([^'"]+)['"]\s*:\s*['"]([^'"]+)['"]/g
 
 async function list_source_files(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true })

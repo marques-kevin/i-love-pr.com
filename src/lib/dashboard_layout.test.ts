@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  DEFAULT_DASHBOARD_LAYOUT,
-  normalize_dashboard_layout,
-} from '@/lib/dashboard_layout'
+import { DEFAULT_DASHBOARD_LAYOUT, normalize_dashboard_layout } from '@/lib/dashboard_layout'
 
 describe('normalize_dashboard_layout', () => {
   it('defaults when missing', () => {

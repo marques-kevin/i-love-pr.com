@@ -75,10 +75,7 @@ export function Wrapper({ prs }: ConnectorProps) {
           {total_pages > 1 && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
-                {intl.formatMessage(
-                  { id: 'open_prs.range' },
-                  { from, to, count: prs.length },
-                )}
+                {intl.formatMessage({ id: 'open_prs.range' }, { from, to, count: prs.length })}
                 <span className="mx-2 text-border">·</span>
                 {intl.formatMessage(
                   { id: 'open_prs.page' },

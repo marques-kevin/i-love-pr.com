@@ -2,10 +2,7 @@ import { connect, type ConnectedProps } from 'react-redux'
 import type { DashboardLayoutItem } from '@/lib/types'
 import { save_dashboard_layout } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
-import {
-  DEFAULT_DASHBOARD_LAYOUT,
-  normalize_dashboard_layout,
-} from '@/lib/dashboard_layout'
+import { DEFAULT_DASHBOARD_LAYOUT, normalize_dashboard_layout } from '@/lib/dashboard_layout'
 
 function map_state_to_props(state: RootState) {
   const raw = state.settings.settings?.dashboard_layout

@@ -278,7 +278,8 @@ export function normalizeBusinessHours(
       value?.workdays && value.workdays.length > 0
         ? [...value.workdays]
         : [...DEFAULT_BUSINESS_HOURS.workdays],
-    start_minutes: value?.start_minutes ?? value?.startMinutes ?? DEFAULT_BUSINESS_HOURS.start_minutes,
+    start_minutes:
+      value?.start_minutes ?? value?.startMinutes ?? DEFAULT_BUSINESS_HOURS.start_minutes,
     end_minutes: value?.end_minutes ?? value?.endMinutes ?? DEFAULT_BUSINESS_HOURS.end_minutes,
   }
 }

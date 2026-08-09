@@ -9,8 +9,7 @@ export const en_messages = {
   'onboarding.tagline': 'Self-hosted GitHub PR analytics. Your token never leaves this browser.',
   'onboarding.token_label': 'GitHub Personal Access Token',
   'onboarding.token_placeholder': 'ghp_… or github_pat_…',
-  'onboarding.token_help':
-    'Classic PAT with {repo} (or {public_repo}) read access.',
+  'onboarding.token_help': 'Classic PAT with {repo} (or {public_repo}) read access.',
   'onboarding.validate': 'Validate',
   'onboarding.checking': 'Checking…',
   'onboarding.authenticated_as': 'Authenticated as @{login}',
@@ -85,8 +84,7 @@ export const en_messages = {
   'chart.size_vs_review.description':
     'First human review vs time from review request to first approve.',
   'chart.scatter.title': 'Scatter: lines vs request → approve',
-  'chart.scatter.description':
-    'Each point is a merged PR with at least one human APPROVED review.',
+  'chart.scatter.description': 'Each point is a merged PR with at least one human APPROVED review.',
   'chart.open_prs.title': 'Open pull requests',
   'open_prs.empty': 'No open pull requests in the selected scope.',
   'open_prs.stale': 'stale',
@@ -98,14 +96,11 @@ export const en_messages = {
 
   'insight.title': 'Does PR size slow down review?',
   'insight.metric_approve': 'request → approve',
-  'insight.insufficient':
-    'Not enough data yet (need ≥10 merged PRs with both size and {metric}).',
-  'insight.strong_pos':
-    'Strong positive correlation (r={r}): larger PRs take longer to {metric}.',
+  'insight.insufficient': 'Not enough data yet (need ≥10 merged PRs with both size and {metric}).',
+  'insight.strong_pos': 'Strong positive correlation (r={r}): larger PRs take longer to {metric}.',
   'insight.moderate_pos':
     'Moderate positive correlation (r={r}): larger PRs tend to take longer to {metric}.',
-  'insight.weak':
-    'Weak/no linear correlation (r={r}) between lines changed and time to {metric}.',
+  'insight.weak': 'Weak/no linear correlation (r={r}) between lines changed and time to {metric}.',
   'insight.negative':
     'Negative correlation (r={r}): larger PRs are not slower to {metric} in this sample.',
 
@@ -133,8 +128,7 @@ export const en_messages = {
   'settings.end': 'End',
   'settings.storage': 'Local storage',
   'settings.reset_sync': 'Clear synced PR data',
-  'settings.reset_sync_confirm':
-    'Clear all PR/review data and re-run a full backfill?',
+  'settings.reset_sync_confirm': 'Clear all PR/review data and re-run a full backfill?',
   'settings.reset_sync_done': 'Local PR data cleared. Sync will backfill on next refresh.',
   'settings.clear_all': 'Erase all local data',
   'settings.clear_all_confirm': 'Erase ALL local data including token and settings?',

@@ -12,10 +12,7 @@ import {
 import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
 import { create_layout_item } from '@/lib/dashboard_layout'
 import { widget_description_key, widget_label_key } from '@/lib/i18n'
-import {
-  DASHBOARD_WIDGET_BY_ID,
-  DASHBOARD_WIDGET_CATALOG,
-} from '../lib/widget_catalog'
+import { DASHBOARD_WIDGET_BY_ID, DASHBOARD_WIDGET_CATALOG } from '../lib/widget_catalog'
 import { connector, type ConnectorProps } from './custom_dashboard.connector'
 import { DashboardWidget } from './dashboard_widget'
 

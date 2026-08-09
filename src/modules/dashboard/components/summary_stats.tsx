@@ -14,7 +14,10 @@ export function Wrapper({ summary, business_hours_enabled }: ConnectorProps) {
 
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      <StatCard label={intl.formatMessage({ id: 'stats.merged' })} value={String(summary.mergedCount)} />
+      <StatCard
+        label={intl.formatMessage({ id: 'stats.merged' })}
+        value={String(summary.mergedCount)}
+      />
       <StatCard
         label={intl.formatMessage({
           id: business_hours_enabled ? 'stats.cycle_time_biz' : 'stats.cycle_time',

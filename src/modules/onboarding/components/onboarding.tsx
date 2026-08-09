@@ -45,15 +45,14 @@ export function Wrapper({
       set_rate_limit(result.rateLimit)
 
       const action = await load_available_repos({ token: trimmed, force: true })
-      if (
-        load_available_repos_thunk.fulfilled.match(action) &&
-        action.payload.repos.length === 0
-      ) {
+      if (load_available_repos_thunk.fulfilled.match(action) && action.payload.repos.length === 0) {
         set_error(intl.formatMessage({ id: 'onboarding.error.no_repos' }))
       }
     } catch (e) {
       set_error(
-        e instanceof Error ? e.message : intl.formatMessage({ id: 'onboarding.error.invalid_token' }),
+        e instanceof Error
+          ? e.message
+          : intl.formatMessage({ id: 'onboarding.error.invalid_token' }),
       )
     } finally {
       set_validating(false)

@@ -50,10 +50,8 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       id: 'settings',
       token: partial.token,
       repos: partial.repos,
-      sync_interval_hours:
-        partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
-      backfill_limit:
-        partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
+      sync_interval_hours: partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
+      backfill_limit: partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
       ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
       teams: partial.teams ?? existing?.teams ?? [],
       business_hours: normalizeBusinessHours(

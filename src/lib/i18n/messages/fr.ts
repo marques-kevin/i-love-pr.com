@@ -12,8 +12,7 @@ export const fr_messages = define_locale_messages({
     'Analytics GitHub PR self-hosted. Votre token ne quitte jamais ce navigateur.',
   'onboarding.token_label': 'Personal Access Token GitHub',
   'onboarding.token_placeholder': 'ghp_… ou github_pat_…',
-  'onboarding.token_help':
-    'PAT classique avec accès en lecture {repo} (ou {public_repo}).',
+  'onboarding.token_help': 'PAT classique avec accès en lecture {repo} (ou {public_repo}).',
   'onboarding.validate': 'Valider',
   'onboarding.checking': 'Vérification…',
   'onboarding.authenticated_as': 'Authentifié en tant que @{login}',
@@ -101,8 +100,7 @@ export const fr_messages = define_locale_messages({
 
   'insight.title': 'La taille des PR ralentit-elle la review ?',
   'insight.metric_approve': 'demande → approve',
-  'insight.insufficient':
-    'Pas assez de données (il faut ≥10 PRs mergées avec taille et {metric}).',
+  'insight.insufficient': 'Pas assez de données (il faut ≥10 PRs mergées avec taille et {metric}).',
   'insight.strong_pos':
     'Forte corrélation positive (r={r}) : les plus grosses PRs mettent plus longtemps à {metric}.',
   'insight.moderate_pos':

@@ -83,8 +83,7 @@ export function create_memory_repositories(seed?: {
         id: 'settings',
         token: partial.token,
         repos: [...partial.repos],
-        sync_interval_hours:
-          partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
+        sync_interval_hours: partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
         backfill_limit:
           partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
         ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
