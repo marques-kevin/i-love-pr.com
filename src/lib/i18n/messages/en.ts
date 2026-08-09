@@ -41,7 +41,11 @@ export const en_messages = {
   'dashboard.empty_title': 'No charts yet',
   'dashboard.empty_body': 'Pick prefabricated charts to build your dashboard.',
   'dashboard.add_title': 'Add a chart',
-  'dashboard.add_description': 'Choose a prefabricated chart to add to your dashboard.',
+  'dashboard.add_description':
+    'Browse the catalog on the left and preview the chart before adding it.',
+  'dashboard.add_preview': 'Preview',
+  'dashboard.add_confirm': 'Add to dashboard',
+  'dashboard.add_cancel': 'Cancel',
   'dashboard.move_up': 'Move up',
   'dashboard.move_down': 'Move down',
   'dashboard.remove': 'Remove {label}',

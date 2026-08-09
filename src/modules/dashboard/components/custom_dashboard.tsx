@@ -52,8 +52,16 @@ export function Wrapper({
   const intl = useIntl()
   const [editing, set_editing] = useState(false)
   const [picker_open, set_picker_open] = useState(false)
+  const [preview_widget_id, set_preview_widget_id] = useState<DashboardWidgetId>(
+    DASHBOARD_WIDGET_CATALOG[0].widget_id,
+  )
   const [create_open, set_create_open] = useState(false)
   const [new_name, set_new_name] = useState('')
+
+  const open_picker = () => {
+    set_preview_widget_id(DASHBOARD_WIDGET_CATALOG[0].widget_id)
+    set_picker_open(true)
+  }
 
   const add_widget = (widget_id: DashboardWidgetId) => {
     save_layout([...layout, create_layout_item(widget_id)])
@@ -107,7 +115,7 @@ export function Wrapper({
         </div>
         <div className="flex flex-wrap gap-2">
           {editing && (
-            <Button type="button" variant="outline" size="sm" onClick={() => set_picker_open(true)}>
+            <Button type="button" variant="outline" size="sm" onClick={open_picker}>
               <Plus className="size-4" />
               {intl.formatMessage({ id: 'dashboard.add_chart' })}
             </Button>
@@ -152,7 +160,7 @@ export function Wrapper({
             className="mt-6"
             onClick={() => {
               set_editing(true)
-              set_picker_open(true)
+              open_picker()
             }}
           >
             <Plus className="size-4" />
@@ -210,32 +218,77 @@ export function Wrapper({
         </div>
       )}
 
-      <Dialog open={picker_open} onOpenChange={set_picker_open}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-          <DialogHeader>
+      <Dialog
+        open={picker_open}
+        onOpenChange={(open) => {
+          set_picker_open(open)
+          if (open) set_preview_widget_id(DASHBOARD_WIDGET_CATALOG[0].widget_id)
+        }}
+      >
+        <DialogContent className="flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12">
             <DialogTitle>{intl.formatMessage({ id: 'dashboard.add_title' })}</DialogTitle>
             <DialogDescription>
               {intl.formatMessage({ id: 'dashboard.add_description' })}
             </DialogDescription>
           </DialogHeader>
-          <ul className="mt-2 space-y-2">
-            {DASHBOARD_WIDGET_CATALOG.map((widget) => (
-              <li key={widget.widget_id}>
-                <button
-                  type="button"
-                  className="flex w-full flex-col items-start gap-1 rounded-md border border-border px-4 py-3 text-left transition-colors hover:bg-muted/50"
-                  onClick={() => add_widget(widget.widget_id)}
-                >
-                  <span className="font-medium text-foreground">
-                    {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
+
+          <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(14rem,18rem)_1fr]">
+            <ul className="max-h-[40vh] space-y-1 overflow-y-auto border-b border-border p-3 md:max-h-none md:border-r md:border-b-0">
+              {DASHBOARD_WIDGET_CATALOG.map((widget) => {
+                const selected = widget.widget_id === preview_widget_id
+                return (
+                  <li key={widget.widget_id}>
+                    <button
+                      type="button"
+                      className={`flex w-full flex-col items-start gap-0.5 rounded-md px-3 py-2.5 text-left transition-colors ${
+                        selected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted/60 text-foreground'
+                      }`}
+                      onClick={() => set_preview_widget_id(widget.widget_id)}
+                      aria-pressed={selected}
+                    >
+                      <span className="text-sm font-medium">
+                        {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
+                      </span>
+                      <span
+                        className={`text-xs ${selected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}
+                      >
+                        {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <div className="flex min-h-0 flex-col">
+              <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
+                <p className="text-sm font-medium text-foreground">
+                  {intl.formatMessage({ id: 'dashboard.add_preview' })}
+                  <span className="ml-2 font-normal text-muted-foreground">
+                    {intl.formatMessage({ id: widget_label_key(preview_widget_id) })}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                </p>
+              </div>
+              <div className="min-h-[16rem] flex-1 overflow-y-auto p-4 md:min-h-[22rem]">
+                <div key={preview_widget_id} className="min-w-0">
+                  <DashboardWidget widget_id={preview_widget_id} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mx-0 mb-0 shrink-0">
+            <Button type="button" variant="outline" onClick={() => set_picker_open(false)}>
+              {intl.formatMessage({ id: 'dashboard.add_cancel' })}
+            </Button>
+            <Button type="button" onClick={() => add_widget(preview_widget_id)}>
+              <Plus className="size-4" />
+              {intl.formatMessage({ id: 'dashboard.add_confirm' })}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

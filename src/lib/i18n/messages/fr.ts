@@ -44,7 +44,11 @@ export const fr_messages = define_locale_messages({
   'dashboard.empty_title': 'Aucun graphique',
   'dashboard.empty_body': 'Choisissez des graphiques préfabriqués pour composer votre dashboard.',
   'dashboard.add_title': 'Ajouter un graphique',
-  'dashboard.add_description': 'Choisissez un graphique préfabriqué à ajouter.',
+  'dashboard.add_description':
+    'Parcourez le catalogue à gauche et prévisualisez le graphique avant de l’ajouter.',
+  'dashboard.add_preview': 'Aperçu',
+  'dashboard.add_confirm': 'Ajouter au dashboard',
+  'dashboard.add_cancel': 'Annuler',
   'dashboard.move_up': 'Monter',
   'dashboard.move_down': 'Descendre',
   'dashboard.remove': 'Retirer {label}',
