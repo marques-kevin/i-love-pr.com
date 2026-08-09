@@ -1,0 +1,13 @@
+---
+description: PR review workflow — read AGENTS.md, review diffs, and clean up code to match project conventions
+alwaysApply: false
+---
+
+When reviewing a pull request or cleaning up review feedback:
+
+1. **Read `AGENTS.md`** at the repository root before judging or editing any code.
+2. **Review the diff** against those conventions (naming, Redux `connect` pattern, repository injection, testing rules, tooling).
+3. **Fix violations** in the PR branch when you have write access — minimal diffs only, no unrelated refactors.
+4. **Verify** with `npm run check` before marking the PR ready for review.
+
+Also read `APPROVAL_POLICY.md` for approval criteria and cases that require human review.

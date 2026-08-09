@@ -65,6 +65,17 @@ src/
   - `pre-push` — full `npm run check`
 - **Never** skip hooks (`--no-verify` / `--no-gpg-sign` to bypass) — agents included
 
+## Review
+
+When reviewing or cleaning up a pull request:
+
+1. **Read** this file (`AGENTS.md`) first
+2. **Review** the diff against the conventions above (naming, Redux, data access, testing, tooling)
+3. **Fix** any violations with minimal, focused diffs — no unrelated refactors
+4. **Verify** with `npm run check` before marking the PR ready
+
+See also `APPROVAL_POLICY.md` for approval criteria and `.cursor/rules/pr_review.mdc` for the Cursor review rule.
+
 ## GitHub
 
 - **Board tickets** (GitHub Projects / issues) and **pull requests** (titles + descriptions) must be written in **English**
