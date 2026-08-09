@@ -24,6 +24,14 @@ const WIDGET_LABEL_KEYS = {
   size_vs_review: 'widget.size_vs_review.label',
   size_review_scatter: 'widget.size_review_scatter.label',
   open_prs: 'widget.open_prs.label',
+  cycle_breakdown: 'widget.cycle_breakdown.label',
+  review_latency: 'widget.review_latency.label',
+  cycle_percentiles: 'widget.cycle_percentiles.label',
+  review_rounds: 'widget.review_rounds.label',
+  no_review_merges: 'widget.no_review_merges.label',
+  author_leaderboard: 'widget.author_leaderboard.label',
+  open_pr_age: 'widget.open_pr_age.label',
+  flow_volume: 'widget.flow_volume.label',
 } as const satisfies Record<DashboardWidgetId, MessageKey>
 
 const WIDGET_DESCRIPTION_KEYS = {
@@ -36,6 +44,14 @@ const WIDGET_DESCRIPTION_KEYS = {
   size_vs_review: 'widget.size_vs_review.description',
   size_review_scatter: 'widget.size_review_scatter.description',
   open_prs: 'widget.open_prs.description',
+  cycle_breakdown: 'widget.cycle_breakdown.description',
+  review_latency: 'widget.review_latency.description',
+  cycle_percentiles: 'widget.cycle_percentiles.description',
+  review_rounds: 'widget.review_rounds.description',
+  no_review_merges: 'widget.no_review_merges.description',
+  author_leaderboard: 'widget.author_leaderboard.description',
+  open_pr_age: 'widget.open_pr_age.description',
+  flow_volume: 'widget.flow_volume.description',
 } as const satisfies Record<DashboardWidgetId, MessageKey>
 
 export function locale_message_key(locale: AppLocale): MessageKey {

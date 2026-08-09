@@ -24,6 +24,14 @@ export type DashboardWidgetId =
   | 'size_vs_review'
   | 'size_review_scatter'
   | 'open_prs'
+  | 'cycle_breakdown'
+  | 'review_latency'
+  | 'cycle_percentiles'
+  | 'review_rounds'
+  | 'no_review_merges'
+  | 'author_leaderboard'
+  | 'open_pr_age'
+  | 'flow_volume'
 
 export interface DashboardLayoutItem {
   /** Stable instance key (allows the same widget more than once later). */
@@ -196,6 +204,26 @@ export interface SyncProgress {
 
 export interface MetricsSnapshot {
   cycleTimeSeries: { date: string; avgHours: number; count: number }[]
+  cycleBreakdownSeries: {
+    date: string
+    createToAskHours: number
+    askToFirstReviewHours: number
+    firstReviewToApproveHours: number
+    approveToMergeHours: number
+    count: number
+  }[]
+  reviewLatencySeries: {
+    date: string
+    avgTimeToFirstReviewHours: number
+    avgTimeToApproveHours: number
+    count: number
+  }[]
+  cyclePercentileSeries: {
+    date: string
+    p50Hours: number
+    p95Hours: number
+    count: number
+  }[]
   prSizeBuckets: { bucket: string; count: number }[]
   sizeVsReviewTime: {
     bucket: string
@@ -221,6 +249,21 @@ export interface MetricsSnapshot {
   }
   throughput: { period: string; author: string; count: number }[]
   reviewerLoad: { reviewer: string; given: number; received: number }[]
+  reviewRoundsBuckets: { rounds: string; count: number }[]
+  noReviewMerges: {
+    mergedCount: number
+    noReviewCount: number
+    noReviewRatio: number | null
+  }
+  authorLeaderboard: {
+    author: string
+    mergedCount: number
+    avgCycleTimeHours: number | null
+    avgLinesChanged: number | null
+    avgReviewRounds: number | null
+  }[]
+  openPrAgeBuckets: { bucket: string; count: number }[]
+  flowVolumeSeries: { date: string; opened: number; merged: number }[]
   openPrs: PrFactRecord[]
   summary: {
     mergedCount: number

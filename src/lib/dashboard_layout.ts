@@ -10,6 +10,14 @@ const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'size_vs_review',
   'size_review_scatter',
   'open_prs',
+  'cycle_breakdown',
+  'review_latency',
+  'cycle_percentiles',
+  'review_rounds',
+  'no_review_merges',
+  'author_leaderboard',
+  'open_pr_age',
+  'flow_volume',
 ])
 
 export const DEFAULT_DASHBOARD_ID = 'default'
