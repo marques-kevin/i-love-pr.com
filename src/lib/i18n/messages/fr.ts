@@ -38,6 +38,12 @@ export const fr_messages = define_locale_messages({
 
   'dashboard.subtitle': 'Votre dashboard personnalisé',
   'dashboard.subtitle_editing': 'Ajoutez, réordonnez ou retirez des graphiques.',
+  'dashboard.filters': 'Filtres',
+  'dashboard.filters.title': 'Filtres',
+  'dashboard.filters.description':
+    'Affinez les graphiques par dépôts, équipes et membres pour ce dashboard.',
+  'dashboard.filters.repos': 'Dépôts',
+  'dashboard.filters.members': 'Membres & équipes',
   'dashboard.customize': 'Personnaliser',
   'dashboard.done': 'Terminé',
   'dashboard.add_chart': 'Ajouter un graphique',

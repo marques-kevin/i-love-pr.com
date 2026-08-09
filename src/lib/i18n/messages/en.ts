@@ -35,6 +35,12 @@ export const en_messages = {
 
   'dashboard.subtitle': 'Your custom dashboard',
   'dashboard.subtitle_editing': 'Add, reorder, or remove charts on your dashboard.',
+  'dashboard.filters': 'Filters',
+  'dashboard.filters.title': 'Filters',
+  'dashboard.filters.description':
+    'Narrow charts by repositories, teams, and members for this dashboard.',
+  'dashboard.filters.repos': 'Repositories',
+  'dashboard.filters.members': 'Members & teams',
   'dashboard.customize': 'Customize',
   'dashboard.done': 'Done',
   'dashboard.add_chart': 'Add chart',
