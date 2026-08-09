@@ -47,24 +47,27 @@ npm run build
 
 Deploy the `dist/` folder to any static host.
 
-### Cloudflare Pages (recommended for this app)
+### Cloudflare (static hosting)
 
-iLovePR is a **static** Vite PWA — no server code. Prefer **Workers & Pages → Create → Pages** (not a Worker).
+Cloudflare’s dashboard now creates **Workers** by default — classic **Pages**
+projects are harder to find. For this app that’s fine: we deploy an
+**assets-only Worker** (no server code), which behaves like Pages.
 
-If Cloudflare auto-created a **Worker** when you connected the repo:
+Config: `wrangler.jsonc` → serves `./dist` as a SPA.
 
-1. Workers & Pages → delete / disconnect that Worker project
-2. Create application → **Pages** → Connect to Git → this repository
-3. Build settings:
-   - **Framework preset:** Vite
-   - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-   - **Node version:** `24` (matches `.nvmrc`)
-4. Save and deploy
+```bash
+npm install
+npx wrangler login   # once
+npm run deploy       # build + wrangler deploy
+```
 
-No `wrangler.toml` or Worker script is required.
+In the dashboard (Connect to Git), use the same idea:
 
-For GitHub Pages, set `base` in `vite.config.ts` if the app is served from a subpath.
+- **Build command:** `npm run build`
+- **Deploy / output:** `dist` (or Wrangler config `assets.directory`)
+- **Node version:** `24`
+
+No Worker script (`main`) is required — only static assets.
 
 ## Privacy
 
