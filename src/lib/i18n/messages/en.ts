@@ -88,6 +88,13 @@ export const en_messages = {
   'chart.scatter.description':
     'Each point is a merged PR with at least one human APPROVED review.',
   'chart.open_prs.title': 'Open pull requests',
+  'open_prs.empty': 'No open pull requests in the selected scope.',
+  'open_prs.stale': 'stale',
+  'open_prs.meta': '{repo} · @{author} · {lines} lines',
+  'open_prs.prev': 'Previous',
+  'open_prs.next': 'Next',
+  'open_prs.page': 'Page {page} of {total}',
+  'open_prs.range': '{from}–{to} of {count}',
 
   'insight.title': 'Does PR size slow down review?',
   'insight.metric_approve': 'request → approve',

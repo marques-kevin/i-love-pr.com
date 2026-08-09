@@ -91,6 +91,13 @@ export const fr_messages = define_locale_messages({
   'chart.scatter.description':
     'Chaque point est une PR mergée avec au moins une review APPROVED humaine.',
   'chart.open_prs.title': 'Pull requests ouvertes',
+  'open_prs.empty': 'Aucune pull request ouverte dans la sélection.',
+  'open_prs.stale': 'obsolète',
+  'open_prs.meta': '{repo} · @{author} · {lines} lignes',
+  'open_prs.prev': 'Précédent',
+  'open_prs.next': 'Suivant',
+  'open_prs.page': 'Page {page} sur {total}',
+  'open_prs.range': '{from}–{to} sur {count}',
 
   'insight.title': 'La taille des PR ralentit-elle la review ?',
   'insight.metric_approve': 'demande → approve',
