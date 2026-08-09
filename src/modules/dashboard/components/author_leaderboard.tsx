@@ -13,7 +13,10 @@ export function Wrapper({ data }: ConnectorProps) {
   if (!data) return null
 
   return (
-    <Panel title={intl.formatMessage({ id: 'chart.author_leaderboard.title' })}>
+    <Panel
+      title={intl.formatMessage({ id: 'chart.author_leaderboard.title' })}
+      help={intl.formatMessage({ id: 'chart.author_leaderboard.help' })}
+    >
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           {intl.formatMessage({ id: 'chart.author_leaderboard.empty' })}

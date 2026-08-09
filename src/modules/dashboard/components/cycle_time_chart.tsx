@@ -7,7 +7,10 @@ export function Wrapper({ data }: ConnectorProps) {
   const intl = useIntl()
   if (!data) return null
   return (
-    <Panel title={intl.formatMessage({ id: 'chart.cycle_time.title' })}>
+    <Panel
+      title={intl.formatMessage({ id: 'chart.cycle_time.title' })}
+      help={intl.formatMessage({ id: 'chart.cycle_time.help' })}
+    >
       <CycleTimeChartView data={data} />
     </Panel>
   )

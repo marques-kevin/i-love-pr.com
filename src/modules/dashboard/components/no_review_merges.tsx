@@ -6,9 +6,12 @@ export function Wrapper({ data }: ConnectorProps) {
   const intl = useIntl()
   if (!data) return null
 
+  const help = intl.formatMessage({ id: 'chart.no_review_merges.help' })
+  const title = intl.formatMessage({ id: 'chart.no_review_merges.title' })
+
   if (data.mergedCount === 0) {
     return (
-      <Panel title={intl.formatMessage({ id: 'chart.no_review_merges.title' })}>
+      <Panel title={title} help={help}>
         <p className="text-sm text-muted-foreground">
           {intl.formatMessage({ id: 'chart.no_review_merges.empty' })}
         </p>
@@ -19,7 +22,7 @@ export function Wrapper({ data }: ConnectorProps) {
   const ratio = data.noReviewRatio == null ? '—' : `${Math.round(data.noReviewRatio * 1000) / 10}%`
 
   return (
-    <Panel title={intl.formatMessage({ id: 'chart.no_review_merges.title' })}>
+    <Panel title={title} help={help}>
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard
           label={intl.formatMessage({ id: 'chart.no_review_merges.count' })}

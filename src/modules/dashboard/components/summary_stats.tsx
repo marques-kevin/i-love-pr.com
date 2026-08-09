@@ -17,24 +17,34 @@ export function Wrapper({ summary, business_hours_enabled }: ConnectorProps) {
       <StatCard
         label={intl.formatMessage({ id: 'stats.merged' })}
         value={String(summary.mergedCount)}
+        help={intl.formatMessage({ id: 'stats.merged.help' })}
       />
       <StatCard
         label={intl.formatMessage({
           id: business_hours_enabled ? 'stats.cycle_time_biz' : 'stats.cycle_time',
         })}
         value={format_hours(summary.avgCycleTimeHours)}
+        help={intl.formatMessage({
+          id: business_hours_enabled ? 'stats.cycle_time_biz.help' : 'stats.cycle_time.help',
+        })}
       />
       <StatCard
         label={intl.formatMessage({
           id: business_hours_enabled ? 'stats.tfr_biz' : 'stats.tfr',
         })}
         value={format_hours(summary.avgTimeToFirstReviewHours)}
+        help={intl.formatMessage({
+          id: business_hours_enabled ? 'stats.tfr_biz.help' : 'stats.tfr.help',
+        })}
       />
       <StatCard
         label={intl.formatMessage({
           id: business_hours_enabled ? 'stats.approve_biz' : 'stats.approve',
         })}
         value={format_hours(summary.avgTimeToApproveHours)}
+        help={intl.formatMessage({
+          id: business_hours_enabled ? 'stats.approve_biz.help' : 'stats.approve.help',
+        })}
       />
       <StatCard
         label={intl.formatMessage({ id: 'stats.avg_size' })}
@@ -46,6 +56,7 @@ export function Wrapper({ summary, business_hours_enabled }: ConnectorProps) {
               )
             : '—'
         }
+        help={intl.formatMessage({ id: 'stats.avg_size.help' })}
       />
     </section>
   )

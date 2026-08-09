@@ -24,7 +24,10 @@ export function Wrapper({ prs }: ConnectorProps) {
   const to = Math.min(start_index + PAGE_SIZE, prs.length)
 
   return (
-    <Panel title={intl.formatMessage({ id: 'chart.open_prs.title' })}>
+    <Panel
+      title={intl.formatMessage({ id: 'chart.open_prs.title' })}
+      help={intl.formatMessage({ id: 'chart.open_prs.help' })}
+    >
       {prs.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           {intl.formatMessage({ id: 'open_prs.empty' })}

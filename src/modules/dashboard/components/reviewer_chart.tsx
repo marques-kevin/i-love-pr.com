@@ -7,7 +7,10 @@ export function Wrapper({ data }: ConnectorProps) {
   const intl = useIntl()
   if (!data) return null
   return (
-    <Panel title={intl.formatMessage({ id: 'chart.reviewer.title' })}>
+    <Panel
+      title={intl.formatMessage({ id: 'chart.reviewer.title' })}
+      help={intl.formatMessage({ id: 'chart.reviewer.help' })}
+    >
       <ReviewerChartView data={data} />
     </Panel>
   )

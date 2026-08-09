@@ -1,5 +1,5 @@
 import { useIntl } from 'react-intl'
-import { CycleBreakdownChart as ChartView } from './charts'
+import { CycleBreakdownChart as CycleBreakdownChartView } from './charts'
 import { Panel } from './panel'
 import { connector, type ConnectorProps } from './cycle_breakdown.connector'
 
@@ -9,9 +9,9 @@ export function Wrapper({ data }: ConnectorProps) {
   return (
     <Panel
       title={intl.formatMessage({ id: 'chart.cycle_breakdown.title' })}
-      description={intl.formatMessage({ id: 'chart.cycle_breakdown.description' })}
+      help={intl.formatMessage({ id: 'chart.cycle_breakdown.help' })}
     >
-      <ChartView data={data} />
+      <CycleBreakdownChartView data={data} />
     </Panel>
   )
 }

@@ -9,7 +9,7 @@ export function Wrapper({ data }: ConnectorProps) {
   return (
     <Panel
       title={intl.formatMessage({ id: 'chart.scatter.title' })}
-      description={intl.formatMessage({ id: 'chart.scatter.description' })}
+      help={intl.formatMessage({ id: 'chart.scatter.help' })}
     >
       {data.length === 0 ? (
         <p className="text-sm text-muted-foreground">No reviewed PRs in this period/filter.</p>

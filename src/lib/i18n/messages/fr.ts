@@ -111,37 +111,73 @@ export const fr_messages = define_locale_messages({
   'widget.flow_volume.description': 'PRs ouvertes et mergées par semaine.',
 
   'stats.merged': 'PRs mergées',
+  'stats.merged.help':
+    'Nombre de pull requests passées à MERGED sur la période, les dépôts et le filtre membres sélectionnés. Les bots ignorés dans les paramètres sont exclus.',
   'stats.cycle_time': 'Cycle time moyen',
+  'stats.cycle_time.help':
+    'Moyenne d’heures de la création de la PR jusqu’au merge, pour les PRs mergées dans le périmètre. Temps calendaire sauf si les heures ouvrées sont activées.',
   'stats.cycle_time_biz': 'Cycle time moyen (biz)',
+  'stats.cycle_time_biz.help':
+    'Identique au cycle time moyen, compté uniquement pendant les heures ouvrées configurées (jours et plages dans les paramètres).',
   'stats.tfr': 'Temps jusqu’à 1ʳᵉ review',
+  'stats.tfr.help':
+    'Moyenne d’heures du début d’attente de review (1ʳᵉ demande de review, sinon ready-for-review, sinon création) jusqu’à la première review humaine. Self-reviews et bots exclus.',
   'stats.tfr_biz': 'Temps jusqu’à 1ʳᵉ review (biz)',
+  'stats.tfr_biz.help':
+    'Identique au temps jusqu’à 1ʳᵉ review, mesuré en heures ouvrées uniquement.',
   'stats.approve': 'Demande → approve',
+  'stats.approve.help':
+    'Moyenne d’heures du début d’attente de review jusqu’au premier APPROVED humain, sur les PRs mergées du périmètre.',
   'stats.approve_biz': 'Demande → approve (biz)',
+  'stats.approve_biz.help': 'Identique à demande → approve, mesuré en heures ouvrées uniquement.',
   'stats.avg_size': 'Taille moyenne de PR',
+  'stats.avg_size.help':
+    'Moyenne des additions + suppressions (lignes changées) sur les PRs mergées de la période.',
   'stats.lines': '{count} lignes',
 
+  'chart.help_aria': 'À propos de cette métrique',
   'chart.cycle_time.title': 'Cycle time dans le temps',
+  'chart.cycle_time.help':
+    'Moyenne hebdomadaire des heures création → merge pour les PRs mergées cette semaine.\n\nAxe Y : heures (ouvrées si activé).\nAxe X : début de semaine (lundi).\n\nUtile pour repérer une régression de vitesse de livraison.',
   'chart.throughput.title': 'Throughput',
+  'chart.throughput.help':
+    'Nombre de PRs mergées chaque semaine (tous auteurs confondus sur ce graphique).\n\nSeules les PRs MERGED de la période et des filtres sont comptées. Les bots sont exclus.',
   'chart.pr_size.title': 'Distribution des tailles de PR',
+  'chart.pr_size.help':
+    'Combien de PRs mergées tombent dans chaque bucket de taille (additions + suppressions) :\nXS <50, S 50–199, M 200–499, L 500–999, XL 1000+.\n\nS’il n’y a aucun merge sur la période, le graphique se rabat sur les PRs créées ou mises à jour.',
   'chart.reviewer.title': 'Charge de review',
+  'chart.reviewer.help':
+    'Pour chaque personne : reviews données (a reviewé la PR de quelqu’un d’autre) vs reviews reçues (d’autres ont reviewé ses PRs) sur la période.\n\nSelf-reviews et bots exclus. Top 20 par activité totale.',
   'chart.size_vs_review.title': 'Temps de review moyen par taille',
-  'chart.size_vs_review.description':
-    'Première review humaine vs temps de la demande de review au premier approve.',
+  'chart.size_vs_review.help':
+    'Pour chaque bucket de taille de PR : moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nUniquement les PRs mergées avec les timestamps pertinents.',
   'chart.scatter.title': 'Nuage : lignes vs demande → approve',
-  'chart.scatter.description':
-    'Chaque point est une PR mergée avec au moins une review APPROVED humaine.',
+  'chart.scatter.help':
+    'Chaque point est une PR mergée avec un APPROVED humain.\n\nX : lignes changées. Y : heures du début d’attente de review au premier approve.\n\nLes outliers en haut/à droite sont de grosses PRs et/ou lentes à approve.',
   'chart.open_prs.title': 'Pull requests ouvertes',
+  'chart.open_prs.help':
+    'PRs actuellement OPEN dans les dépôts/membres sélectionnés (pas limitées à la période).\n\nL’âge part de la création. « Obsolète » = ouverte depuis 7+ jours. Tri du plus ancien au plus récent.',
   'chart.cycle_breakdown.title': 'Découpage du cycle time',
-  'chart.cycle_breakdown.description':
-    'Création → demande → 1ʳᵉ review → approve → merge (moyennes hebdo).',
+  'chart.cycle_breakdown.help':
+    'Moyennes hebdomadaires empilées d’étapes mutuellement exclusives pour les PRs mergées :\n1) Création → demande de review\n2) Demande → 1ʳᵉ review humaine\n3) 1ʳᵉ review → premier approve\n4) Approve → merge\n\nLes étapes sans timestamp sont omises de la moyenne de la semaine.',
   'chart.review_latency.title': 'Latence de review dans le temps',
+  'chart.review_latency.help':
+    'Deux séries hebdomadaires pour les PRs mergées :\n• Temps jusqu’à 1ʳᵉ review — demande/ready/création → 1ʳᵉ review humaine\n• Demande → approve — même départ → premier APPROVED\n\nDes courbes qui montent indiquent une file de review qui ralentit.',
   'chart.cycle_percentiles.title': 'Percentiles de cycle time',
+  'chart.cycle_percentiles.help':
+    'p50 (médiane) et p95 hebdomadaires des heures création → merge pour les PRs mergées cette semaine.\n\np50 = PR typique ; p95 = queue lente. Un grand écart signifie que quelques PRs dominent le délai.',
   'chart.review_rounds.title': 'Distribution des tours de review',
+  'chart.review_rounds.help':
+    'Combien de tours de review ont nécessité les PRs mergées.\n\nTours ≈ événements CHANGES_REQUESTED + 1 s’il y a eu un APPROVED (0 si aucune review humaine). Le bucket « 4+ » regroupe les allers-retours lourds.',
   'chart.no_review_merges.title': 'Merges sans review',
+  'chart.no_review_merges.help':
+    'Parmi les PRs mergées du périmètre, combien avaient zéro tour de review humaine (aucune review non-auteur, non-bot).\n\nPart = merges sans review ÷ tous les merges de la période.',
   'chart.no_review_merges.count': 'Merges sans review',
   'chart.no_review_merges.ratio': 'Part des merges',
   'chart.no_review_merges.empty': 'Aucune PR mergée sur cette période.',
   'chart.author_leaderboard.title': 'Classement des auteurs',
+  'chart.author_leaderboard.help':
+    'Top auteurs par nombre de PRs mergées sur la période (max 15).\n\nColonnes : merges, cycle time moyen (création → merge), lignes changées moyennes, tours de review moyens.',
   'chart.author_leaderboard.author': 'Auteur',
   'chart.author_leaderboard.merged': 'Mergées',
   'chart.author_leaderboard.cycle': 'Cycle moy.',
@@ -149,7 +185,11 @@ export const fr_messages = define_locale_messages({
   'chart.author_leaderboard.rounds': 'Tours moy.',
   'chart.author_leaderboard.empty': 'Aucune PR mergée sur cette période.',
   'chart.open_pr_age.title': 'Âge des PRs ouvertes',
+  'chart.open_pr_age.help':
+    'Distribution des PRs actuellement OPEN par âge depuis la création : <1j, 1–3j, 3–7j, 7–14j, 14j+.\n\nNon filtré par le contrôle de période — backlog live pour les dépôts/membres sélectionnés.',
   'chart.flow_volume.title': 'Ouvertes vs mergées',
+  'chart.flow_volume.help':
+    'Comptes hebdomadaires de PRs créées (ouvertes) vs PRs mergées.\n\nOuvertes = created_at ; mergées = merged_at. Si ouvertes restent au-dessus de mergées, le WIP croît.',
   'open_prs.empty': 'Aucune pull request ouverte dans la sélection.',
   'open_prs.stale': 'obsolète',
   'open_prs.meta': '{repo} · @{author} · {lines} lignes',
@@ -159,6 +199,8 @@ export const fr_messages = define_locale_messages({
   'open_prs.range': '{from}–{to} sur {count}',
 
   'insight.title': 'La taille des PR ralentit-elle la review ?',
+  'insight.help':
+    'Corrélation de Pearson entre lignes changées et heures demande → approve sur les PRs mergées ayant les deux valeurs.\n\nr proche de 0 : peu de lien linéaire. r positif : les plus grosses PRs mettent plus longtemps à être approved. Il faut ≥10 échantillons pour une lecture fiable.',
   'insight.metric_approve': 'demande → approve',
   'insight.insufficient': 'Pas assez de données (il faut ≥10 PRs mergées avec taille et {metric}).',
   'insight.strong_pos':

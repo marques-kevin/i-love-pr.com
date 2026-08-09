@@ -1,5 +1,6 @@
 import { useIntl } from 'react-intl'
 import { correlationInsight } from './charts'
+import { Panel } from './panel'
 import { connector, type ConnectorProps } from './size_review_insight.connector'
 
 export function Wrapper({ correlation }: ConnectorProps) {
@@ -9,11 +10,11 @@ export function Wrapper({ correlation }: ConnectorProps) {
   const metric_label = intl.formatMessage({ id: 'insight.metric_approve' })
 
   return (
-    <div>
-      <h2 className="font-display text-xl font-bold tracking-tight">
-        {intl.formatMessage({ id: 'insight.title' })}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <Panel
+      title={intl.formatMessage({ id: 'insight.title' })}
+      help={intl.formatMessage({ id: 'insight.help' })}
+    >
+      <p className="text-sm text-muted-foreground">
         {correlationInsight(
           correlation.linesVsTimeToApprove,
           correlation.sampleSize,
@@ -21,7 +22,7 @@ export function Wrapper({ correlation }: ConnectorProps) {
           (descriptor, values) => intl.formatMessage(descriptor, values),
         )}
       </p>
-    </div>
+    </Panel>
   )
 }
 
