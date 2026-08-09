@@ -137,6 +137,8 @@ export const fr_messages = define_locale_messages({
   'stats.lines': '{count} lignes',
 
   'chart.help_aria': 'À propos de cette métrique',
+  'chart.legend.wait_to_first_review': 'Demande/ready/création → 1ʳᵉ review (h)',
+  'chart.legend.wait_to_approve': 'Demande/ready/création → approve (h)',
   'chart.cycle_time.title': 'Cycle time dans le temps',
   'chart.cycle_time.help':
     'Moyenne hebdomadaire des heures création → merge pour les PRs mergées cette semaine.\n\nAxe Y : heures (ouvrées si activé).\nAxe X : début de semaine (lundi).\n\nUtile pour repérer une régression de vitesse de livraison.',
@@ -151,13 +153,13 @@ export const fr_messages = define_locale_messages({
     'Pour chaque personne : reviews données (a reviewé la PR de quelqu’un d’autre) vs reviews reçues (d’autres ont reviewé ses PRs) sur la période.\n\nSelf-reviews et bots exclus. Top 20 par activité totale.',
   'chart.size_vs_review.title': 'Temps de review moyen par taille',
   'chart.size_vs_review.help':
-    'Pour chaque bucket de taille de PR : moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nUniquement les PRs mergées avec les timestamps pertinents.',
+    'Les deux séries partagent le même départ (« attente de review ») :\n1) premier événement « request review » s’il existe\n2) sinon ready-for-review\n3) sinon création de la PR\n\nPuis :\n• Demande/ready/création → 1ʳᵉ review — jusqu’à la première review humaine (hors self/bot)\n• Demande/ready/création → approve — jusqu’au premier APPROVED humain\n\nGroupé par bucket de taille de PR. Uniquement les PRs mergées avec les timestamps pertinents.',
   'chart.size_review_cost.title': 'Coût d’approve pour 100 lignes',
   'chart.size_review_cost.help':
-    'Pour chaque bucket de taille de PR : moyenne d’heures d’approve pour 100 lignes changées.\n\nÇa normalise le coût de review par la taille pour comparer XS et XL équitablement. Uniquement les PRs mergées avec un APPROVED et lines_changed > 0.',
+    'Pour chaque bucket de taille de PR : moyenne d’heures d’approve pour 100 lignes changées.\n\nLes heures d’approve utilisent le même départ d’attente de review que les autres métriques (1ʳᵉ demande de review, sinon ready-for-review, sinon création → premier APPROVED).\n\nUniquement les PRs mergées avec un APPROVED et lines_changed > 0.',
   'chart.scatter.title': 'Nuage : lignes vs demande → approve',
   'chart.scatter.help':
-    'Chaque point est une PR mergée avec un APPROVED humain.\n\nX : lignes changées. Y : heures du début d’attente de review au premier approve.\n\nLes outliers en haut/à droite sont de grosses PRs et/ou lentes à approve.',
+    'Chaque point est une PR mergée avec un APPROVED humain.\n\nX : lignes changées. Y : heures du début d’attente de review (1ʳᵉ demande de review, sinon ready-for-review, sinon création) au premier approve.\n\nLes outliers en haut/à droite sont de grosses PRs et/ou lentes à approve.',
   'chart.open_prs.title': 'Pull requests ouvertes',
   'chart.open_prs.help':
     'PRs actuellement OPEN dans les dépôts/membres sélectionnés (pas limitées à la période).\n\nL’âge part de la création. « Obsolète » = ouverte depuis 7+ jours. Tri du plus ancien au plus récent.',
@@ -166,7 +168,7 @@ export const fr_messages = define_locale_messages({
     'Moyennes hebdomadaires empilées d’étapes mutuellement exclusives pour les PRs mergées :\n1) Création → demande de review\n2) Demande → 1ʳᵉ review humaine\n3) 1ʳᵉ review → premier approve\n4) Approve → merge\n\nLes étapes sans timestamp sont omises de la moyenne de la semaine.',
   'chart.review_latency.title': 'Latence de review dans le temps',
   'chart.review_latency.help':
-    'Deux séries hebdomadaires pour les PRs mergées :\n• Temps jusqu’à 1ʳᵉ review — demande/ready/création → 1ʳᵉ review humaine\n• Demande → approve — même départ → premier APPROVED\n\nDes courbes qui montent indiquent une file de review qui ralentit.',
+    'Deux séries hebdomadaires pour les PRs mergées. Les deux partent du moment d’attente de review : 1ʳᵉ « request review », sinon ready-for-review, sinon création de la PR.\n\n• Demande/ready/création → 1ʳᵉ review — jusqu’à la première review humaine\n• Demande/ready/création → approve — jusqu’au premier APPROVED humain\n\nDes courbes qui montent indiquent une file de review qui ralentit.',
   'chart.cycle_percentiles.title': 'Percentiles de cycle time',
   'chart.cycle_percentiles.help':
     'p50 (médiane) et p95 hebdomadaires des heures création → merge pour les PRs mergées cette semaine.\n\np50 = PR typique ; p95 = queue lente. Un grand écart signifie que quelques PRs dominent le délai.',

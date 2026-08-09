@@ -10,6 +10,7 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts'
+import { useIntl } from 'react-intl'
 import {
   type ChartConfig,
   ChartContainer,
@@ -37,16 +38,10 @@ const reviewerConfig = {
   received: { label: 'Reviews received', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
-const sizeVsReviewConfig = {
-  avgTimeToFirstReviewHours: {
-    label: 'First review (h)',
-    color: 'var(--chart-1)',
-  },
-  avgTimeToApproveHours: {
-    label: 'Request → approve (h)',
-    color: 'var(--chart-2)',
-  },
-} satisfies ChartConfig
+const sizeVsReviewColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
 
 const sizeVsReviewCostConfig = {
   avgHoursPerHundredLines: {
@@ -57,7 +52,7 @@ const sizeVsReviewCostConfig = {
 
 const scatterConfig = {
   timeToApproveHours: {
-    label: 'Request → approve (h)',
+    label: 'Ask/ready/created → approve (h)',
     color: 'var(--chart-1)',
   },
 } satisfies ChartConfig
@@ -69,10 +64,10 @@ const cycleBreakdownConfig = {
   approveToMergeHours: { label: 'Approve → merge (h)', color: 'var(--chart-4)' },
 } satisfies ChartConfig
 
-const reviewLatencyConfig = {
-  avgTimeToFirstReviewHours: { label: 'First review (h)', color: 'var(--chart-1)' },
-  avgTimeToApproveHours: { label: 'Request → approve (h)', color: 'var(--chart-2)' },
-} satisfies ChartConfig
+const reviewLatencyColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
 
 const cyclePercentilesConfig = {
   p50Hours: { label: 'p50 (h)', color: 'var(--chart-1)' },
@@ -166,6 +161,18 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
 }
 
 export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsReviewTime'] }) {
+  const intl = useIntl()
+  const config = {
+    avgTimeToFirstReviewHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
+      color: sizeVsReviewColors.avgTimeToFirstReviewHours,
+    },
+    avgTimeToApproveHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
+      color: sizeVsReviewColors.avgTimeToApproveHours,
+    },
+  } satisfies ChartConfig
+
   const chartData = data.map((row) => ({
     ...row,
     avgTimeToFirstReviewHours:
@@ -177,7 +184,7 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
   }))
 
   return (
-    <ChartContainer config={sizeVsReviewConfig} className="aspect-auto h-72 w-full">
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
       <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
@@ -337,8 +344,20 @@ export function CycleBreakdownChart({ data }: { data: MetricsSnapshot['cycleBrea
 }
 
 export function ReviewLatencyChart({ data }: { data: MetricsSnapshot['reviewLatencySeries'] }) {
+  const intl = useIntl()
+  const config = {
+    avgTimeToFirstReviewHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
+      color: reviewLatencyColors.avgTimeToFirstReviewHours,
+    },
+    avgTimeToApproveHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
+      color: reviewLatencyColors.avgTimeToApproveHours,
+    },
+  } satisfies ChartConfig
+
   return (
-    <ChartContainer config={reviewLatencyConfig} className="aspect-auto h-72 w-full">
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
       <LineChart data={data} margin={{ left: 8, right: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />

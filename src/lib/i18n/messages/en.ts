@@ -130,6 +130,8 @@ export const en_messages = {
   'stats.lines': '{count} lines',
 
   'chart.help_aria': 'About this metric',
+  'chart.legend.wait_to_first_review': 'Ask/ready/created → 1st review (h)',
+  'chart.legend.wait_to_approve': 'Ask/ready/created → approve (h)',
   'chart.cycle_time.title': 'Cycle time over time',
   'chart.cycle_time.help':
     'Weekly average of create → merge hours for PRs merged that week.\n\nY-axis: hours (business hours if enabled).\nX-axis: week start (Monday).\n\nUse this to spot regressions in delivery speed over time.',
@@ -144,13 +146,13 @@ export const en_messages = {
     'For each person: reviews given (they reviewed someone else’s PR) vs reviews received (others reviewed their PRs) in the period.\n\nSelf-reviews and bots are excluded. Top 20 by total activity.',
   'chart.size_vs_review.title': 'Avg review time by size',
   'chart.size_vs_review.help':
-    'For each PR size bucket, average hours to first human review and average hours from review request to first APPROVED.\n\nOnly merged PRs with the relevant timestamps are included.',
+    'Both series share the same start (“review wait”):\n1) first “request review” event if any\n2) else ready-for-review\n3) else PR created\n\nThen:\n• Ask/ready/created → 1st review — until the first human review (not self/bot)\n• Ask/ready/created → approve — until the first human APPROVED\n\nGrouped by PR size bucket. Only merged PRs with the relevant timestamps are included.',
   'chart.size_review_cost.title': 'Approve cost per 100 lines',
   'chart.size_review_cost.help':
-    'For each PR size bucket, average approve hours per 100 lines changed.\n\nThis normalizes review cost by size so XS vs XL can be compared fairly. Only merged PRs with an APPROVED review and lines_changed > 0 are included.',
+    'For each PR size bucket, average approve hours per 100 lines changed.\n\nApprove hours use the same review-wait start as other review metrics (first request review, else ready-for-review, else created → first APPROVED).\n\nOnly merged PRs with an APPROVED review and lines_changed > 0 are included.',
   'chart.scatter.title': 'Scatter: lines vs request → approve',
   'chart.scatter.help':
-    'Each point is one merged PR with a human APPROVED review.\n\nX: lines changed. Y: hours from review-wait start to first approve.\n\nOutliers far up/right are large and/or slow-to-approve PRs.',
+    'Each point is one merged PR with a human APPROVED review.\n\nX: lines changed. Y: hours from review-wait start (first request review, else ready-for-review, else created) to first approve.\n\nOutliers far up/right are large and/or slow-to-approve PRs.',
   'chart.open_prs.title': 'Open pull requests',
   'chart.open_prs.help':
     'Currently OPEN PRs in the selected repos/members (not limited to the period).\n\nAge is since creation. “Stale” marks PRs open 7+ days. Sorted oldest first.',
@@ -159,7 +161,7 @@ export const en_messages = {
     'Stacked weekly averages of mutually exclusive stages for merged PRs:\n1) Create → ask for review\n2) Ask → first human review\n3) First review → first approve\n4) Approve → merge\n\nStages with missing timestamps are omitted from that week’s average.',
   'chart.review_latency.title': 'Review latency over time',
   'chart.review_latency.help':
-    'Two weekly series for merged PRs:\n• Time to first review — ask/ready/created → first human review\n• Request → approve — same start → first APPROVED\n\nRising curves mean the review queue is slowing down.',
+    'Two weekly series for merged PRs. Both start at the review-wait moment: first “request review”, else ready-for-review, else PR created.\n\n• Ask/ready/created → 1st review — until the first human review\n• Ask/ready/created → approve — until the first human APPROVED\n\nRising curves mean the review queue is slowing down.',
   'chart.cycle_percentiles.title': 'Cycle time percentiles',
   'chart.cycle_percentiles.help':
     'Weekly p50 (median) and p95 of create → merge hours for PRs merged that week.\n\np50 shows the typical PR; p95 shows the slow tail. A wide gap means a few PRs dominate delay.',
