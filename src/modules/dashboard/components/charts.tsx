@@ -87,6 +87,42 @@ const flowVolumeConfig = {
   merged: { label: 'Merged', color: 'var(--chart-1)' },
 } satisfies ChartConfig
 
+const draftLatencyConfig = {
+  avgHours: { label: 'Create → ask (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const leadVsCycleConfig = {
+  leadHours: { label: 'Lead: create → merge (h)', color: 'var(--chart-1)' },
+  reviewCycleHours: { label: 'Review cycle: ask → approve (h)', color: 'var(--chart-2)' },
+} satisfies ChartConfig
+
+const repoComparisonConfig = {
+  mergedCount: { label: 'Merged PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const authorCycleConfig = {
+  avgCycleTimeHours: { label: 'Avg cycle (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const reviewBalanceConfig = {
+  ratio: { label: 'Given / received', color: 'var(--chart-3)' },
+} satisfies ChartConfig
+
+const reviewStateMixConfig = {
+  approved: { label: 'APPROVED', color: 'var(--chart-1)' },
+  changesRequested: { label: 'CHANGES_REQUESTED', color: 'var(--chart-2)' },
+  commented: { label: 'COMMENTED', color: 'var(--chart-3)' },
+} satisfies ChartConfig
+
+const additionsDeletionsConfig = {
+  additions: { label: 'Additions', color: 'var(--chart-1)' },
+  deletions: { label: 'Deletions', color: 'var(--chart-2)' },
+} satisfies ChartConfig
+
+const roundsVsSizeConfig = {
+  avgReviewRounds: { label: 'Avg review rounds', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
 export function CycleTimeChart({ data }: { data: MetricsSnapshot['cycleTimeSeries'] }) {
   return (
     <ChartContainer config={cycleConfig} className="aspect-auto h-72 w-full">
@@ -458,6 +494,205 @@ export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSer
         <ChartLegend content={<ChartLegendContent />} />
         <Bar dataKey="opened" fill="var(--color-opened)" radius={4} isAnimationActive={false} />
         <Bar dataKey="merged" fill="var(--color-merged)" radius={4} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function DraftLatencyChart({ data }: { data: MetricsSnapshot['draftLatencySeries'] }) {
+  return (
+    <ChartContainer config={draftLatencyConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgHours"
+          stroke="var(--color-avgHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function LeadVsCycleChart({ data }: { data: MetricsSnapshot['leadVsCycleSeries'] }) {
+  return (
+    <ChartContainer config={leadVsCycleConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="leadHours"
+          stroke="var(--color-leadHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="reviewCycleHours"
+          stroke="var(--color-reviewCycleHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function RepoComparisonChart({ data }: { data: MetricsSnapshot['repoComparison'] }) {
+  const chart_data = data.map((row) => ({
+    ...row,
+    label: row.repo.includes('/') ? row.repo.split('/').slice(-1)[0] : row.repo,
+  }))
+  return (
+    <ChartContainer config={repoComparisonConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="label" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="mergedCount"
+          fill="var(--color-mergedCount)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function AuthorCycleRankingChart({ data }: { data: MetricsSnapshot['authorCycleRanking'] }) {
+  return (
+    <ChartContainer config={authorCycleConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="author" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="avgCycleTimeHours"
+          fill="var(--color-avgCycleTimeHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBalance'] }) {
+  const chart_data = data
+    .filter((row) => row.ratio != null)
+    .map((row) => ({ ...row, ratio: row.ratio! }))
+  return (
+    <ChartContainer config={reviewBalanceConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="person" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="ratio" fill="var(--color-ratio)" radius={4} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ReviewStateMixChart({ data }: { data: MetricsSnapshot['reviewStateMixSeries'] }) {
+  return (
+    <ChartContainer config={reviewStateMixConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="approved"
+          stackId="state"
+          fill="var(--color-approved)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="changesRequested"
+          stackId="state"
+          fill="var(--color-changesRequested)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="commented"
+          stackId="state"
+          fill="var(--color-commented)"
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function AdditionsDeletionsChart({
+  data,
+}: {
+  data: MetricsSnapshot['additionsDeletionsSeries']
+}) {
+  return (
+    <ChartContainer config={additionsDeletionsConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="additions"
+          fill="var(--color-additions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="deletions"
+          fill="var(--color-deletions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSize'] }) {
+  const chart_data = data.map((row) => ({
+    bucket: row.bucket,
+    count: row.count,
+    avgReviewRounds: row.avgReviewRounds != null ? Math.round(row.avgReviewRounds * 10) / 10 : 0,
+  }))
+  return (
+    <ChartContainer config={roundsVsSizeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chart_data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="avgReviewRounds"
+          fill="var(--color-avgReviewRounds)"
+          radius={4}
+          isAnimationActive={false}
+        />
       </BarChart>
     </ChartContainer>
   )

@@ -32,6 +32,14 @@ export type DashboardWidgetId =
   | 'author_leaderboard'
   | 'open_pr_age'
   | 'flow_volume'
+  | 'draft_latency'
+  | 'lead_vs_cycle'
+  | 'repo_comparison'
+  | 'author_cycle_ranking'
+  | 'review_balance'
+  | 'review_state_mix'
+  | 'additions_deletions'
+  | 'rounds_vs_size'
 
 export interface DashboardLayoutItem {
   /** Stable instance key (allows the same widget more than once later). */
@@ -264,6 +272,46 @@ export interface MetricsSnapshot {
   }[]
   openPrAgeBuckets: { bucket: string; count: number }[]
   flowVolumeSeries: { date: string; opened: number; merged: number }[]
+  draftLatencySeries: { date: string; avgHours: number; count: number }[]
+  leadVsCycleSeries: {
+    date: string
+    leadHours: number
+    reviewCycleHours: number
+    count: number
+  }[]
+  repoComparison: {
+    repo: string
+    mergedCount: number
+    avgCycleTimeHours: number | null
+    avgLinesChanged: number | null
+  }[]
+  authorCycleRanking: {
+    author: string
+    mergedCount: number
+    avgCycleTimeHours: number
+  }[]
+  reviewBalance: {
+    person: string
+    given: number
+    received: number
+    ratio: number | null
+  }[]
+  reviewStateMixSeries: {
+    date: string
+    approved: number
+    changesRequested: number
+    commented: number
+  }[]
+  additionsDeletionsSeries: {
+    date: string
+    additions: number
+    deletions: number
+  }[]
+  roundsVsSize: {
+    bucket: string
+    count: number
+    avgReviewRounds: number | null
+  }[]
   openPrs: PrFactRecord[]
   summary: {
     mergedCount: number

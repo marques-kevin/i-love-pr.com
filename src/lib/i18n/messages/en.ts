@@ -105,6 +105,22 @@ export const en_messages = {
   'widget.open_pr_age.description': 'How old currently open PRs are.',
   'widget.flow_volume.label': 'Opened vs merged',
   'widget.flow_volume.description': 'PRs opened and merged per week.',
+  'widget.draft_latency.label': 'Draft / ready latency',
+  'widget.draft_latency.description': 'Time from PR creation to asking for review, by week.',
+  'widget.lead_vs_cycle.label': 'Lead vs review cycle',
+  'widget.lead_vs_cycle.description': 'Create → merge vs ask → approve by week.',
+  'widget.repo_comparison.label': 'Repo comparison',
+  'widget.repo_comparison.description': 'Merged volume per repository.',
+  'widget.author_cycle_ranking.label': 'Author cycle ranking',
+  'widget.author_cycle_ranking.description': 'Authors ranked by average cycle time.',
+  'widget.review_balance.label': 'Review balance',
+  'widget.review_balance.description': 'Reviews given ÷ received per person.',
+  'widget.review_state_mix.label': 'Review state mix',
+  'widget.review_state_mix.description': 'APPROVED vs CHANGES_REQUESTED vs COMMENTED by week.',
+  'widget.additions_deletions.label': 'Additions vs deletions',
+  'widget.additions_deletions.description': 'Lines added and deleted on merges by week.',
+  'widget.rounds_vs_size.label': 'Rounds vs size',
+  'widget.rounds_vs_size.description': 'Average review rounds by PR size bucket.',
 
   'stats.merged': 'Merged PRs',
   'stats.merged.help':
@@ -190,6 +206,30 @@ export const en_messages = {
   'chart.flow_volume.title': 'Opened vs merged',
   'chart.flow_volume.help':
     'Weekly counts of PRs created (opened) vs PRs merged.\n\nOpened uses created_at; merged uses merged_at. If opened stays above merged, WIP is growing.',
+  'chart.draft_latency.title': 'Draft / ready latency',
+  'chart.draft_latency.help':
+    'Weekly average hours from PR creation to the review-wait start (first request review, else ready-for-review, else created — so this is often near 0 when no explicit ask).\n\nBased on merged PRs that week with a create→ask duration.',
+  'chart.lead_vs_cycle.title': 'Lead time vs review cycle',
+  'chart.lead_vs_cycle.help':
+    'Two weekly averages for merged PRs:\n• Lead — create → merge\n• Review cycle — ask/ready/created → first APPROVED\n\nLead includes coding wait before review; review cycle focuses on the review queue.',
+  'chart.repo_comparison.title': 'Merged volume by repo',
+  'chart.repo_comparison.help':
+    'How many PRs were merged per repository in the selected period (member filter applied).\n\nRepos are sorted by merge count. Short name is shown on the axis; full name is in the tooltip.',
+  'chart.author_cycle_ranking.title': 'Authors by avg cycle time',
+  'chart.author_cycle_ranking.help':
+    'Authors ranked by average create → merge hours for their merged PRs in the period (top 15 with at least one timed merge).\n\nHigher bars mean slower delivery for that author in this sample.',
+  'chart.review_balance.title': 'Review balance (given ÷ received)',
+  'chart.review_balance.help':
+    'For each person with human reviews in the period: reviews given ÷ reviews received.\n\nRatio > 1: gives more reviews than they get. Ratio < 1: receives more than they give. People with 0 received are omitted (undefined ratio).',
+  'chart.review_state_mix.title': 'Review state mix',
+  'chart.review_state_mix.help':
+    'Weekly counts of human review submissions by state: APPROVED, CHANGES_REQUESTED, COMMENTED.\n\nSelf-reviews and bots are excluded. DISMISSED/PENDING are omitted.',
+  'chart.additions_deletions.title': 'Additions vs deletions',
+  'chart.additions_deletions.help':
+    'Sum of lines added and lines deleted on PRs merged each week.\n\nShows whether the team is growing the codebase or churning/refactoring.',
+  'chart.rounds_vs_size.title': 'Avg review rounds by size',
+  'chart.rounds_vs_size.help':
+    'For each PR size bucket (XS–XL by lines changed), average review rounds on merged PRs in the period.\n\nRounds ≈ CHANGES_REQUESTED events + 1 if APPROVED (0 if no human reviews).',
   'open_prs.empty': 'No open pull requests in the selected scope.',
   'open_prs.stale': 'stale',
   'open_prs.meta': '{repo} · @{author} · {lines} lines',

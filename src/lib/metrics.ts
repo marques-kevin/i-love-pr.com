@@ -368,6 +368,137 @@ export async function compute_metrics(options: {
     .sort((a, b) => b.mergedCount - a.mergedCount)
     .slice(0, 15)
 
+  const draft_latency_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const hours = week_merged
+      .map((pr) => pr.cycle.time_from_creation_to_asked_for_review)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      avgHours: round1(avg(hours) ?? 0),
+      count: hours.length,
+    }
+  })
+
+  const lead_vs_cycle_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const lead = week_merged
+      .map((pr) => pr.cycle.time_from_creation_to_merged)
+      .filter((h): h is number => h != null)
+    const review_cycle = week_merged
+      .map((pr) => pr.cycle.time_from_asked_for_review_to_approved)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      leadHours: round1(avg(lead) ?? 0),
+      reviewCycleHours: round1(avg(review_cycle) ?? 0),
+      count: week_merged.length,
+    }
+  })
+
+  const by_repo = new Map<string, PrFactRecord[]>()
+  for (const pr of merged_in_period) {
+    const list = by_repo.get(pr.repo_full_name) ?? []
+    list.push(pr)
+    by_repo.set(pr.repo_full_name, list)
+  }
+  const repo_comparison = [...by_repo.entries()]
+    .map(([repo, repo_prs]) => {
+      const cycles = repo_prs
+        .map((pr) => pr.cycle.time_from_creation_to_merged)
+        .filter((h): h is number => h != null)
+      return {
+        repo,
+        mergedCount: repo_prs.length,
+        avgCycleTimeHours: avg(cycles),
+        avgLinesChanged: avg(repo_prs.map((pr) => pr.lines_changed)),
+      }
+    })
+    .sort((a, b) => b.mergedCount - a.mergedCount)
+
+  const author_cycle_ranking = [...by_author.entries()]
+    .map(([author, author_prs]) => {
+      const cycles = author_prs
+        .map((pr) => pr.cycle.time_from_creation_to_merged)
+        .filter((h): h is number => h != null)
+      const avg_cycle = avg(cycles)
+      return avg_cycle == null
+        ? null
+        : {
+            author,
+            mergedCount: author_prs.length,
+            avgCycleTimeHours: round1(avg_cycle),
+          }
+    })
+    .filter((row): row is NonNullable<typeof row> => row != null)
+    .sort((a, b) => b.avgCycleTimeHours - a.avgCycleTimeHours)
+    .slice(0, 15)
+
+  const review_balance = reviewer_load
+    .map((row) => ({
+      person: row.reviewer,
+      given: row.given,
+      received: row.received,
+      ratio: row.received === 0 ? null : round1(row.given / row.received),
+    }))
+    .sort((a, b) => (b.ratio ?? -1) - (a.ratio ?? -1))
+
+  const review_state_mix_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    let approved = 0
+    let changes_requested = 0
+    let commented = 0
+    for (const review of reviews) {
+      const submitted = parseISO(review.submitted_at)
+      if (submitted < week_start || submitted >= week_end) continue
+      const pr = pr_by_id.get(review.pr_id)
+      if (!pr || review.author === pr.author) continue
+      if (review.state === 'APPROVED') approved += 1
+      else if (review.state === 'CHANGES_REQUESTED') changes_requested += 1
+      else if (review.state === 'COMMENTED') commented += 1
+    }
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      approved,
+      changesRequested: changes_requested,
+      commented,
+    }
+  })
+
+  const additions_deletions_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      additions: week_merged.reduce((sum, pr) => sum + pr.lines_added, 0),
+      deletions: week_merged.reduce((sum, pr) => sum + pr.lines_deleted, 0),
+    }
+  })
+
+  const rounds_vs_size = BUCKET_ORDER.map((bucket) => {
+    const in_bucket = merged_in_period.filter((pr) => size_bucket(pr.lines_changed) === bucket)
+    return {
+      bucket,
+      count: in_bucket.length,
+      avgReviewRounds: avg(in_bucket.map((pr) => pr.review_rounds)),
+    }
+  })
+
   const cycle_hours = merged_in_period
     .map((pr) => pr.cycle.time_from_creation_to_merged)
     .filter((h): h is number => h != null)
@@ -395,6 +526,14 @@ export async function compute_metrics(options: {
     authorLeaderboard: author_leaderboard,
     openPrAgeBuckets: open_pr_age_buckets,
     flowVolumeSeries: flow_volume_series,
+    draftLatencySeries: draft_latency_series,
+    leadVsCycleSeries: lead_vs_cycle_series,
+    repoComparison: repo_comparison,
+    authorCycleRanking: author_cycle_ranking,
+    reviewBalance: review_balance,
+    reviewStateMixSeries: review_state_mix_series,
+    additionsDeletionsSeries: additions_deletions_series,
+    roundsVsSize: rounds_vs_size,
     openPrs: open_prs,
     summary: {
       mergedCount: merged_in_period.length,

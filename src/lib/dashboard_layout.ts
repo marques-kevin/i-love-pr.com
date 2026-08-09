@@ -18,6 +18,14 @@ const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'author_leaderboard',
   'open_pr_age',
   'flow_volume',
+  'draft_latency',
+  'lead_vs_cycle',
+  'repo_comparison',
+  'author_cycle_ranking',
+  'review_balance',
+  'review_state_mix',
+  'additions_deletions',
+  'rounds_vs_size',
 ])
 
 const VALID_PERIOD_KEYS = new Set<PeriodKey>(['7d', '30d', '90d', 'custom'])

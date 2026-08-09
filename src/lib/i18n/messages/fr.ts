@@ -111,6 +111,24 @@ export const fr_messages = define_locale_messages({
   'widget.open_pr_age.description': 'Ancienneté des PRs actuellement ouvertes.',
   'widget.flow_volume.label': 'Ouvertes vs mergées',
   'widget.flow_volume.description': 'PRs ouvertes et mergées par semaine.',
+  'widget.draft_latency.label': 'Latence draft / ready',
+  'widget.draft_latency.description':
+    'Temps de la création de la PR à la demande de review, par semaine.',
+  'widget.lead_vs_cycle.label': 'Lead vs cycle de review',
+  'widget.lead_vs_cycle.description': 'Création → merge vs demande → approve par semaine.',
+  'widget.repo_comparison.label': 'Comparaison des dépôts',
+  'widget.repo_comparison.description': 'Volume mergé par dépôt.',
+  'widget.author_cycle_ranking.label': 'Classement cycle auteurs',
+  'widget.author_cycle_ranking.description': 'Auteurs classés par cycle time moyen.',
+  'widget.review_balance.label': 'Équilibre de review',
+  'widget.review_balance.description': 'Reviews données ÷ reçues par personne.',
+  'widget.review_state_mix.label': 'Mix d’états de review',
+  'widget.review_state_mix.description': 'APPROVED vs CHANGES_REQUESTED vs COMMENTED par semaine.',
+  'widget.additions_deletions.label': 'Additions vs suppressions',
+  'widget.additions_deletions.description':
+    'Lignes ajoutées et supprimées sur les merges, par semaine.',
+  'widget.rounds_vs_size.label': 'Tours vs taille',
+  'widget.rounds_vs_size.description': 'Tours de review moyens par bucket de taille.',
 
   'stats.merged': 'PRs mergées',
   'stats.merged.help':
@@ -197,6 +215,30 @@ export const fr_messages = define_locale_messages({
   'chart.flow_volume.title': 'Ouvertes vs mergées',
   'chart.flow_volume.help':
     'Comptes hebdomadaires de PRs créées (ouvertes) vs PRs mergées.\n\nOuvertes = created_at ; mergées = merged_at. Si ouvertes restent au-dessus de mergées, le WIP croît.',
+  'chart.draft_latency.title': 'Latence draft / ready',
+  'chart.draft_latency.help':
+    'Moyenne hebdomadaire d’heures de la création de la PR au début d’attente de review (1ʳᵉ demande de review, sinon ready-for-review, sinon création — donc souvent proche de 0 sans demande explicite).\n\nBasé sur les PRs mergées cette semaine avec une durée création → demande.',
+  'chart.lead_vs_cycle.title': 'Lead time vs cycle de review',
+  'chart.lead_vs_cycle.help':
+    'Deux moyennes hebdomadaires pour les PRs mergées :\n• Lead — création → merge\n• Cycle de review — demande/ready/création → premier APPROVED\n\nLe lead inclut l’attente avant review ; le cycle de review se concentre sur la file de review.',
+  'chart.repo_comparison.title': 'Volume mergé par dépôt',
+  'chart.repo_comparison.help':
+    'Combien de PRs ont été mergées par dépôt sur la période (filtre membres appliqué).\n\nTriés par nombre de merges. Nom court sur l’axe ; nom complet dans le tooltip.',
+  'chart.author_cycle_ranking.title': 'Auteurs par cycle time moyen',
+  'chart.author_cycle_ranking.help':
+    'Auteurs classés par moyenne d’heures création → merge pour leurs PRs mergées sur la période (top 15 avec au moins un merge chronométré).\n\nDes barres plus hautes = livraison plus lente pour cet auteur dans cet échantillon.',
+  'chart.review_balance.title': 'Équilibre de review (données ÷ reçues)',
+  'chart.review_balance.help':
+    'Pour chaque personne avec des reviews humaines sur la période : reviews données ÷ reviews reçues.\n\nRatio > 1 : donne plus qu’il ne reçoit. Ratio < 1 : reçoit plus qu’il ne donne. Les personnes à 0 reçues sont omises (ratio indéfini).',
+  'chart.review_state_mix.title': 'Mix d’états de review',
+  'chart.review_state_mix.help':
+    'Comptes hebdomadaires de soumissions de reviews humaines par état : APPROVED, CHANGES_REQUESTED, COMMENTED.\n\nSelf-reviews et bots exclus. DISMISSED/PENDING omis.',
+  'chart.additions_deletions.title': 'Additions vs suppressions',
+  'chart.additions_deletions.help':
+    'Somme des lignes ajoutées et supprimées sur les PRs mergées chaque semaine.\n\nIndique si l’équipe fait croître le code ou plutôt churner / refactorer.',
+  'chart.rounds_vs_size.title': 'Tours de review moyens par taille',
+  'chart.rounds_vs_size.help':
+    'Pour chaque bucket de taille de PR (XS–XL par lignes changées) : moyenne des tours de review sur les PRs mergées de la période.\n\nTours ≈ événements CHANGES_REQUESTED + 1 s’il y a APPROVED (0 si aucune review humaine).',
   'open_prs.empty': 'Aucune pull request ouverte dans la sélection.',
   'open_prs.stale': 'obsolète',
   'open_prs.meta': '{repo} · @{author} · {lines} lignes',

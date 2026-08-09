@@ -32,6 +32,14 @@ const WIDGET_LABEL_KEYS = {
   author_leaderboard: 'widget.author_leaderboard.label',
   open_pr_age: 'widget.open_pr_age.label',
   flow_volume: 'widget.flow_volume.label',
+  draft_latency: 'widget.draft_latency.label',
+  lead_vs_cycle: 'widget.lead_vs_cycle.label',
+  repo_comparison: 'widget.repo_comparison.label',
+  author_cycle_ranking: 'widget.author_cycle_ranking.label',
+  review_balance: 'widget.review_balance.label',
+  review_state_mix: 'widget.review_state_mix.label',
+  additions_deletions: 'widget.additions_deletions.label',
+  rounds_vs_size: 'widget.rounds_vs_size.label',
 } as const satisfies Record<DashboardWidgetId, MessageKey>
 
 const WIDGET_DESCRIPTION_KEYS = {
@@ -52,6 +60,14 @@ const WIDGET_DESCRIPTION_KEYS = {
   author_leaderboard: 'widget.author_leaderboard.description',
   open_pr_age: 'widget.open_pr_age.description',
   flow_volume: 'widget.flow_volume.description',
+  draft_latency: 'widget.draft_latency.description',
+  lead_vs_cycle: 'widget.lead_vs_cycle.description',
+  repo_comparison: 'widget.repo_comparison.description',
+  author_cycle_ranking: 'widget.author_cycle_ranking.description',
+  review_balance: 'widget.review_balance.description',
+  review_state_mix: 'widget.review_state_mix.description',
+  additions_deletions: 'widget.additions_deletions.description',
+  rounds_vs_size: 'widget.rounds_vs_size.description',
 } as const satisfies Record<DashboardWidgetId, MessageKey>
 
 export function locale_message_key(locale: AppLocale): MessageKey {
