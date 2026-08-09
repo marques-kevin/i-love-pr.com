@@ -8,26 +8,24 @@ describe('create_memory_repositories settings', () => {
     const saved = await repositories.settings.save({
       token: 'ghp_test',
       repos: ['acme/app'],
-      syncIntervalHours: 12,
-      businessHours: { ...DEFAULT_BUSINESS_HOURS, enabled: true },
+      sync_interval_hours: 12,
+      business_hours: { ...DEFAULT_BUSINESS_HOURS, enabled: true },
     })
 
     expect(saved.token).toBe('ghp_test')
     expect(saved.repos).toEqual(['acme/app'])
-    expect(saved.businessHours.enabled).toBe(true)
+    expect(saved.business_hours.enabled).toBe(true)
 
     const loaded = await repositories.settings.get()
     expect(loaded?.token).toBe('ghp_test')
   })
 
-  it('upserts teams', async () => {
+  it('saves dashboard layout', async () => {
     const repositories = create_memory_repositories()
     await repositories.settings.save({ token: 't', repos: ['a/b'] })
-    const with_team = await repositories.settings.upsert_team({
-      name: 'Core',
-      members: ['alice', 'bob'],
-    })
-    expect(with_team.teams).toHaveLength(1)
-    expect(with_team.teams[0].members).toEqual(['alice', 'bob'])
+    const next = await repositories.settings.save_dashboard_layout([
+      { instance_id: '1', widget_id: 'cycle_time' },
+    ])
+    expect(next.dashboard_layout).toEqual([{ instance_id: '1', widget_id: 'cycle_time' }])
   })
 })

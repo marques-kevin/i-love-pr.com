@@ -15,28 +15,28 @@ export function Wrapper({ prs }: ConnectorProps) {
       ) : (
         <ul className="divide-y divide-border">
           {prs.map((pr) => {
-            const age_days = differenceInDays(new Date(), parseISO(pr.createdAt))
+            const age_days = differenceInDays(new Date(), parseISO(pr.created_at))
             const stale = age_days >= 7
             return (
               <li
-                key={pr.id}
+                key={pr.pr_id}
                 className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <a
-                    href={`https://github.com/${pr.repoFullName}/pull/${pr.number}`}
+                    href={`https://github.com/${pr.repo_full_name}/pull/${pr.pr_number}`}
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium text-foreground hover:text-primary"
                   >
-                    #{pr.number} {pr.title}
+                    #{pr.pr_number} {pr.title}
                   </a>
                   <p className="text-sm text-muted-foreground">
-                    {pr.repoFullName} · @{pr.author} · {pr.linesChanged} lines
+                    {pr.repo_full_name} · @{pr.author} · {pr.lines_changed} lines
                   </p>
                 </div>
                 <Badge variant={stale ? 'destructive' : 'secondary'}>
-                  {formatDistanceToNow(parseISO(pr.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(parseISO(pr.created_at), { addSuffix: true })}
                   {stale ? ' · stale' : ''}
                 </Badge>
               </li>

@@ -3,7 +3,7 @@ import type { RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
   summary: state.dashboard.metrics?.summary ?? null,
-  business_hours_enabled: state.settings.settings?.businessHours?.enabled === true,
+  business_hours_enabled: state.settings.settings?.business_hours?.enabled === true,
 })
 
 export const map_dispatch_to_props = {}

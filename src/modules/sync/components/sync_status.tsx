@@ -14,14 +14,14 @@ export function Wrapper({
   run_sync,
 }: ConnectorProps) {
   const last_synced = sync_states
-    .map((s) => s.lastSyncedAt)
+    .map((s) => s.last_synced_at)
     .filter(Boolean)
     .sort()
     .at(-1)
 
-  const paused_error = sync_states.find((s) => s.lastError)?.lastError
+  const paused_error = sync_states.find((s) => s.last_error)?.last_error
   const is_backfilling = syncing && (progress?.mode === 'backfill' || progress?.mode === 'paused')
-  const has_more_history = sync_states.some((s) => Boolean(s.pageCursor))
+  const has_more_history = sync_states.some((s) => Boolean(s.page_cursor))
 
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">

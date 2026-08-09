@@ -51,7 +51,7 @@ async function sync_repo(
   const parsed = parseRepoFullName(full_name)
   if (!parsed) {
     await repositories.sync_state.update(full_name, {
-      lastError: `Invalid repo format: ${full_name}`,
+      last_error: `Invalid repo format: ${full_name}`,
       mode: 'idle',
     })
     return { rate_limit: ctx.client.getRateLimit() }
@@ -61,56 +61,57 @@ async function sync_repo(
     (await repositories.sync_state.get(full_name)) ??
     (await repositories.sync_state.update(full_name, {
       mode: 'idle',
-      cursorUpdatedAt: null,
-      pageCursor: null,
-      lastSyncedAt: null,
-      lastError: null,
-      totalFetched: 0,
-      backfillFetched: 0,
+      cursor_updated_at: null,
+      page_cursor: null,
+      last_synced_at: null,
+      last_error: null,
+      total_fetched: 0,
+      backfill_fetched: 0,
     }))
 
-  const age_hours = hours_since(state.lastSyncedAt)
-  const interval = ctx.settings.syncIntervalHours
-  const batch_size = Math.max(1, ctx.settings.backfillLimit ?? 200)
+  const age_hours = hours_since(state.last_synced_at)
+  const interval = ctx.settings.sync_interval_hours
+  const batch_size = Math.max(1, ctx.settings.backfill_limit ?? 200)
   const has_data = (await repositories.pull_requests.count_by_repo(full_name)) > 0
   const resume_paused = state.mode === 'paused' || state.mode === 'backfill'
-  const continue_deeper = Boolean(ctx.force && state.pageCursor && state.mode === 'idle')
+  const continue_deeper = Boolean(ctx.force && state.page_cursor && state.mode === 'idle')
 
   let mode: SyncState['mode'] = 'idle'
-  if (ctx.force || resume_paused || !has_data || !state.cursorUpdatedAt) {
+  if (ctx.force || resume_paused || !has_data || !state.cursor_updated_at) {
     mode = 'backfill'
   } else if (age_hours === null || age_hours >= interval) {
     mode = 'incremental'
   } else {
     ctx.on_progress?.({
-      repoFullName: full_name,
+      repo_full_name: full_name,
       mode: 'idle',
-      fetched: state.totalFetched,
+      fetched: state.total_fetched,
       message: `Cache fresh (< ${interval}h). Skipping ${full_name}.`,
-      rateLimit: ctx.client.getRateLimit(),
+      rate_limit: ctx.client.getRateLimit(),
     })
     return { rate_limit: ctx.client.getRateLimit() }
   }
 
-  const stop_before = mode === 'incremental' && state.cursorUpdatedAt ? state.cursorUpdatedAt : null
+  const stop_before =
+    mode === 'incremental' && state.cursor_updated_at ? state.cursor_updated_at : null
 
   const resume_mid_batch = mode === 'backfill' && resume_paused
   let page_cursor: string | null =
-    mode === 'backfill' ? (resume_mid_batch || continue_deeper ? state.pageCursor : null) : null
+    mode === 'backfill' ? (resume_mid_batch || continue_deeper ? state.page_cursor : null) : null
   let fetched_this_run = 0
-  let batch_fetched = resume_mid_batch ? (state.backfillFetched ?? 0) : 0
-  let newest_updated_at = state.cursorUpdatedAt
+  let batch_fetched = resume_mid_batch ? (state.backfill_fetched ?? 0) : 0
+  let newest_updated_at = state.cursor_updated_at
   let more_pages_available = false
 
   await repositories.sync_state.update(full_name, {
     mode,
-    pageCursor: page_cursor,
-    backfillFetched: batch_fetched,
-    lastError: null,
+    page_cursor,
+    backfill_fetched: batch_fetched,
+    last_error: null,
   })
 
   ctx.on_progress?.({
-    repoFullName: full_name,
+    repo_full_name: full_name,
     mode,
     fetched: batch_fetched,
     message:
@@ -119,7 +120,7 @@ async function sync_repo(
           ? `Continuing ${full_name} (batch ${batch_fetched}/${batch_size})…`
           : `Backfilling ${full_name} (batch of ${batch_size} PRs)…`
         : `Refreshing ${full_name}…`,
-    rateLimit: ctx.client.getRateLimit(),
+    rate_limit: ctx.client.getRateLimit(),
   })
 
   try {
@@ -135,7 +136,7 @@ async function sync_repo(
       if (stop_before) {
         const filtered = []
         for (const item of page_items) {
-          if (item.pullRequest.updatedAt <= stop_before) {
+          if (item.pull_request.updated_at <= stop_before) {
             reached_cursor = true
             break
           }
@@ -163,8 +164,8 @@ async function sync_repo(
       }
 
       for (const item of page_items) {
-        if (!newest_updated_at || item.pullRequest.updatedAt > newest_updated_at) {
-          newest_updated_at = item.pullRequest.updatedAt
+        if (!newest_updated_at || item.pull_request.updated_at > newest_updated_at) {
+          newest_updated_at = item.pull_request.updated_at
         }
       }
 
@@ -177,24 +178,24 @@ async function sync_repo(
 
       await repositories.sync_state.update(full_name, {
         mode,
-        pageCursor: persist_cursor,
-        cursorUpdatedAt: newest_updated_at,
-        totalFetched: (state.totalFetched ?? 0) + fetched_this_run,
-        backfillFetched: mode === 'backfill' ? batch_fetched : (state.backfillFetched ?? 0),
-        lastError: null,
+        page_cursor: persist_cursor,
+        cursor_updated_at: newest_updated_at,
+        total_fetched: (state.total_fetched ?? 0) + fetched_this_run,
+        backfill_fetched: mode === 'backfill' ? batch_fetched : (state.backfill_fetched ?? 0),
+        last_error: null,
       })
 
       state = (await repositories.sync_state.get(full_name))!
 
       ctx.on_progress?.({
-        repoFullName: full_name,
+        repo_full_name: full_name,
         mode,
-        fetched: mode === 'backfill' ? batch_fetched : state.totalFetched,
+        fetched: mode === 'backfill' ? batch_fetched : state.total_fetched,
         message:
           mode === 'backfill'
             ? `${full_name}: ${batch_fetched}/${batch_size} this batch`
             : `${full_name}: ${fetched_this_run} PRs this run`,
-        rateLimit: page.rateLimit,
+        rate_limit: page.rateLimit,
       })
 
       if (hit_batch_limit) break
@@ -202,18 +203,18 @@ async function sync_repo(
       if (page.rateLimit.remaining < 20) {
         await repositories.sync_state.update(full_name, {
           mode: 'paused',
-          pageCursor: page_cursor,
-          cursorUpdatedAt: newest_updated_at,
-          backfillFetched: batch_fetched,
-          lastError: 'Paused: rate limit low. Sync history again once it resets to continue.',
-          totalFetched: state.totalFetched,
+          page_cursor,
+          cursor_updated_at: newest_updated_at,
+          backfill_fetched: batch_fetched,
+          last_error: 'Paused: rate limit low. Sync history again once it resets to continue.',
+          total_fetched: state.total_fetched,
         })
         ctx.on_progress?.({
-          repoFullName: full_name,
+          repo_full_name: full_name,
           mode: 'paused',
           fetched: batch_fetched,
           message: `Paused ${full_name}: ${batch_fetched}/${batch_size} this batch (rate limit). Retry later.`,
-          rateLimit: page.rateLimit,
+          rate_limit: page.rateLimit,
         })
         return { rate_limit: page.rateLimit }
       }
@@ -223,25 +224,25 @@ async function sync_repo(
 
     await repositories.sync_state.update(full_name, {
       mode: 'idle',
-      pageCursor: kept_cursor,
-      cursorUpdatedAt: newest_updated_at,
-      lastSyncedAt: new Date().toISOString(),
-      lastError: null,
-      totalFetched: state.totalFetched,
-      backfillFetched: 0,
+      page_cursor: kept_cursor,
+      cursor_updated_at: newest_updated_at,
+      last_synced_at: new Date().toISOString(),
+      last_error: null,
+      total_fetched: state.total_fetched,
+      backfill_fetched: 0,
     })
 
     ctx.on_progress?.({
-      repoFullName: full_name,
+      repo_full_name: full_name,
       mode: 'idle',
-      fetched: mode === 'backfill' ? batch_fetched : state.totalFetched,
+      fetched: mode === 'backfill' ? batch_fetched : state.total_fetched,
       message:
         mode === 'backfill'
           ? kept_cursor
             ? `Synced ${full_name}: +${batch_fetched} PRs. More history left — Sync history again after rate limit resets.`
             : `Synced ${full_name}: +${batch_fetched} PRs (end of history)`
           : `Synced ${full_name}`,
-      rateLimit: ctx.client.getRateLimit(),
+      rate_limit: ctx.client.getRateLimit(),
     })
 
     return { rate_limit: ctx.client.getRateLimit() }
@@ -257,20 +258,20 @@ async function sync_repo(
 
     await repositories.sync_state.update(full_name, {
       mode: 'paused',
-      pageCursor: page_cursor,
-      cursorUpdatedAt: newest_updated_at,
-      backfillFetched: batch_fetched,
-      lastError: message,
-      totalFetched:
-        (await repositories.sync_state.get(full_name))?.totalFetched ?? state.totalFetched,
+      page_cursor,
+      cursor_updated_at: newest_updated_at,
+      backfill_fetched: batch_fetched,
+      last_error: message,
+      total_fetched:
+        (await repositories.sync_state.get(full_name))?.total_fetched ?? state.total_fetched,
     })
 
     ctx.on_progress?.({
-      repoFullName: full_name,
+      repo_full_name: full_name,
       mode: 'paused',
-      fetched: batch_fetched || state.totalFetched + fetched_this_run,
+      fetched: batch_fetched || state.total_fetched + fetched_this_run,
       message: `Interrupted ${full_name}: ${message}`,
-      rateLimit: rate_limit,
+      rate_limit,
     })
 
     return { rate_limit }

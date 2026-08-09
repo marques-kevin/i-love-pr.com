@@ -44,8 +44,8 @@ export const run_sync = create_app_async_thunk<
       force,
       on_progress: (progress) => {
         dispatch(set_progress(progress))
-        if (progress.rateLimit) {
-          dispatch(set_rate_limit(progress.rateLimit))
+        if (progress.rate_limit) {
+          dispatch(set_rate_limit(progress.rate_limit))
         }
       },
     })

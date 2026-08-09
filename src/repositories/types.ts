@@ -2,9 +2,11 @@ import type {
   AppSettings,
   MemberTeam,
   NormalizedPullRequest,
+  PrFactRecord,
   PullRequestRecord,
   ReviewRecord,
   SyncState,
+  DashboardLayoutItem,
 } from '@/lib/types'
 
 export type SaveSettingsInput = Partial<Omit<AppSettings, 'id'>> & {
@@ -16,6 +18,7 @@ export interface SettingsRepository {
   get: () => Promise<AppSettings | undefined>
   save: (partial: SaveSettingsInput) => Promise<AppSettings>
   save_teams: (teams: MemberTeam[]) => Promise<AppSettings>
+  save_dashboard_layout: (layout: DashboardLayoutItem[]) => Promise<AppSettings>
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>
@@ -47,21 +50,35 @@ export interface SyncStateRepository {
   clear: () => Promise<void>
 }
 
+export interface PrFactsRepository {
+  list_by_repos: (repos: string[]) => Promise<PrFactRecord[]>
+  put_many: (facts: PrFactRecord[]) => Promise<void>
+  delete_many: (pr_ids: string[]) => Promise<void>
+  delete_by_repos: (repos: string[]) => Promise<void>
+  clear: () => Promise<void>
+}
+
 export interface Repositories {
   settings: SettingsRepository
   pull_requests: PullRequestRepository
   reviews: ReviewRepository
   sync_state: SyncStateRepository
+  pr_facts: PrFactsRepository
 }
 
-/** Persist a synced page of raw PRs + reviews. */
+/** Persist a synced page of raw PRs + reviews, then rebuild derived facts. */
 export async function persist_normalized_page(
   repositories: Repositories,
   items: NormalizedPullRequest[],
 ): Promise<void> {
   if (items.length === 0) return
   for (const item of items) {
-    await repositories.pull_requests.put_many([item.pullRequest])
-    await repositories.reviews.replace_for_pr(item.pullRequest.id, item.reviews)
+    await repositories.pull_requests.put_many([item.pull_request])
+    await repositories.reviews.replace_for_pr(item.pull_request.id, item.reviews)
   }
+  const { rebuild_pr_facts_for_prs } = await import('@/lib/rebuild_pr_facts')
+  await rebuild_pr_facts_for_prs(
+    repositories,
+    items.map((item) => item.pull_request),
+  )
 }

@@ -9,100 +9,160 @@ export interface MemberTeam {
   id: string
   name: string
   members: string[]
-  createdAt: string
+  created_at: string
+}
+
+/** Prefabricated dashboard chart / panel ids. */
+export type DashboardWidgetId =
+  | 'summary_stats'
+  | 'cycle_time'
+  | 'throughput'
+  | 'pr_size'
+  | 'reviewer_load'
+  | 'size_review_insight'
+  | 'size_vs_review'
+  | 'size_review_scatter'
+  | 'open_prs'
+
+export interface DashboardLayoutItem {
+  /** Stable instance key (allows the same widget more than once later). */
+  instance_id: string
+  widget_id: DashboardWidgetId
 }
 
 export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
-  syncIntervalHours: number
+  sync_interval_hours: number
   /** Max PRs to pull per repo during a backfill (most recently updated first) */
-  backfillLimit: number
-  ignoredBots: string[]
+  backfill_limit: number
+  ignored_bots: string[]
   /** Saved member filter presets (teams) */
   teams: MemberTeam[]
-  businessHours: BusinessHoursConfig
-  onboardedAt: string
+  business_hours: BusinessHoursConfig
+  /** Ordered custom dashboard widgets (empty = blank canvas). */
+  dashboard_layout: DashboardLayoutItem[]
+  onboarded_at: string
 }
 
 export interface RepoRecord {
-  fullName: string
+  full_name: string
   owner: string
   name: string
-  addedAt: string
+  added_at: string
 }
 
 export interface SyncState {
-  repoFullName: string
-  /** ISO timestamp of the most recent PR updatedAt fully processed */
-  cursorUpdatedAt: string | null
+  repo_full_name: string
+  /** ISO timestamp of the most recent PR updated_at fully processed */
+  cursor_updated_at: string | null
   /** Pagination cursor for in-progress backfill */
-  pageCursor: string | null
+  page_cursor: string | null
   mode: 'idle' | 'backfill' | 'incremental' | 'paused'
-  lastSyncedAt: string | null
-  lastError: string | null
-  totalFetched: number
-  /** PRs fetched so far in the current backfill campaign (toward backfillLimit) */
-  backfillFetched: number
+  last_synced_at: string | null
+  last_error: string | null
+  total_fetched: number
+  /** PRs fetched so far in the current backfill campaign (toward backfill_limit) */
+  backfill_fetched: number
 }
 
 /** Raw PR metadata as synced from GitHub — no derived metrics. */
 export interface PullRequestRecord {
   id: string
-  repoFullName: string
+  repo_full_name: string
   number: number
   title: string
   author: string
   state: PrState
-  createdAt: string
-  updatedAt: string
-  closedAt: string | null
-  mergedAt: string | null
-  readyForReviewAt: string | null
+  created_at: string
+  updated_at: string
+  closed_at: string | null
+  merged_at: string | null
+  ready_for_review_at: string | null
   /** Earliest ReviewRequestedEvent from GitHub timeline (raw) */
-  firstReviewRequestedAt: string | null
+  first_review_requested_at: string | null
   additions: number
   deletions: number
-  changedFiles: number
-  commitsCount: number
-  commentsCount: number
+  changed_files: number
+  commits_count: number
+  comments_count: number
   labels: string[]
 }
 
 /** Raw review event as synced from GitHub. */
 export interface ReviewRecord {
   id: string
-  prId: string
-  repoFullName: string
-  prNumber: number
+  pr_id: string
+  repo_full_name: string
+  pr_number: number
   author: string
   state: ReviewState
-  submittedAt: string
+  submitted_at: string
 }
 
-/** Metrics computed at read-time from raw PR + reviews (+ current bot list). */
+/** Metrics computed at derive-time (in-memory enrich). */
 export interface PrFacts {
-  isBot: boolean
-  linesChanged: number
-  firstApprovedAt: string | null
-  cycleTimeHours: number | null
-  timeToFirstReviewHours: number | null
-  timeToApproveHours: number | null
-  reviewRounds: number
+  is_bot: boolean
+  lines_changed: number
+  first_approved_at: string | null
+  cycle_time_hours: number | null
+  time_to_first_review_hours: number | null
+  time_to_approve_hours: number | null
+  review_rounds: number
+}
+
+/**
+ * Cached derived row in IndexedDB — snake_case, denormalized for fast filters.
+ * Rebuilt on sync / settings change; not the same shape as raw GitHub rows.
+ */
+export interface PrFactCycleHours {
+  time_from_creation_to_asked_for_review: number | null
+  time_from_creation_to_merged: number | null
+  time_from_creation_to_approved: number | null
+  time_from_asked_for_review_to_approved: number | null
+  time_from_asked_for_review_to_first_review: number | null
+}
+
+export interface PrFactRecord {
+  /** Schema / derive formula version — bump `PR_FACTS_VERSION` to force rebuild. */
+  _version: number
+  pr_id: string
+  repo_full_name: string
+  author: string
+  state: PrState
+  created_at: string
+  merged_at: string | null
+  pr_number: number
+  title: string
+  /** When review wait starts: first request-review, else ready-for-review, else created. */
+  request_review_at: string
+  first_approved_at: string | null
+  is_bot: boolean
+  lines_added: number
+  lines_deleted: number
+  lines_changed: number
+  review_rounds: number
+  cycle: PrFactCycleHours
 }
 
 export type EnrichedPullRequest = PullRequestRecord & PrFacts
 
+/** Bump when derive formulas / pr_facts shape change to force a local facts rebuild. */
+export const PR_FACTS_VERSION = 8
+
+/** @deprecated use PR_FACTS_VERSION */
+export const DERIVE_VERSION = PR_FACTS_VERSION
+
 export interface RateLimitInfo {
   remaining: number
   limit: number
-  resetAt: string
+  reset_at: string
   cost?: number
 }
 
 export interface NormalizedPullRequest {
-  pullRequest: PullRequestRecord
+  pull_request: PullRequestRecord
   reviews: ReviewRecord[]
 }
 
@@ -115,11 +175,11 @@ export interface PeriodRange {
 }
 
 export interface SyncProgress {
-  repoFullName: string
+  repo_full_name: string
   mode: SyncState['mode']
   fetched: number
   message: string
-  rateLimit: RateLimitInfo | null
+  rate_limit: RateLimitInfo | null
 }
 
 export interface MetricsSnapshot {
@@ -149,7 +209,7 @@ export interface MetricsSnapshot {
   }
   throughput: { period: string; author: string; count: number }[]
   reviewerLoad: { reviewer: string; given: number; received: number }[]
-  openPrs: EnrichedPullRequest[]
+  openPrs: PrFactRecord[]
   summary: {
     mergedCount: number
     avgCycleTimeHours: number | null

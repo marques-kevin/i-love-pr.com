@@ -198,6 +198,22 @@ export interface GitHubRepoOption {
   isPrivate: boolean
 }
 
+type GraphQLRateLimit = {
+  remaining: number
+  limit: number
+  resetAt: string
+  cost?: number
+}
+
+function to_rate_limit_info(rl: GraphQLRateLimit): RateLimitInfo {
+  return {
+    remaining: rl.remaining,
+    limit: rl.limit,
+    reset_at: rl.resetAt,
+    cost: rl.cost,
+  }
+}
+
 function parseRateLimitFromHeaders(headers: Headers): RateLimitInfo | null {
   const remaining = headers.get('x-ratelimit-remaining')
   const limit = headers.get('x-ratelimit-limit')
@@ -206,7 +222,7 @@ function parseRateLimitFromHeaders(headers: Headers): RateLimitInfo | null {
   return {
     remaining: Number(remaining),
     limit: Number(limit),
-    resetAt: new Date(Number(reset) * 1000).toISOString(),
+    reset_at: new Date(Number(reset) * 1000).toISOString(),
   }
 }
 
@@ -229,17 +245,12 @@ export class GitHubClient {
 
   async validateToken(): Promise<{ login: string; rateLimit: RateLimitInfo }> {
     const data = await this.graphql<{
-      rateLimit: RateLimitInfo & { cost: number }
+      rateLimit: GraphQLRateLimit & { cost: number }
       viewer: { login: string }
     }>(VALIDATE_TOKEN_QUERY)
     return {
       login: data.viewer.login,
-      rateLimit: {
-        remaining: data.rateLimit.remaining,
-        limit: data.rateLimit.limit,
-        resetAt: data.rateLimit.resetAt,
-        cost: data.rateLimit.cost,
-      },
+      rateLimit: to_rate_limit_info(data.rateLimit),
     }
   }
 
@@ -253,7 +264,7 @@ export class GitHubClient {
     let page = 0
 
     type ListReposData = {
-      rateLimit: RateLimitInfo & { cost: number }
+      rateLimit: GraphQLRateLimit & { cost: number }
       viewer: {
         repositories: {
           pageInfo: { hasNextPage: boolean; endCursor: string | null }
@@ -288,7 +299,7 @@ export class GitHubClient {
   /** Resolve a public or accessible repo by owner/name (for manual add). */
   async resolveRepository(owner: string, name: string): Promise<GitHubRepoOption> {
     const data = await this.graphql<{
-      rateLimit: RateLimitInfo & { cost: number }
+      rateLimit: GraphQLRateLimit & { cost: number }
       repository: { nameWithOwner: string; isPrivate: boolean } | null
     }>(RESOLVE_REPOSITORY_QUERY, { owner, name })
 
@@ -399,16 +410,11 @@ export class GitHubClient {
     }
 
     const payload = (await response.json()) as GraphQLResponse<
-      T & { rateLimit?: RateLimitInfo & { cost?: number } }
+      T & { rateLimit?: GraphQLRateLimit }
     >
 
     if (payload.data && 'rateLimit' in payload.data && payload.data.rateLimit) {
-      this.lastRateLimit = {
-        remaining: payload.data.rateLimit.remaining,
-        limit: payload.data.rateLimit.limit,
-        resetAt: payload.data.rateLimit.resetAt,
-        cost: payload.data.rateLimit.cost,
-      }
+      this.lastRateLimit = to_rate_limit_info(payload.data.rateLimit)
     }
 
     if (payload.errors?.length) {
@@ -416,7 +422,7 @@ export class GitHubClient {
       const isRate = /rate limit/i.test(message)
       if (isRate && attempt < 5) {
         const resetMs = this.lastRateLimit
-          ? Math.max(0, new Date(this.lastRateLimit.resetAt).getTime() - Date.now())
+          ? Math.max(0, new Date(this.lastRateLimit.reset_at).getTime() - Date.now())
           : 1000 * 2 ** attempt
         await sleep(Math.min(resetMs || 1000, 60_000))
         return this.graphql(query, variables, attempt + 1)
@@ -435,7 +441,7 @@ export class GitHubClient {
     if (!this.lastRateLimit) return
     if (this.lastRateLimit.remaining > this.minRemainingBeforeThrottle) return
 
-    const resetMs = new Date(this.lastRateLimit.resetAt).getTime() - Date.now()
+    const resetMs = new Date(this.lastRateLimit.reset_at).getTime() - Date.now()
     if (resetMs <= 0) return
 
     // Soft throttle: wait a bit when approaching the limit
@@ -446,7 +452,7 @@ export class GitHubClient {
 
 function normalizePullRequest(
   node: GraphQLPullRequest,
-  repoFullName: string,
+  repo_full_name: string,
 ): NormalizedPullRequest {
   const author = node.author?.login ?? 'unknown'
   const timeline = node.timelineItems.nodes.filter(
@@ -461,24 +467,24 @@ function normalizePullRequest(
     .sort()
 
   const state: PrState = node.state
-  const pullRequest = {
-    id: `${repoFullName}#${node.number}`,
-    repoFullName,
+  const pull_request = {
+    id: `${repo_full_name}#${node.number}`,
+    repo_full_name,
     number: node.number,
     title: node.title,
     author,
     state,
-    createdAt: node.createdAt,
-    updatedAt: node.updatedAt,
-    closedAt: node.closedAt,
-    mergedAt: node.mergedAt,
-    readyForReviewAt: readyEvent?.createdAt ?? null,
-    firstReviewRequestedAt: reviewRequestedTimes[0] ?? null,
+    created_at: node.createdAt,
+    updated_at: node.updatedAt,
+    closed_at: node.closedAt,
+    merged_at: node.mergedAt,
+    ready_for_review_at: readyEvent?.createdAt ?? null,
+    first_review_requested_at: reviewRequestedTimes[0] ?? null,
     additions: node.additions,
     deletions: node.deletions,
-    changedFiles: node.changedFiles,
-    commitsCount: node.commits.totalCount,
-    commentsCount: node.comments.totalCount,
+    changed_files: node.changedFiles,
+    commits_count: node.commits.totalCount,
+    comments_count: node.comments.totalCount,
     labels: node.labels.nodes.map((l) => l.name),
   }
 
@@ -486,15 +492,15 @@ function normalizePullRequest(
     .filter((r) => r.submittedAt)
     .map((r) => ({
       id: r.id,
-      prId: pullRequest.id,
-      repoFullName,
-      prNumber: node.number,
+      pr_id: pull_request.id,
+      repo_full_name,
+      pr_number: node.number,
       author: r.author?.login ?? 'unknown',
       state: r.state,
-      submittedAt: r.submittedAt!,
+      submitted_at: r.submittedAt!,
     }))
 
-  return { pullRequest, reviews }
+  return { pull_request, reviews }
 }
 
 export function parseRepoFullName(fullName: string): { owner: string; name: string } | null {

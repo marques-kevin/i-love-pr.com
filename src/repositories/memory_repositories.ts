@@ -1,14 +1,18 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
+import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
 import type {
   AppSettings,
+  DashboardLayoutItem,
   MemberTeam,
+  PrFactRecord,
   PullRequestRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
 import type {
+  PrFactsRepository,
   PullRequestRepository,
   Repositories,
   ReviewRepository,
@@ -18,14 +22,14 @@ import type {
 
 function empty_sync_state(repo_full_name: string): SyncState {
   return {
-    repoFullName: repo_full_name,
-    cursorUpdatedAt: null,
-    pageCursor: null,
+    repo_full_name,
+    cursor_updated_at: null,
+    page_cursor: null,
     mode: 'idle',
-    lastSyncedAt: null,
-    lastError: null,
-    totalFetched: 0,
-    backfillFetched: 0,
+    last_synced_at: null,
+    last_error: null,
+    total_fetched: 0,
+    backfill_fetched: 0,
   }
 }
 
@@ -33,7 +37,8 @@ function normalize_settings(settings: AppSettings): AppSettings {
   return {
     ...settings,
     teams: settings.teams ?? [],
-    businessHours: normalizeBusinessHours(settings.businessHours),
+    business_hours: normalizeBusinessHours(settings.business_hours),
+    dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
   }
 }
 
@@ -42,6 +47,7 @@ type MemoryBag = {
   pull_requests: Map<string, PullRequestRecord>
   reviews: Map<string, ReviewRecord>
   sync_states: Map<string, SyncState>
+  pr_facts: Map<string, PrFactRecord>
 }
 
 export function create_memory_repositories(seed?: {
@@ -49,14 +55,16 @@ export function create_memory_repositories(seed?: {
   pull_requests?: PullRequestRecord[]
   reviews?: ReviewRecord[]
   sync_states?: SyncState[]
+  pr_facts?: PrFactRecord[]
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
     pull_requests: new Map((seed?.pull_requests ?? []).map((pr) => [pr.id, structuredClone(pr)])),
     reviews: new Map((seed?.reviews ?? []).map((r) => [r.id, structuredClone(r)])),
     sync_states: new Map(
-      (seed?.sync_states ?? []).map((s) => [s.repoFullName, structuredClone(s)]),
+      (seed?.sync_states ?? []).map((s) => [s.repo_full_name, structuredClone(s)]),
     ),
+    pr_facts: new Map((seed?.pr_facts ?? []).map((f) => [f.pr_id, structuredClone(f)])),
   }
 
   const save_teams = async (teams: MemberTeam[]) => {
@@ -73,18 +81,31 @@ export function create_memory_repositories(seed?: {
         id: 'settings',
         token: partial.token,
         repos: [...partial.repos],
-        syncIntervalHours: partial.syncIntervalHours ?? existing?.syncIntervalHours ?? 24,
-        backfillLimit: partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
-        ignoredBots: partial.ignoredBots ?? existing?.ignoredBots ?? [...DEFAULT_IGNORED_BOTS],
+        sync_interval_hours:
+          partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
+        backfill_limit:
+          partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
+        ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
         teams: partial.teams ?? existing?.teams ?? [],
-        businessHours: normalizeBusinessHours(
-          partial.businessHours ?? existing?.businessHours ?? DEFAULT_BUSINESS_HOURS,
+        business_hours: normalizeBusinessHours(
+          partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
         ),
-        onboardedAt: existing?.onboardedAt ?? new Date().toISOString(),
+        dashboard_layout: normalize_dashboard_layout(
+          partial.dashboard_layout ?? existing?.dashboard_layout,
+        ),
+        onboarded_at: existing?.onboarded_at ?? new Date().toISOString(),
       }
       return normalize_settings(structuredClone(bag.settings))
     },
     save_teams,
+    save_dashboard_layout: async (layout: DashboardLayoutItem[]) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      bag.settings = {
+        ...bag.settings,
+        dashboard_layout: normalize_dashboard_layout(layout),
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
     upsert_team: async (input) => {
       if (!bag.settings) throw new Error('Settings not initialized')
       const name = input.name.trim()
@@ -101,7 +122,7 @@ export function create_memory_repositories(seed?: {
           id: crypto.randomUUID(),
           name,
           members: [...input.members],
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         })
       }
       return save_teams(teams)
@@ -124,10 +145,12 @@ export function create_memory_repositories(seed?: {
       bag.pull_requests.clear()
       bag.reviews.clear()
       bag.sync_states.clear()
+      bag.pr_facts.clear()
     },
     reset_sync_data: async () => {
       bag.pull_requests.clear()
       bag.reviews.clear()
+      bag.pr_facts.clear()
       for (const key of bag.sync_states.keys()) {
         bag.sync_states.set(key, empty_sync_state(key))
       }
@@ -138,11 +161,11 @@ export function create_memory_repositories(seed?: {
     list_by_repos: async (repos) => {
       const set = new Set(repos)
       return [...bag.pull_requests.values()]
-        .filter((pr) => set.has(pr.repoFullName))
+        .filter((pr) => set.has(pr.repo_full_name))
         .map((pr) => structuredClone(pr))
     },
     count_by_repo: async (repo_full_name) =>
-      [...bag.pull_requests.values()].filter((pr) => pr.repoFullName === repo_full_name).length,
+      [...bag.pull_requests.values()].filter((pr) => pr.repo_full_name === repo_full_name).length,
     put_many: async (prs) => {
       for (const pr of prs) {
         bag.pull_requests.set(pr.id, structuredClone(pr))
@@ -156,17 +179,19 @@ export function create_memory_repositories(seed?: {
   const reviews: ReviewRepository = {
     list_by_pr_ids: async (pr_ids) => {
       const set = new Set(pr_ids)
-      return [...bag.reviews.values()].filter((r) => set.has(r.prId)).map((r) => structuredClone(r))
+      return [...bag.reviews.values()]
+        .filter((r) => set.has(r.pr_id))
+        .map((r) => structuredClone(r))
     },
     list_by_repos: async (repos) => {
       const set = new Set(repos)
       return [...bag.reviews.values()]
-        .filter((r) => set.has(r.repoFullName))
+        .filter((r) => set.has(r.repo_full_name))
         .map((r) => structuredClone(r))
     },
     replace_for_pr: async (pr_id, next_reviews) => {
       for (const [id, review] of [...bag.reviews.entries()]) {
-        if (review.prId === pr_id) bag.reviews.delete(id)
+        if (review.pr_id === pr_id) bag.reviews.delete(id)
       }
       for (const review of next_reviews) {
         bag.reviews.set(review.id, structuredClone(review))
@@ -184,7 +209,7 @@ export function create_memory_repositories(seed?: {
     },
     list: async () => [...bag.sync_states.values()].map((s) => structuredClone(s)),
     put: async (state) => {
-      bag.sync_states.set(state.repoFullName, structuredClone(state))
+      bag.sync_states.set(state.repo_full_name, structuredClone(state))
     },
     update: async (repo_full_name, patch) => {
       const current = bag.sync_states.get(repo_full_name)
@@ -192,7 +217,7 @@ export function create_memory_repositories(seed?: {
         ...empty_sync_state(repo_full_name),
         ...current,
         ...patch,
-        repoFullName: repo_full_name,
+        repo_full_name,
       }
       bag.sync_states.set(repo_full_name, next)
       return structuredClone(next)
@@ -214,5 +239,31 @@ export function create_memory_repositories(seed?: {
     },
   }
 
-  return { settings, pull_requests, reviews, sync_state }
+  const pr_facts: PrFactsRepository = {
+    list_by_repos: async (repos) => {
+      const set = new Set(repos)
+      return [...bag.pr_facts.values()]
+        .filter((f) => set.has(f.repo_full_name))
+        .map((f) => structuredClone(f))
+    },
+    put_many: async (facts) => {
+      for (const fact of facts) {
+        bag.pr_facts.set(fact.pr_id, structuredClone(fact))
+      }
+    },
+    delete_many: async (pr_ids) => {
+      for (const id of pr_ids) bag.pr_facts.delete(id)
+    },
+    delete_by_repos: async (repos) => {
+      const set = new Set(repos)
+      for (const [id, fact] of [...bag.pr_facts.entries()]) {
+        if (set.has(fact.repo_full_name)) bag.pr_facts.delete(id)
+      }
+    },
+    clear: async () => {
+      bag.pr_facts.clear()
+    },
+  }
+
+  return { settings, pull_requests, reviews, sync_state, pr_facts }
 }

@@ -9,6 +9,7 @@ import {
   sync_selected_repos_with_settings,
   refresh_metrics,
 } from '@/modules/dashboard/redux/dashboard_slice'
+import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import {
   load_available_repos,
   load_settings,
@@ -39,6 +40,7 @@ export function register_app_listeners(
       const settings = action.payload
       if (!settings) return
 
+      await ensure_pr_facts(api.extra.repositories)
       api.dispatch(sync_selected_repos_with_settings(settings.repos))
       void api.dispatch(load_available_repos())
       void api.dispatch(refresh_sync_states())

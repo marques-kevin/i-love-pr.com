@@ -10,7 +10,7 @@ import type { EnrichedPullRequest, PrFacts, PullRequestRecord, ReviewRecord } fr
  * When review waiting starts: first "request review", else ready-for-review, else created.
  */
 export function reviewWaitStartAt(pr: PullRequestRecord): string {
-  return pr.firstReviewRequestedAt ?? pr.readyForReviewAt ?? pr.createdAt
+  return pr.first_review_requested_at ?? pr.ready_for_review_at ?? pr.created_at
 }
 
 /**
@@ -26,35 +26,35 @@ export function derivePrFacts(
 ): PrFacts {
   const humanReviews = reviews
     .filter((r) => !isBotLogin(r.author, ignoredBots) && r.author !== pr.author)
-    .sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
+    .sort((a, b) => a.submitted_at.localeCompare(b.submitted_at))
 
   const waitStart = reviewWaitStartAt(pr)
 
-  let cycleTimeHours: number | null = null
-  if (pr.mergedAt) {
-    cycleTimeHours = elapsed(pr.createdAt, pr.mergedAt)
+  let cycle_time_hours: number | null = null
+  if (pr.merged_at) {
+    cycle_time_hours = elapsed(pr.created_at, pr.merged_at)
   }
 
-  let timeToFirstReviewHours: number | null = null
+  let time_to_first_review_hours: number | null = null
   if (humanReviews.length > 0) {
-    timeToFirstReviewHours = Math.max(0, elapsed(waitStart, humanReviews[0].submittedAt))
+    time_to_first_review_hours = Math.max(0, elapsed(waitStart, humanReviews[0].submitted_at))
   }
 
   const firstApproval = humanReviews.find((r) => r.state === 'APPROVED')
-  const firstApprovedAt = firstApproval?.submittedAt ?? null
-  let timeToApproveHours: number | null = null
-  if (firstApprovedAt) {
-    timeToApproveHours = Math.max(0, elapsed(waitStart, firstApprovedAt))
+  const first_approved_at = firstApproval?.submitted_at ?? null
+  let time_to_approve_hours: number | null = null
+  if (first_approved_at) {
+    time_to_approve_hours = Math.max(0, elapsed(waitStart, first_approved_at))
   }
 
   return {
-    isBot: isBotLogin(pr.author, ignoredBots),
-    linesChanged: pr.additions + pr.deletions,
-    firstApprovedAt,
-    cycleTimeHours,
-    timeToFirstReviewHours,
-    timeToApproveHours,
-    reviewRounds: countReviewRounds(humanReviews),
+    is_bot: isBotLogin(pr.author, ignoredBots),
+    lines_changed: pr.additions + pr.deletions,
+    first_approved_at,
+    cycle_time_hours,
+    time_to_first_review_hours,
+    time_to_approve_hours,
+    review_rounds: countReviewRounds(humanReviews),
   }
 }
 
@@ -72,7 +72,7 @@ export function enrichPullRequest(
 }
 
 function countReviewRounds(
-  reviews: { author: string; state: string; submittedAt: string }[],
+  reviews: { author: string; state: string; submitted_at: string }[],
 ): number {
   if (reviews.length === 0) return 0
   const changes = reviews.filter((r) => r.state === 'CHANGES_REQUESTED').length

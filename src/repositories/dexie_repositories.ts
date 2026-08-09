@@ -2,8 +2,10 @@ import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import type { AppSettings, MemberTeam, SyncState } from '@/lib/types'
+import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
 import type {
   PullRequestRepository,
+  PrFactsRepository,
   Repositories,
   ReviewRepository,
   SaveSettingsInput,
@@ -13,14 +15,23 @@ import type {
 
 function empty_sync_state(repo_full_name: string): SyncState {
   return {
-    repoFullName: repo_full_name,
-    cursorUpdatedAt: null,
-    pageCursor: null,
+    repo_full_name,
+    cursor_updated_at: null,
+    page_cursor: null,
     mode: 'idle',
-    lastSyncedAt: null,
-    lastError: null,
-    totalFetched: 0,
-    backfillFetched: 0,
+    last_synced_at: null,
+    last_error: null,
+    total_fetched: 0,
+    backfill_fetched: 0,
+  }
+}
+
+function normalize_settings(settings: AppSettings): AppSettings {
+  return {
+    ...settings,
+    teams: settings.teams ?? [],
+    business_hours: normalizeBusinessHours(settings.business_hours),
+    dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
   }
 }
 
@@ -28,11 +39,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
   const get = async (): Promise<AppSettings | undefined> => {
     const settings = await database.settings.get('settings')
     if (!settings) return undefined
-    return {
-      ...settings,
-      teams: settings.teams ?? [],
-      businessHours: normalizeBusinessHours(settings.businessHours),
-    }
+    return normalize_settings(settings as AppSettings)
   }
 
   const save = async (partial: SaveSettingsInput): Promise<AppSettings> => {
@@ -41,14 +48,19 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       id: 'settings',
       token: partial.token,
       repos: partial.repos,
-      syncIntervalHours: partial.syncIntervalHours ?? existing?.syncIntervalHours ?? 24,
-      backfillLimit: partial.backfillLimit ?? existing?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
-      ignoredBots: partial.ignoredBots ?? existing?.ignoredBots ?? [...DEFAULT_IGNORED_BOTS],
+      sync_interval_hours:
+        partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
+      backfill_limit:
+        partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
+      ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
       teams: partial.teams ?? existing?.teams ?? [],
-      businessHours: normalizeBusinessHours(
-        partial.businessHours ?? existing?.businessHours ?? DEFAULT_BUSINESS_HOURS,
+      business_hours: normalizeBusinessHours(
+        partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
       ),
-      onboardedAt: existing?.onboardedAt ?? new Date().toISOString(),
+      dashboard_layout: normalize_dashboard_layout(
+        partial.dashboard_layout ?? existing?.dashboard_layout,
+      ),
+      onboarded_at: existing?.onboarded_at ?? new Date().toISOString(),
     }
     await database.settings.put(next)
     return next
@@ -62,10 +74,24 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     return next
   }
 
+  const save_dashboard_layout = async (
+    layout: AppSettings['dashboard_layout'],
+  ): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    const next: AppSettings = {
+      ...existing,
+      dashboard_layout: normalize_dashboard_layout(layout),
+    }
+    await database.settings.put(next)
+    return next
+  }
+
   return {
     get,
     save,
     save_teams,
+    save_dashboard_layout,
     upsert_team: async (input) => {
       const existing = await get()
       if (!existing) throw new Error('Settings not initialized')
@@ -85,7 +111,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
           id: crypto.randomUUID(),
           name,
           members: [...input.members],
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         })
       }
       return save_teams(teams)
@@ -97,22 +123,22 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     },
     upsert_repos: async (full_names) => {
       const now = new Date().toISOString()
-      await database.transaction('rw', database.repos, database.syncState, async () => {
+      await database.transaction('rw', database.repos, database.sync_state, async () => {
         for (const full_name of full_names) {
           const [owner, name] = full_name.split('/')
           if (!owner || !name) continue
           const existing = await database.repos.get(full_name)
           if (!existing) {
             await database.repos.put({
-              fullName: full_name,
+              full_name,
               owner,
               name,
-              addedAt: now,
+              added_at: now,
             })
           }
-          const sync = await database.syncState.get(full_name)
+          const sync = await database.sync_state.get(full_name)
           if (!sync) {
-            await database.syncState.put(empty_sync_state(full_name))
+            await database.sync_state.put(empty_sync_state(full_name))
           }
         }
       })
@@ -120,18 +146,24 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     clear_all_data: async () => {
       await database.transaction(
         'rw',
-        database.pullRequests,
-        database.reviews,
-        database.syncState,
-        database.repos,
-        database.settings,
+        [
+          database.pull_requests,
+          database.reviews,
+          database.sync_state,
+          database.repos,
+          database.settings,
+          database.pr_facts,
+          database.chart_specs,
+        ],
         async () => {
           await Promise.all([
-            database.pullRequests.clear(),
+            database.pull_requests.clear(),
             database.reviews.clear(),
-            database.syncState.clear(),
+            database.sync_state.clear(),
             database.repos.clear(),
             database.settings.clear(),
+            database.pr_facts.clear(),
+            database.chart_specs.clear(),
           ])
         },
       )
@@ -139,16 +171,15 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     reset_sync_data: async () => {
       await database.transaction(
         'rw',
-        database.pullRequests,
-        database.reviews,
-        database.syncState,
+        [database.pull_requests, database.reviews, database.sync_state, database.pr_facts],
         async () => {
-          await database.pullRequests.clear()
+          await database.pull_requests.clear()
           await database.reviews.clear()
-          const states = await database.syncState.toArray()
+          await database.pr_facts.clear()
+          const states = await database.sync_state.toArray()
           for (const state of states) {
-            await database.syncState.put({
-              ...empty_sync_state(state.repoFullName),
+            await database.sync_state.put({
+              ...empty_sync_state(state.repo_full_name),
             })
           }
         },
@@ -164,17 +195,17 @@ export function create_dexie_pull_request_repository(
     list_by_repos: async (repos) => {
       if (repos.length === 0) return []
       if (repos.length === 1) {
-        return database.pullRequests.where('repoFullName').equals(repos[0]).toArray()
+        return database.pull_requests.where('repo_full_name').equals(repos[0]).toArray()
       }
-      return database.pullRequests.where('repoFullName').anyOf(repos).toArray()
+      return database.pull_requests.where('repo_full_name').anyOf(repos).toArray()
     },
     count_by_repo: async (repo_full_name) =>
-      database.pullRequests.where('repoFullName').equals(repo_full_name).count(),
+      database.pull_requests.where('repo_full_name').equals(repo_full_name).count(),
     put_many: async (prs) => {
-      await database.pullRequests.bulkPut(prs)
+      await database.pull_requests.bulkPut(prs)
     },
     clear: async () => {
-      await database.pullRequests.clear()
+      await database.pull_requests.clear()
     },
   }
 }
@@ -186,18 +217,18 @@ export function create_dexie_review_repository(database: IlovePrDatabase): Revie
       const chunk_size = 100
       for (let i = 0; i < pr_ids.length; i += chunk_size) {
         const chunk = pr_ids.slice(i, i + chunk_size)
-        const part = await database.reviews.where('prId').anyOf(chunk).toArray()
+        const part = await database.reviews.where('pr_id').anyOf(chunk).toArray()
         reviews = reviews.concat(part)
       }
       return reviews
     },
     list_by_repos: async (repos) => {
       if (repos.length === 0) return []
-      return database.reviews.where('repoFullName').anyOf(repos).toArray()
+      return database.reviews.where('repo_full_name').anyOf(repos).toArray()
     },
     replace_for_pr: async (pr_id, reviews) => {
       await database.transaction('rw', database.reviews, async () => {
-        const existing = await database.reviews.where('prId').equals(pr_id).toArray()
+        const existing = await database.reviews.where('pr_id').equals(pr_id).toArray()
         const incoming_ids = new Set(reviews.map((r) => r.id))
         for (const old of existing) {
           if (!incoming_ids.has(old.id)) {
@@ -217,37 +248,62 @@ export function create_dexie_review_repository(database: IlovePrDatabase): Revie
 
 export function create_dexie_sync_state_repository(database: IlovePrDatabase): SyncStateRepository {
   return {
-    get: async (repo_full_name) => database.syncState.get(repo_full_name),
-    list: async () => database.syncState.toArray(),
+    get: async (repo_full_name) => database.sync_state.get(repo_full_name),
+    list: async () => database.sync_state.toArray(),
     put: async (state) => {
-      await database.syncState.put(state)
+      await database.sync_state.put(state)
     },
     update: async (repo_full_name, patch) => {
-      const current = await database.syncState.get(repo_full_name)
+      const current = await database.sync_state.get(repo_full_name)
       const next: SyncState = {
         ...empty_sync_state(repo_full_name),
         ...current,
         ...patch,
-        repoFullName: repo_full_name,
+        repo_full_name,
       }
-      await database.syncState.put(next)
+      await database.sync_state.put(next)
       return next
     },
     ensure: async (repo_full_name) => {
-      const existing = await database.syncState.get(repo_full_name)
+      const existing = await database.sync_state.get(repo_full_name)
       if (existing) return existing
       const next = empty_sync_state(repo_full_name)
-      await database.syncState.put(next)
+      await database.sync_state.put(next)
       return next
     },
     reset_all: async () => {
-      const states = await database.syncState.toArray()
+      const states = await database.sync_state.toArray()
       for (const state of states) {
-        await database.syncState.put(empty_sync_state(state.repoFullName))
+        await database.sync_state.put(empty_sync_state(state.repo_full_name))
       }
     },
     clear: async () => {
-      await database.syncState.clear()
+      await database.sync_state.clear()
+    },
+  }
+}
+
+export function create_dexie_pr_facts_repository(database: IlovePrDatabase): PrFactsRepository {
+  return {
+    list_by_repos: async (repos) => {
+      if (repos.length === 0) return []
+      if (repos.length === 1) {
+        return database.pr_facts.where('repo_full_name').equals(repos[0]).toArray()
+      }
+      return database.pr_facts.where('repo_full_name').anyOf(repos).toArray()
+    },
+    put_many: async (facts) => {
+      await database.pr_facts.bulkPut(facts)
+    },
+    delete_many: async (pr_ids) => {
+      await database.pr_facts.bulkDelete(pr_ids)
+    },
+    delete_by_repos: async (repos) => {
+      if (repos.length === 0) return
+      await database.pr_facts.where('repo_full_name').anyOf(repos).delete()
+    },
+    clear: async () => {
+      await database.pr_facts.clear()
     },
   }
 }
@@ -258,5 +314,6 @@ export function create_dexie_repositories(database: IlovePrDatabase): Repositori
     pull_requests: create_dexie_pull_request_repository(database),
     reviews: create_dexie_review_repository(database),
     sync_state: create_dexie_sync_state_repository(database),
+    pr_facts: create_dexie_pr_facts_repository(database),
   }
 }

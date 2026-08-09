@@ -1,21 +1,21 @@
 /** 0 = Sunday … 6 = Saturday (JS Date.getDay / ISO weekday via Intl) */
 export interface BusinessHoursConfig {
   enabled: boolean
-  timeZone: string
+  time_zone: string
   workdays: number[]
   /** Minutes from midnight, inclusive start of the work window */
-  startMinutes: number
+  start_minutes: number
   /** Minutes from midnight, exclusive end of the work window */
-  endMinutes: number
+  end_minutes: number
 }
 
 export const DEFAULT_BUSINESS_HOURS: BusinessHoursConfig = {
   enabled: false,
-  timeZone:
+  time_zone:
     typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC',
   workdays: [1, 2, 3, 4, 5],
-  startMinutes: 9 * 60,
-  endMinutes: 18 * 60,
+  start_minutes: 9 * 60,
+  end_minutes: 18 * 60,
 }
 
 export const WEEKDAY_LABELS = [
@@ -184,8 +184,8 @@ export function create_elapsed_hours_fn(
     }
   }
 
-  const { timeZone, workdays, startMinutes, endMinutes } = config
-  if (endMinutes <= startMinutes || workdays.length === 0) {
+  const { time_zone, workdays, start_minutes, end_minutes } = config
+  if (end_minutes <= start_minutes || workdays.length === 0) {
     return create_elapsed_hours_fn({ ...config, enabled: false })
   }
 
@@ -199,8 +199,8 @@ export function create_elapsed_hours_fn(
 
     const window: DayWindow = {
       weekday,
-      window_start_ms: zoned_time_to_utc(year, month, day, startMinutes, timeZone),
-      window_end_ms: zoned_time_to_utc(year, month, day, endMinutes, timeZone),
+      window_start_ms: zoned_time_to_utc(year, month, day, start_minutes, time_zone),
+      window_end_ms: zoned_time_to_utc(year, month, day, end_minutes, time_zone),
     }
     day_cache.set(key, window)
     return window
@@ -211,8 +211,8 @@ export function create_elapsed_hours_fn(
     const end_ms = new Date(end_iso).getTime()
     if (!Number.isFinite(start_ms) || !Number.isFinite(end_ms) || end_ms <= start_ms) return 0
 
-    const start_parts = get_zoned_parts(new Date(start_ms), timeZone)
-    const end_parts = get_zoned_parts(new Date(end_ms), timeZone)
+    const start_parts = get_zoned_parts(new Date(start_ms), time_zone)
+    const end_parts = get_zoned_parts(new Date(end_ms), time_zone)
 
     let cursor = {
       year: start_parts.year,
@@ -262,16 +262,23 @@ export function elapsedHours(
 }
 
 export function normalizeBusinessHours(
-  value: Partial<BusinessHoursConfig> | null | undefined,
+  value:
+    | (Partial<BusinessHoursConfig> & {
+        timeZone?: string
+        startMinutes?: number
+        endMinutes?: number
+      })
+    | null
+    | undefined,
 ): BusinessHoursConfig {
   return {
     enabled: value?.enabled ?? DEFAULT_BUSINESS_HOURS.enabled,
-    timeZone: value?.timeZone || DEFAULT_BUSINESS_HOURS.timeZone,
+    time_zone: value?.time_zone || value?.timeZone || DEFAULT_BUSINESS_HOURS.time_zone,
     workdays:
       value?.workdays && value.workdays.length > 0
         ? [...value.workdays]
         : [...DEFAULT_BUSINESS_HOURS.workdays],
-    startMinutes: value?.startMinutes ?? DEFAULT_BUSINESS_HOURS.startMinutes,
-    endMinutes: value?.endMinutes ?? DEFAULT_BUSINESS_HOURS.endMinutes,
+    start_minutes: value?.start_minutes ?? value?.startMinutes ?? DEFAULT_BUSINESS_HOURS.start_minutes,
+    end_minutes: value?.end_minutes ?? value?.endMinutes ?? DEFAULT_BUSINESS_HOURS.end_minutes,
   }
 }

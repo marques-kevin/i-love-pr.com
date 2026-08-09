@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
 import { requestPersistentStorage } from '@/lib/storage'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
@@ -40,22 +41,32 @@ export const save_settings = create_app_async_thunk<
   {
     token: string
     repos: string[]
-    syncIntervalHours?: number
-    backfillLimit?: number
-    ignoredBots?: string[]
-    businessHours?: BusinessHoursConfig
+    sync_interval_hours?: number
+    backfill_limit?: number
+    ignored_bots?: string[]
+    business_hours?: BusinessHoursConfig
   }
 >('settings/save', async (input, { extra }) => {
+  const previous = await extra.repositories.settings.get()
   const payload: SaveSettingsInput = {
     token: input.token.trim(),
     repos: input.repos.map((r) => r.trim()).filter(Boolean),
-    syncIntervalHours: input.syncIntervalHours,
-    backfillLimit: input.backfillLimit,
-    ignoredBots: input.ignoredBots ?? DEFAULT_IGNORED_BOTS,
-    businessHours: input.businessHours,
+    sync_interval_hours: input.sync_interval_hours,
+    backfill_limit: input.backfill_limit,
+    ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
+    business_hours: input.business_hours,
   }
   const next = await extra.repositories.settings.save(payload)
   await extra.repositories.settings.upsert_repos(next.repos)
+
+  const bots_changed =
+    JSON.stringify(previous?.ignored_bots ?? []) !== JSON.stringify(next.ignored_bots)
+  const hours_changed =
+    JSON.stringify(previous?.business_hours ?? null) !== JSON.stringify(next.business_hours)
+  if (bots_changed || hours_changed) {
+    await rebuild_all_pr_facts(extra.repositories)
+  }
+
   return next
 })
 
@@ -72,6 +83,13 @@ export const delete_team = create_app_async_thunk<AppSettings, string>(
     return extra.repositories.settings.delete_team(id)
   },
 )
+
+export const save_dashboard_layout = create_app_async_thunk<
+  AppSettings,
+  AppSettings['dashboard_layout']
+>('settings/save_dashboard_layout', async (layout, { extra }) => {
+  return extra.repositories.settings.save_dashboard_layout(layout)
+})
 
 export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
@@ -155,6 +173,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(delete_team.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(save_dashboard_layout.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {

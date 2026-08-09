@@ -59,15 +59,17 @@ export function Wrapper({
 }: ConnectorProps) {
   const [token, set_token] = useState(settings?.token ?? '')
   const [repos, set_repos] = useState(settings?.repos ?? [])
-  const [sync_interval_hours, set_sync_interval_hours] = useState(settings?.syncIntervalHours ?? 24)
+  const [sync_interval_hours, set_sync_interval_hours] = useState(
+    settings?.sync_interval_hours ?? 24,
+  )
   const [backfill_limit, set_backfill_limit] = useState(
-    settings?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
+    settings?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
   )
   const [ignored_bots, set_ignored_bots] = useState(
-    (settings?.ignoredBots ?? DEFAULT_IGNORED_BOTS).join('\n'),
+    (settings?.ignored_bots ?? DEFAULT_IGNORED_BOTS).join('\n'),
   )
   const [business_hours, set_business_hours] = useState<BusinessHoursConfig>(
-    normalizeBusinessHours(settings?.businessHours),
+    normalizeBusinessHours(settings?.business_hours),
   )
   const [storage_info, set_storage_info] = useState<{
     usage: number
@@ -78,17 +80,17 @@ export function Wrapper({
   const [busy, set_busy] = useState(false)
 
   const time_zone_options = Array.from(
-    new Set([business_hours.timeZone, DEFAULT_BUSINESS_HOURS.timeZone, ...COMMON_TIMEZONES]),
+    new Set([business_hours.time_zone, DEFAULT_BUSINESS_HOURS.time_zone, ...COMMON_TIMEZONES]),
   )
 
   useEffect(() => {
     if (!open || !settings) return
     set_token(settings.token)
     set_repos(settings.repos)
-    set_sync_interval_hours(settings.syncIntervalHours)
-    set_backfill_limit(settings.backfillLimit ?? DEFAULT_BACKFILL_LIMIT)
-    set_ignored_bots(settings.ignoredBots.join('\n'))
-    set_business_hours(normalizeBusinessHours(settings.businessHours))
+    set_sync_interval_hours(settings.sync_interval_hours)
+    set_backfill_limit(settings.backfill_limit ?? DEFAULT_BACKFILL_LIMIT)
+    set_ignored_bots(settings.ignored_bots.join('\n'))
+    set_business_hours(normalizeBusinessHours(settings.business_hours))
     set_message(null)
     void estimateStorage().then(set_storage_info)
   }, [open, settings])
@@ -108,13 +110,13 @@ export function Wrapper({
       await save_settings({
         token: token.trim(),
         repos,
-        syncIntervalHours: sync_interval_hours,
-        backfillLimit: backfill_limit,
-        ignoredBots: ignored_bots
+        sync_interval_hours,
+        backfill_limit,
+        ignored_bots: ignored_bots
           .split(/[\n,]/)
           .map((s) => s.trim())
           .filter(Boolean),
-        businessHours: normalizeBusinessHours(business_hours),
+        business_hours: normalizeBusinessHours(business_hours),
       })
       void refresh_metrics()
       void run_sync({ force: false })
@@ -266,11 +268,11 @@ export function Wrapper({
                   <select
                     id="bh-tz"
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    value={business_hours.timeZone}
+                    value={business_hours.time_zone}
                     onChange={(e) =>
                       set_business_hours((prev) => ({
                         ...prev,
-                        timeZone: e.target.value,
+                        time_zone: e.target.value,
                       }))
                     }
                   >
@@ -316,11 +318,11 @@ export function Wrapper({
                     <Input
                       id="bh-start"
                       type="time"
-                      value={minutesToTimeInput(business_hours.startMinutes)}
+                      value={minutesToTimeInput(business_hours.start_minutes)}
                       onChange={(e) =>
                         set_business_hours((prev) => ({
                           ...prev,
-                          startMinutes: timeInputToMinutes(e.target.value),
+                          start_minutes: timeInputToMinutes(e.target.value),
                         }))
                       }
                     />
@@ -330,11 +332,11 @@ export function Wrapper({
                     <Input
                       id="bh-end"
                       type="time"
-                      value={minutesToTimeInput(business_hours.endMinutes)}
+                      value={minutesToTimeInput(business_hours.end_minutes)}
                       onChange={(e) =>
                         set_business_hours((prev) => ({
                           ...prev,
-                          endMinutes: timeInputToMinutes(e.target.value),
+                          end_minutes: timeInputToMinutes(e.target.value),
                         }))
                       }
                     />
