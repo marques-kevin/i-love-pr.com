@@ -141,53 +141,58 @@ export function Wrapper({
             }}
           >
             <TabsList>
-              {dashboards.map((tab) => (
-                <TabsTrigger key={tab.id} value={tab.id} className="gap-1 pr-1">
-                  <span>{dashboard_tab_label(tab, intl.formatMessage)}</span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
-                        aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
-                        onPointerDown={(event) => {
-                          event.stopPropagation()
-                        }}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                        }}
-                      >
-                        <MoreHorizontal className="size-3.5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="min-w-40">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          open_rename(tab)
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                        {intl.formatMessage({ id: 'dashboard.rename_tab' })}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        disabled={!can_delete_tab}
-                        onClick={() => {
-                          open_delete(tab)
-                        }}
-                        title={
-                          can_delete_tab
-                            ? undefined
-                            : intl.formatMessage({ id: 'dashboard.delete_disabled' })
-                        }
-                      >
-                        <Trash2 className="size-4" />
-                        {intl.formatMessage({ id: 'dashboard.delete_tab' })}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TabsTrigger>
-              ))}
+              {dashboards.map((tab) => {
+                const is_active = tab.id === active_dashboard_id
+                return (
+                  <TabsTrigger key={tab.id} value={tab.id} className="gap-1 pr-1">
+                    <span>{dashboard_tab_label(tab, intl.formatMessage)}</span>
+                    {is_active && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex size-5 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
+                            aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
+                            onPointerDown={(event) => {
+                              event.stopPropagation()
+                            }}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                            }}
+                          >
+                            <MoreHorizontal className="size-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="min-w-40">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              open_rename(tab)
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                            {intl.formatMessage({ id: 'dashboard.rename_tab' })}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            disabled={!can_delete_tab}
+                            onClick={() => {
+                              open_delete(tab)
+                            }}
+                            title={
+                              can_delete_tab
+                                ? undefined
+                                : intl.formatMessage({ id: 'dashboard.delete_disabled' })
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                            {intl.formatMessage({ id: 'dashboard.delete_tab' })}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </TabsTrigger>
+                )
+              })}
             </TabsList>
           </Tabs>
           <Button
