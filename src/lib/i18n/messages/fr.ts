@@ -66,7 +66,8 @@ export const fr_messages = define_locale_messages({
   'dashboard.delete_confirm': 'Supprimer',
   'dashboard.delete_disabled': 'Gardez au moins un dashboard',
   'dashboard.create_title': 'Nouveau dashboard',
-  'dashboard.create_description': 'Donnez un nom à ce dashboard, puis ajoutez vos graphiques.',
+  'dashboard.create_description':
+    'Donnez un nom à ce dashboard. Teams, période et graphiques sont enregistrés par dashboard.',
   'dashboard.create_name_label': 'Nom',
   'dashboard.create_name_placeholder': 'ex. Reviewers',
   'dashboard.create_cancel': 'Annuler',

@@ -4,8 +4,10 @@ import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import type { AppSettings, DashboardLayoutItem, MemberTeam, SyncState } from '@/lib/types'
 import {
   create_dashboard_tab,
+  normalize_dashboard_filters,
   normalize_dashboard_layout,
   normalize_settings_dashboards,
+  type DashboardTabFilters,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
@@ -107,6 +109,23 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     return next
   }
 
+  const save_dashboard_filters = async (
+    input: DashboardTabFilters & { dashboard_id: string },
+  ): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    if (!existing.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+      throw new Error('Dashboard not found')
+    }
+    const filters = normalize_dashboard_filters(input)
+    const dashboards = existing.dashboards.map((tab) =>
+      tab.id === input.dashboard_id ? { ...tab, ...filters } : tab,
+    )
+    const next: AppSettings = { ...existing, dashboards }
+    await database.settings.put(next)
+    return next
+  }
+
   const create_dashboard = async (name: string): Promise<AppSettings> => {
     const existing = await get()
     if (!existing) throw new Error('Settings not initialized')
@@ -188,6 +207,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     save,
     save_teams,
     save_dashboard_layout,
+    save_dashboard_filters,
     create_dashboard,
     rename_dashboard,
     delete_dashboard,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_DASHBOARD_ID,
   DEFAULT_DASHBOARD_LAYOUT,
+  default_dashboard_filters,
   normalize_dashboard_layout,
   normalize_dashboards,
   normalize_settings_dashboards,
@@ -33,6 +34,7 @@ describe('normalize_dashboards', () => {
     expect(dashboards).toHaveLength(1)
     expect(dashboards[0].id).toBe(DEFAULT_DASHBOARD_ID)
     expect(dashboards[0].layout).toEqual(DEFAULT_DASHBOARD_LAYOUT)
+    expect(dashboards[0]).toMatchObject(default_dashboard_filters())
   })
 
   it('migrates legacy dashboard_layout', () => {
@@ -44,12 +46,28 @@ describe('normalize_dashboards', () => {
         id: DEFAULT_DASHBOARD_ID,
         name: '',
         layout: [{ instance_id: '1', widget_id: 'cycle_time' }],
+        ...default_dashboard_filters(),
       },
     ])
   })
 
   it('keeps an intentional empty legacy layout', () => {
     expect(normalize_dashboards(undefined, [])[0].layout).toEqual([])
+  })
+
+  it('fills missing per-tab filters on legacy tabs', () => {
+    const dashboards = normalize_dashboards([
+      {
+        id: 'a',
+        name: 'A',
+        layout: [],
+      } as never,
+    ])
+    expect(dashboards[0]).toMatchObject({
+      id: 'a',
+      name: 'A',
+      ...default_dashboard_filters(),
+    })
   })
 })
 
@@ -61,10 +79,16 @@ describe('normalize_settings_dashboards', () => {
           id: 'a',
           name: 'A',
           layout: [{ instance_id: '1', widget_id: 'cycle_time' }],
+          members: ['alice'],
+          period_key: '7d',
+          custom_from: '',
+          custom_to: '',
         },
       ],
       active_dashboard_id: 'missing',
     })
     expect(result.active_dashboard_id).toBe('a')
+    expect(result.dashboards[0].members).toEqual(['alice'])
+    expect(result.dashboards[0].period_key).toBe('7d')
   })
 })

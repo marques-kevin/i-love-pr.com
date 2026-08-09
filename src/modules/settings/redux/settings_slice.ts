@@ -93,6 +93,19 @@ export const save_dashboard_layout = create_app_async_thunk<
   return extra.repositories.settings.save_dashboard_layout(layout)
 })
 
+export const save_dashboard_filters = create_app_async_thunk<
+  AppSettings,
+  {
+    dashboard_id: string
+    members: string[]
+    period_key: AppSettings['dashboards'][number]['period_key']
+    custom_from: string
+    custom_to: string
+  }
+>('settings/save_dashboard_filters', async (input, { extra }) => {
+  return extra.repositories.settings.save_dashboard_filters(input)
+})
+
 export const create_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/create_dashboard',
   async (name, { extra }) => {
@@ -206,6 +219,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(save_dashboard_layout.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(save_dashboard_filters.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(create_dashboard.fulfilled, (state, action) => {

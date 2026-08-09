@@ -3,8 +3,10 @@ import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-h
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import {
   create_dashboard_tab,
+  normalize_dashboard_filters,
   normalize_dashboard_layout,
   normalize_settings_dashboards,
+  type DashboardTabFilters,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
@@ -127,6 +129,20 @@ export function create_memory_repositories(seed?: {
           tab.id === bag.settings!.active_dashboard_id
             ? { ...tab, layout: normalized_layout }
             : tab,
+        ),
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    save_dashboard_filters: async (input: DashboardTabFilters & { dashboard_id: string }) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (!bag.settings.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      const filters = normalize_dashboard_filters(input)
+      bag.settings = {
+        ...bag.settings,
+        dashboards: bag.settings.dashboards.map((tab) =>
+          tab.id === input.dashboard_id ? { ...tab, ...filters } : tab,
         ),
       }
       return normalize_settings(structuredClone(bag.settings))

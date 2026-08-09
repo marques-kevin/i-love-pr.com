@@ -8,6 +8,7 @@ import type {
   SyncState,
   DashboardLayoutItem,
 } from '@/lib/types'
+import type { DashboardTabFilters } from '@/lib/dashboard_layout'
 
 export type SaveSettingsInput = Partial<Omit<AppSettings, 'id'>> & {
   token: string
@@ -19,6 +20,9 @@ export interface SettingsRepository {
   save: (partial: SaveSettingsInput) => Promise<AppSettings>
   save_teams: (teams: MemberTeam[]) => Promise<AppSettings>
   save_dashboard_layout: (layout: DashboardLayoutItem[]) => Promise<AppSettings>
+  save_dashboard_filters: (
+    input: DashboardTabFilters & { dashboard_id: string },
+  ) => Promise<AppSettings>
   create_dashboard: (name: string) => Promise<AppSettings>
   rename_dashboard: (input: { dashboard_id: string; name: string }) => Promise<AppSettings>
   delete_dashboard: (dashboard_id: string) => Promise<AppSettings>

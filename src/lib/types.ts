@@ -44,6 +44,11 @@ export interface DashboardTab {
   /** Display name; empty for the built-in default tab (label from i18n). */
   name: string
   layout: DashboardLayoutItem[]
+  /** Selected GitHub logins for this tab; empty = all contributors. */
+  members: string[]
+  period_key: PeriodKey
+  custom_from: string
+  custom_to: string
 }
 
 export interface AppSettings {

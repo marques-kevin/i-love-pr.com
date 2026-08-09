@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { subDays } from 'date-fns'
 import { compute_metrics, list_contributors } from '@/lib/metrics'
 import type { MetricsSnapshot, PeriodKey, PeriodRange } from '@/lib/types'
+import type { DashboardTabFilters } from '@/lib/dashboard_layout'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 function build_period(key: PeriodKey, custom_from?: string, custom_to?: string): PeriodRange {
@@ -82,6 +83,12 @@ const dashboard_slice = createSlice({
     set_custom_to(state, action: PayloadAction<string>) {
       state.custom_to = action.payload
     },
+    hydrate_dashboard_filters(state, action: PayloadAction<DashboardTabFilters>) {
+      state.members = action.payload.members
+      state.period_key = action.payload.period_key
+      state.custom_from = action.payload.custom_from
+      state.custom_to = action.payload.custom_to
+    },
     set_show_settings(state, action: PayloadAction<boolean>) {
       state.show_settings = action.payload
     },
@@ -109,6 +116,7 @@ export const {
   set_period_key,
   set_custom_from,
   set_custom_to,
+  hydrate_dashboard_filters,
   set_show_settings,
 } = dashboard_slice.actions
 
