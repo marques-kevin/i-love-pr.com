@@ -55,9 +55,7 @@ export function create_layout_item(widget_id: DashboardWidgetId): DashboardLayou
   }
 }
 
-export function create_default_dashboard(
-  layout?: DashboardLayoutItem[] | null,
-): DashboardTab {
+export function create_default_dashboard(layout?: DashboardLayoutItem[] | null): DashboardTab {
   return {
     id: DEFAULT_DASHBOARD_ID,
     name: '',
@@ -107,11 +105,10 @@ export function normalize_active_dashboard_id(
   return dashboards[0]?.id ?? DEFAULT_DASHBOARD_ID
 }
 
-export function get_active_dashboard(
-  dashboards: DashboardTab[],
-  active_id: string,
-): DashboardTab {
-  return dashboards.find((tab) => tab.id === active_id) ?? dashboards[0] ?? create_default_dashboard()
+export function get_active_dashboard(dashboards: DashboardTab[], active_id: string): DashboardTab {
+  return (
+    dashboards.find((tab) => tab.id === active_id) ?? dashboards[0] ?? create_default_dashboard()
+  )
 }
 
 /** Settings row may still carry legacy `dashboard_layout` from older IndexedDB writes. */

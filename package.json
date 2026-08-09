@@ -20,8 +20,12 @@
     "i18n:check-parity": "tsx scripts/i18n_check_parity.ts",
     "i18n:check-unused": "tsx scripts/i18n_check_unused.ts",
     "i18n:check": "npm run i18n:check-parity && npm run i18n:check-unused",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run i18n:check",
-    "preview": "vite preview"
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run i18n:check",
+    "preview": "vite preview",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
@@ -48,6 +52,8 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^4.1.10",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "oxlint": "^1.75.0",
     "prettier": "^3.8.1",
     "react-scan": "^0.5.7",

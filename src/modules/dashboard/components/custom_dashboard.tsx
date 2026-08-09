@@ -31,7 +31,10 @@ function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: nu
   return next
 }
 
-function dashboard_tab_label(tab: DashboardTab, format_message: ReturnType<typeof useIntl>['formatMessage']) {
+function dashboard_tab_label(
+  tab: DashboardTab,
+  format_message: ReturnType<typeof useIntl>['formatMessage'],
+) {
   if (tab.id === DEFAULT_DASHBOARD_ID || !tab.name) {
     return format_message({ id: 'dashboard.default_name' })
   }
