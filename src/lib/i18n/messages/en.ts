@@ -141,8 +141,9 @@ export const en_messages = {
   'chart.reviewer.help':
     'For each person: reviews given (they reviewed someone else’s PR) vs reviews received (others reviewed their PRs) in the period.\n\nSelf-reviews and bots are excluded. Top 20 by total activity.',
   'chart.size_vs_review.title': 'Avg review time by size',
+  'chart.size_vs_review.cost_title': 'Approve cost per 100 lines',
   'chart.size_vs_review.help':
-    'For each PR size bucket, average hours to first human review and average hours from review request to first APPROVED.\n\nOnly merged PRs with the relevant timestamps are included.',
+    'Left: for each PR size bucket, average hours to first human review and average hours from review request to first APPROVED.\n\nRight: average approve hours per 100 lines changed in that bucket (normalize review cost by size).\n\nOnly merged PRs with the relevant timestamps are included.',
   'chart.scatter.title': 'Scatter: lines vs request → approve',
   'chart.scatter.help':
     'Each point is one merged PR with a human APPROVED review.\n\nX: lines changed. Y: hours from review-wait start to first approve.\n\nOutliers far up/right are large and/or slow-to-approve PRs.',

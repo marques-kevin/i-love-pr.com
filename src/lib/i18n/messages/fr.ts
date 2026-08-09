@@ -147,8 +147,9 @@ export const fr_messages = define_locale_messages({
   'chart.reviewer.help':
     'Pour chaque personne : reviews données (a reviewé la PR de quelqu’un d’autre) vs reviews reçues (d’autres ont reviewé ses PRs) sur la période.\n\nSelf-reviews et bots exclus. Top 20 par activité totale.',
   'chart.size_vs_review.title': 'Temps de review moyen par taille',
+  'chart.size_vs_review.cost_title': 'Coût d’approve pour 100 lignes',
   'chart.size_vs_review.help':
-    'Pour chaque bucket de taille de PR : moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nUniquement les PRs mergées avec les timestamps pertinents.',
+    'À gauche : pour chaque bucket de taille de PR, moyenne d’heures jusqu’à la 1ʳᵉ review humaine, et moyenne de la demande de review au premier APPROVED.\n\nÀ droite : moyenne d’heures d’approve pour 100 lignes changées dans ce bucket (coût de review normalisé par la taille).\n\nUniquement les PRs mergées avec les timestamps pertinents.',
   'chart.scatter.title': 'Nuage : lignes vs demande → approve',
   'chart.scatter.help':
     'Chaque point est une PR mergée avec un APPROVED humain.\n\nX : lignes changées. Y : heures du début d’attente de review au premier approve.\n\nLes outliers en haut/à droite sont de grosses PRs et/ou lentes à approve.',

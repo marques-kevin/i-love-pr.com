@@ -48,6 +48,13 @@ const sizeVsReviewConfig = {
   },
 } satisfies ChartConfig
 
+const sizeVsReviewCostConfig = {
+  avgHoursPerHundredLines: {
+    label: 'Approve h / 100 lines',
+    color: 'var(--chart-3)',
+  },
+} satisfies ChartConfig
+
 const scatterConfig = {
   timeToApproveHours: {
     label: 'Request → approve (h)',
@@ -186,6 +193,33 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
         <Bar
           dataKey="avgTimeToApproveHours"
           fill="var(--color-avgTimeToApproveHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function SizeVsReviewCostChart({ data }: { data: MetricsSnapshot['sizeVsReviewTime'] }) {
+  const chartData = data.map((row) => ({
+    bucket: row.bucket,
+    count: row.count,
+    avgHoursPerHundredLines:
+      row.avgHoursPerHundredLines != null ? Math.round(row.avgHoursPerHundredLines * 10) / 10 : 0,
+  }))
+
+  return (
+    <ChartContainer config={sizeVsReviewCostConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="avgHoursPerHundredLines"
+          fill="var(--color-avgHoursPerHundredLines)"
           radius={4}
           isAnimationActive={false}
         />
