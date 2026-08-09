@@ -1,0 +1,508 @@
+import type {
+  NormalizedPullRequest,
+  PrState,
+  RateLimitInfo,
+  ReviewState,
+} from './types'
+
+const GRAPHQL_URL = 'https://api.github.com/graphql'
+
+export class GitHubApiError extends Error {
+  status: number
+  rateLimit: RateLimitInfo | null
+  isSecondaryRateLimit: boolean
+
+  constructor(
+    message: string,
+    status: number,
+    rateLimit: RateLimitInfo | null = null,
+    isSecondaryRateLimit = false,
+  ) {
+    super(message)
+    this.name = 'GitHubApiError'
+    this.status = status
+    this.rateLimit = rateLimit
+    this.isSecondaryRateLimit = isSecondaryRateLimit
+  }
+}
+
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: { message: string; type?: string }[]
+}
+
+interface PullRequestsPageData {
+  rateLimit: {
+    remaining: number
+    limit: number
+    resetAt: string
+    cost: number
+  }
+  viewer?: { login: string }
+  repository: {
+    pullRequests: {
+      pageInfo: { hasNextPage: boolean; endCursor: string | null }
+      nodes: GraphQLPullRequest[]
+    }
+  } | null
+}
+
+interface GraphQLPullRequest {
+  number: number
+  title: string
+  state: 'OPEN' | 'CLOSED' | 'MERGED'
+  createdAt: string
+  updatedAt: string
+  closedAt: string | null
+  mergedAt: string | null
+  additions: number
+  deletions: number
+  changedFiles: number
+  author: { login: string } | null
+  labels: { nodes: { name: string }[] }
+  commits: { totalCount: number }
+  comments: { totalCount: number }
+  reviews: {
+    nodes: {
+      id: string
+      author: { login: string } | null
+      state: ReviewState
+      submittedAt: string | null
+    }[]
+  }
+  timelineItems: {
+    nodes: ({ __typename?: string; createdAt: string } | Record<string, never>)[]
+  }
+}
+
+const PULL_REQUESTS_QUERY = `
+  query FetchPullRequests($owner: String!, $name: String!, $cursor: String) {
+    rateLimit {
+      remaining
+      limit
+      resetAt
+      cost
+    }
+    repository(owner: $owner, name: $name) {
+      pullRequests(first: 25, after: $cursor, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          number
+          title
+          state
+          createdAt
+          updatedAt
+          closedAt
+          mergedAt
+          additions
+          deletions
+          changedFiles
+          author {
+            login
+          }
+          labels(first: 20) {
+            nodes {
+              name
+            }
+          }
+          commits {
+            totalCount
+          }
+          comments {
+            totalCount
+          }
+          reviews(first: 100) {
+            nodes {
+              id
+              author {
+                login
+              }
+              state
+              submittedAt
+            }
+          }
+          timelineItems(first: 20, itemTypes: [READY_FOR_REVIEW_EVENT, REVIEW_REQUESTED_EVENT]) {
+            nodes {
+              __typename
+              ... on ReadyForReviewEvent {
+                createdAt
+              }
+              ... on ReviewRequestedEvent {
+                createdAt
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+const VALIDATE_TOKEN_QUERY = `
+  query ValidateToken {
+    rateLimit {
+      remaining
+      limit
+      resetAt
+      cost
+    }
+    viewer {
+      login
+    }
+  }
+`
+
+const LIST_REPOSITORIES_QUERY = `
+  query ListRepositories($cursor: String) {
+    rateLimit {
+      remaining
+      limit
+      resetAt
+      cost
+    }
+    viewer {
+      repositories(
+        first: 100
+        after: $cursor
+        affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
+        orderBy: { field: UPDATED_AT, direction: DESC }
+      ) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          nameWithOwner
+          isPrivate
+        }
+      }
+    }
+  }
+`
+
+const RESOLVE_REPOSITORY_QUERY = `
+  query ResolveRepository($owner: String!, $name: String!) {
+    rateLimit {
+      remaining
+      limit
+      resetAt
+      cost
+    }
+    repository(owner: $owner, name: $name) {
+      nameWithOwner
+      isPrivate
+    }
+  }
+`
+
+export interface GitHubRepoOption {
+  fullName: string
+  isPrivate: boolean
+}
+
+function parseRateLimitFromHeaders(headers: Headers): RateLimitInfo | null {
+  const remaining = headers.get('x-ratelimit-remaining')
+  const limit = headers.get('x-ratelimit-limit')
+  const reset = headers.get('x-ratelimit-reset')
+  if (remaining == null || limit == null || reset == null) return null
+  return {
+    remaining: Number(remaining),
+    limit: Number(limit),
+    resetAt: new Date(Number(reset) * 1000).toISOString(),
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export class GitHubClient {
+  private token: string
+  private lastRateLimit: RateLimitInfo | null = null
+  private minRemainingBeforeThrottle = 50
+
+  constructor(token: string) {
+    this.token = token
+  }
+
+  getRateLimit(): RateLimitInfo | null {
+    return this.lastRateLimit
+  }
+
+  async validateToken(): Promise<{ login: string; rateLimit: RateLimitInfo }> {
+    const data = await this.graphql<{
+      rateLimit: RateLimitInfo & { cost: number }
+      viewer: { login: string }
+    }>(VALIDATE_TOKEN_QUERY)
+    return {
+      login: data.viewer.login,
+      rateLimit: {
+        remaining: data.rateLimit.remaining,
+        limit: data.rateLimit.limit,
+        resetAt: data.rateLimit.resetAt,
+        cost: data.rateLimit.cost,
+      },
+    }
+  }
+
+  /** List repositories accessible with the current token (paginated, capped). */
+  async listRepositories(options?: {
+    maxPages?: number
+  }): Promise<{ repos: GitHubRepoOption[]; rateLimit: RateLimitInfo | null }> {
+    const maxPages = options?.maxPages ?? 5
+    const repos: GitHubRepoOption[] = []
+    let cursor: string | null = null
+    let page = 0
+
+    type ListReposData = {
+      rateLimit: RateLimitInfo & { cost: number }
+      viewer: {
+        repositories: {
+          pageInfo: { hasNextPage: boolean; endCursor: string | null }
+          nodes: { nameWithOwner: string; isPrivate: boolean }[]
+        }
+      }
+    }
+
+    while (page < maxPages) {
+      const data: ListReposData = await this.graphql<ListReposData>(
+        LIST_REPOSITORIES_QUERY,
+        { cursor },
+      )
+
+      for (const node of data.viewer.repositories.nodes) {
+        if (!node?.nameWithOwner) continue
+        repos.push({
+          fullName: node.nameWithOwner,
+          isPrivate: node.isPrivate,
+        })
+      }
+
+      page += 1
+      if (!data.viewer.repositories.pageInfo.hasNextPage) break
+      cursor = data.viewer.repositories.pageInfo.endCursor
+      if (!cursor) break
+    }
+
+    repos.sort((a, b) => a.fullName.localeCompare(b.fullName))
+    return { repos, rateLimit: this.lastRateLimit }
+  }
+
+  /** Resolve a public or accessible repo by owner/name (for manual add). */
+  async resolveRepository(
+    owner: string,
+    name: string,
+  ): Promise<GitHubRepoOption> {
+    const data = await this.graphql<{
+      rateLimit: RateLimitInfo & { cost: number }
+      repository: { nameWithOwner: string; isPrivate: boolean } | null
+    }>(RESOLVE_REPOSITORY_QUERY, { owner, name })
+
+    if (!data.repository) {
+      throw new GitHubApiError(
+        `Repository ${owner}/${name} not found or inaccessible with this token`,
+        404,
+        this.lastRateLimit,
+      )
+    }
+
+    return {
+      fullName: data.repository.nameWithOwner,
+      isPrivate: data.repository.isPrivate,
+    }
+  }
+
+  /**
+   * Fetch one page of pull requests ordered by updatedAt DESC.
+   * Callers drive pagination via pageCursor and stop when they hit their sync cursor.
+   */
+  async fetchPullRequestsPage(
+    owner: string,
+    name: string,
+    pageCursor: string | null = null,
+  ): Promise<{
+    items: NormalizedPullRequest[]
+    pageInfo: { hasNextPage: boolean; endCursor: string | null }
+    rateLimit: RateLimitInfo
+  }> {
+    const data = await this.graphql<PullRequestsPageData>(PULL_REQUESTS_QUERY, {
+      owner,
+      name,
+      cursor: pageCursor,
+    })
+
+    if (!data.repository) {
+      throw new GitHubApiError(`Repository ${owner}/${name} not found or inaccessible`, 404, this.lastRateLimit)
+    }
+
+    const repoFullName = `${owner}/${name}`
+    const items = data.repository.pullRequests.nodes.map((node) =>
+      normalizePullRequest(node, repoFullName),
+    )
+
+    return {
+      items,
+      pageInfo: data.repository.pullRequests.pageInfo,
+      rateLimit: this.lastRateLimit!,
+    }
+  }
+
+  private async graphql<T>(
+    query: string,
+    variables: Record<string, unknown> = {},
+    attempt = 0,
+  ): Promise<T> {
+    await this.maybeThrottle()
+
+    const response = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ query, variables }),
+    })
+
+    const headerRateLimit = parseRateLimitFromHeaders(response.headers)
+    if (headerRateLimit) this.lastRateLimit = headerRateLimit
+
+    const retryAfter = response.headers.get('retry-after')
+
+    if (response.status === 403 || response.status === 429) {
+      const bodyText = await response.text().catch(() => '')
+      const isSecondary =
+        Boolean(retryAfter) ||
+        /secondary rate limit/i.test(bodyText) ||
+        response.headers.get('x-ratelimit-remaining') === '0'
+
+      if (attempt < 5) {
+        const backoffMs = retryAfter
+          ? Number(retryAfter) * 1000
+          : Math.min(60_000, 1000 * 2 ** attempt)
+        await sleep(backoffMs)
+        return this.graphql(query, variables, attempt + 1)
+      }
+      throw new GitHubApiError(
+        'GitHub rate limit exceeded',
+        response.status,
+        this.lastRateLimit,
+        isSecondary,
+      )
+    }
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new GitHubApiError(
+        `GitHub API error ${response.status}: ${text.slice(0, 200)}`,
+        response.status,
+        this.lastRateLimit,
+      )
+    }
+
+    const payload = (await response.json()) as GraphQLResponse<T & { rateLimit?: RateLimitInfo & { cost?: number } }>
+
+    if (payload.data && 'rateLimit' in payload.data && payload.data.rateLimit) {
+      this.lastRateLimit = {
+        remaining: payload.data.rateLimit.remaining,
+        limit: payload.data.rateLimit.limit,
+        resetAt: payload.data.rateLimit.resetAt,
+        cost: payload.data.rateLimit.cost,
+      }
+    }
+
+    if (payload.errors?.length) {
+      const message = payload.errors.map((e) => e.message).join('; ')
+      const isRate = /rate limit/i.test(message)
+      if (isRate && attempt < 5) {
+        const resetMs = this.lastRateLimit
+          ? Math.max(0, new Date(this.lastRateLimit.resetAt).getTime() - Date.now())
+          : 1000 * 2 ** attempt
+        await sleep(Math.min(resetMs || 1000, 60_000))
+        return this.graphql(query, variables, attempt + 1)
+      }
+      throw new GitHubApiError(message, isRate ? 403 : 400, this.lastRateLimit, isRate)
+    }
+
+    if (!payload.data) {
+      throw new GitHubApiError('Empty GraphQL response', 500, this.lastRateLimit)
+    }
+
+    return payload.data
+  }
+
+  private async maybeThrottle(): Promise<void> {
+    if (!this.lastRateLimit) return
+    if (this.lastRateLimit.remaining > this.minRemainingBeforeThrottle) return
+
+    const resetMs = new Date(this.lastRateLimit.resetAt).getTime() - Date.now()
+    if (resetMs <= 0) return
+
+    // Soft throttle: wait a bit when approaching the limit
+    const wait = Math.min(resetMs, 5_000)
+    await sleep(wait)
+  }
+}
+
+function normalizePullRequest(
+  node: GraphQLPullRequest,
+  repoFullName: string,
+): NormalizedPullRequest {
+  const author = node.author?.login ?? 'unknown'
+  const timeline = node.timelineItems.nodes.filter(
+    (n): n is { __typename?: string; createdAt: string } =>
+      'createdAt' in n && typeof n.createdAt === 'string',
+  )
+
+  const readyEvent = timeline.find((n) => n.__typename === 'ReadyForReviewEvent')
+  const reviewRequestedTimes = timeline
+    .filter((n) => n.__typename === 'ReviewRequestedEvent')
+    .map((n) => n.createdAt)
+    .sort()
+
+  const state: PrState = node.state
+  const pullRequest = {
+    id: `${repoFullName}#${node.number}`,
+    repoFullName,
+    number: node.number,
+    title: node.title,
+    author,
+    state,
+    createdAt: node.createdAt,
+    updatedAt: node.updatedAt,
+    closedAt: node.closedAt,
+    mergedAt: node.mergedAt,
+    readyForReviewAt: readyEvent?.createdAt ?? null,
+    firstReviewRequestedAt: reviewRequestedTimes[0] ?? null,
+    additions: node.additions,
+    deletions: node.deletions,
+    changedFiles: node.changedFiles,
+    commitsCount: node.commits.totalCount,
+    commentsCount: node.comments.totalCount,
+    labels: node.labels.nodes.map((l) => l.name),
+  }
+
+  const reviews = node.reviews.nodes
+    .filter((r) => r.submittedAt)
+    .map((r) => ({
+      id: r.id,
+      prId: pullRequest.id,
+      repoFullName,
+      prNumber: node.number,
+      author: r.author?.login ?? 'unknown',
+      state: r.state,
+      submittedAt: r.submittedAt!,
+    }))
+
+  return { pullRequest, reviews }
+}
+
+export function parseRepoFullName(fullName: string): { owner: string; name: string } | null {
+  const trimmed = fullName.trim()
+  const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(trimmed)
+  if (!match) return null
+  return { owner: match[1], name: match[2] }
+}
