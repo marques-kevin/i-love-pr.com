@@ -10,6 +10,7 @@ import {
   YAxis,
   ZAxis,
 } from 'recharts'
+import { useIntl } from 'react-intl'
 import {
   type ChartConfig,
   ChartContainer,
@@ -18,7 +19,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import type { MessageKey } from '@/lib/i18n'
 import type { MetricsSnapshot } from '@/lib/types'
 
 const cycleConfig = {
@@ -38,22 +38,89 @@ const reviewerConfig = {
   received: { label: 'Reviews received', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
-const sizeVsReviewConfig = {
-  avgTimeToFirstReviewHours: {
-    label: 'First review (h)',
-    color: 'var(--chart-1)',
-  },
-  avgTimeToApproveHours: {
-    label: 'Request → approve (h)',
-    color: 'var(--chart-2)',
+const sizeVsReviewColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
+
+const sizeVsReviewCostConfig = {
+  avgHoursPerHundredLines: {
+    label: 'Approve h / 100 lines',
+    color: 'var(--chart-3)',
   },
 } satisfies ChartConfig
 
 const scatterConfig = {
   timeToApproveHours: {
-    label: 'Request → approve (h)',
+    label: 'Ask/ready/created → approve (h)',
     color: 'var(--chart-1)',
   },
+} satisfies ChartConfig
+
+const cycleBreakdownConfig = {
+  createToAskHours: { label: 'Create → ask (h)', color: 'var(--chart-1)' },
+  askToFirstReviewHours: { label: 'Ask → first review (h)', color: 'var(--chart-2)' },
+  firstReviewToApproveHours: { label: 'First review → approve (h)', color: 'var(--chart-3)' },
+  approveToMergeHours: { label: 'Approve → merge (h)', color: 'var(--chart-4)' },
+} satisfies ChartConfig
+
+const reviewLatencyColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
+
+const cyclePercentilesConfig = {
+  p50Hours: { label: 'p50 (h)', color: 'var(--chart-1)' },
+  p95Hours: { label: 'p95 (h)', color: 'var(--chart-2)' },
+} satisfies ChartConfig
+
+const reviewRoundsConfig = {
+  count: { label: 'PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const openPrAgeConfig = {
+  count: { label: 'Open PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const flowVolumeConfig = {
+  opened: { label: 'Opened', color: 'var(--chart-2)' },
+  merged: { label: 'Merged', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const draftLatencyConfig = {
+  avgHours: { label: 'Create → ask (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const leadVsCycleConfig = {
+  leadHours: { label: 'Lead: create → merge (h)', color: 'var(--chart-1)' },
+  reviewCycleHours: { label: 'Review cycle: ask → approve (h)', color: 'var(--chart-2)' },
+} satisfies ChartConfig
+
+const repoComparisonConfig = {
+  mergedCount: { label: 'Merged PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const authorCycleConfig = {
+  avgCycleTimeHours: { label: 'Avg cycle (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
+
+const reviewBalanceConfig = {
+  ratio: { label: 'Given / received', color: 'var(--chart-3)' },
+} satisfies ChartConfig
+
+const reviewStateMixConfig = {
+  approved: { label: 'APPROVED', color: 'var(--chart-1)' },
+  changesRequested: { label: 'CHANGES_REQUESTED', color: 'var(--chart-2)' },
+  commented: { label: 'COMMENTED', color: 'var(--chart-3)' },
+} satisfies ChartConfig
+
+const additionsDeletionsConfig = {
+  additions: { label: 'Additions', color: 'var(--chart-1)' },
+  deletions: { label: 'Deletions', color: 'var(--chart-2)' },
+} satisfies ChartConfig
+
+const roundsVsSizeConfig = {
+  avgReviewRounds: { label: 'Avg review rounds', color: 'var(--chart-1)' },
 } satisfies ChartConfig
 
 export function CycleTimeChart({ data }: { data: MetricsSnapshot['cycleTimeSeries'] }) {
@@ -130,6 +197,18 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
 }
 
 export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsReviewTime'] }) {
+  const intl = useIntl()
+  const config = {
+    avgTimeToFirstReviewHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
+      color: sizeVsReviewColors.avgTimeToFirstReviewHours,
+    },
+    avgTimeToApproveHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
+      color: sizeVsReviewColors.avgTimeToApproveHours,
+    },
+  } satisfies ChartConfig
+
   const chartData = data.map((row) => ({
     ...row,
     avgTimeToFirstReviewHours:
@@ -141,7 +220,7 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
   }))
 
   return (
-    <ChartContainer config={sizeVsReviewConfig} className="aspect-auto h-72 w-full">
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
       <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
@@ -157,6 +236,33 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
         <Bar
           dataKey="avgTimeToApproveHours"
           fill="var(--color-avgTimeToApproveHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function SizeVsReviewCostChart({ data }: { data: MetricsSnapshot['sizeVsReviewTime'] }) {
+  const chartData = data.map((row) => ({
+    bucket: row.bucket,
+    count: row.count,
+    avgHoursPerHundredLines:
+      row.avgHoursPerHundredLines != null ? Math.round(row.avgHoursPerHundredLines * 10) / 10 : 0,
+  }))
+
+  return (
+    <ChartContainer config={sizeVsReviewCostConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="avgHoursPerHundredLines"
+          fill="var(--color-avgHoursPerHundredLines)"
           radius={4}
           isAnimationActive={false}
         />
@@ -231,30 +337,363 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
   )
 }
 
-type FormatMessage = (
-  descriptor: { id: MessageKey },
-  values?: Record<string, string | number>,
-) => string
+export function CycleBreakdownChart({ data }: { data: MetricsSnapshot['cycleBreakdownSeries'] }) {
+  return (
+    <ChartContainer config={cycleBreakdownConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="createToAskHours"
+          stackId="cycle"
+          fill="var(--color-createToAskHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="askToFirstReviewHours"
+          stackId="cycle"
+          fill="var(--color-askToFirstReviewHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="firstReviewToApproveHours"
+          stackId="cycle"
+          fill="var(--color-firstReviewToApproveHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="approveToMergeHours"
+          stackId="cycle"
+          fill="var(--color-approveToMergeHours)"
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
 
-export function correlationInsight(
-  r: number | null,
-  sampleSize: number,
-  metric_label: string,
-  format_message: FormatMessage,
-): string {
-  if (r == null || sampleSize < 10) {
-    return format_message({ id: 'insight.insufficient' }, { metric: metric_label })
-  }
-  const r_str = r.toFixed(2)
-  const abs = Math.abs(r)
-  if (abs < 0.2) {
-    return format_message({ id: 'insight.weak' }, { r: r_str, metric: metric_label })
-  }
-  if (r < 0) {
-    return format_message({ id: 'insight.negative' }, { r: r_str, metric: metric_label })
-  }
-  if (abs < 0.5) {
-    return format_message({ id: 'insight.moderate_pos' }, { r: r_str, metric: metric_label })
-  }
-  return format_message({ id: 'insight.strong_pos' }, { r: r_str, metric: metric_label })
+export function ReviewLatencyChart({ data }: { data: MetricsSnapshot['reviewLatencySeries'] }) {
+  const intl = useIntl()
+  const config = {
+    avgTimeToFirstReviewHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
+      color: reviewLatencyColors.avgTimeToFirstReviewHours,
+    },
+    avgTimeToApproveHours: {
+      label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
+      color: reviewLatencyColors.avgTimeToApproveHours,
+    },
+  } satisfies ChartConfig
+
+  return (
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgTimeToFirstReviewHours"
+          stroke="var(--color-avgTimeToFirstReviewHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="avgTimeToApproveHours"
+          stroke="var(--color-avgTimeToApproveHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function CyclePercentilesChart({
+  data,
+}: {
+  data: MetricsSnapshot['cyclePercentileSeries']
+}) {
+  return (
+    <ChartContainer config={cyclePercentilesConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="p50Hours"
+          stroke="var(--color-p50Hours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="p95Hours"
+          stroke="var(--color-p95Hours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function ReviewRoundsChart({ data }: { data: MetricsSnapshot['reviewRoundsBuckets'] }) {
+  return (
+    <ChartContainer config={reviewRoundsConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="rounds" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function OpenPrAgeChart({ data }: { data: MetricsSnapshot['openPrAgeBuckets'] }) {
+  return (
+    <ChartContainer config={openPrAgeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSeries'] }) {
+  return (
+    <ChartContainer config={flowVolumeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="opened" fill="var(--color-opened)" radius={4} isAnimationActive={false} />
+        <Bar dataKey="merged" fill="var(--color-merged)" radius={4} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function DraftLatencyChart({ data }: { data: MetricsSnapshot['draftLatencySeries'] }) {
+  return (
+    <ChartContainer config={draftLatencyConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgHours"
+          stroke="var(--color-avgHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function LeadVsCycleChart({ data }: { data: MetricsSnapshot['leadVsCycleSeries'] }) {
+  return (
+    <ChartContainer config={leadVsCycleConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="leadHours"
+          stroke="var(--color-leadHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="reviewCycleHours"
+          stroke="var(--color-reviewCycleHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  )
+}
+
+export function RepoComparisonChart({ data }: { data: MetricsSnapshot['repoComparison'] }) {
+  const chart_data = data.map((row) => ({
+    ...row,
+    label: row.repo.includes('/') ? row.repo.split('/').slice(-1)[0] : row.repo,
+  }))
+  return (
+    <ChartContainer config={repoComparisonConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="label" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="mergedCount"
+          fill="var(--color-mergedCount)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function AuthorCycleRankingChart({ data }: { data: MetricsSnapshot['authorCycleRanking'] }) {
+  return (
+    <ChartContainer config={authorCycleConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="author" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="avgCycleTimeHours"
+          fill="var(--color-avgCycleTimeHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBalance'] }) {
+  const chart_data = data
+    .filter((row) => row.ratio != null)
+    .map((row) => ({ ...row, ratio: row.ratio! }))
+  return (
+    <ChartContainer config={reviewBalanceConfig} className="aspect-auto h-80 w-full">
+      <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
+        <CartesianGrid horizontal={false} />
+        <XAxis type="number" tickLine={false} axisLine={false} />
+        <YAxis type="category" dataKey="person" width={96} tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="ratio" fill="var(--color-ratio)" radius={4} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function ReviewStateMixChart({ data }: { data: MetricsSnapshot['reviewStateMixSeries'] }) {
+  return (
+    <ChartContainer config={reviewStateMixConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="approved"
+          stackId="state"
+          fill="var(--color-approved)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="changesRequested"
+          stackId="state"
+          fill="var(--color-changesRequested)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="commented"
+          stackId="state"
+          fill="var(--color-commented)"
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function AdditionsDeletionsChart({
+  data,
+}: {
+  data: MetricsSnapshot['additionsDeletionsSeries']
+}) {
+  return (
+    <ChartContainer config={additionsDeletionsConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="additions"
+          fill="var(--color-additions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="deletions"
+          fill="var(--color-deletions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+
+export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSize'] }) {
+  const chart_data = data.map((row) => ({
+    bucket: row.bucket,
+    count: row.count,
+    avgReviewRounds: row.avgReviewRounds != null ? Math.round(row.avgReviewRounds * 10) / 10 : 0,
+  }))
+  return (
+    <ChartContainer config={roundsVsSizeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chart_data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="avgReviewRounds"
+          fill="var(--color-avgReviewRounds)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
+  )
 }

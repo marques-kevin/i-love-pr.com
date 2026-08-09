@@ -9,24 +9,9 @@ export function Wrapper({ data }: ConnectorProps) {
   return (
     <Panel
       title={intl.formatMessage({ id: 'chart.size_vs_review.title' })}
-      description={intl.formatMessage({ id: 'chart.size_vs_review.description' })}
+      help={intl.formatMessage({ id: 'chart.size_vs_review.help' })}
     >
       <SizeVsReviewTimeChartView data={data} />
-      <ul className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-        {data.map((row) => (
-          <li key={row.bucket}>
-            <span className="font-medium text-foreground">{row.bucket}</span>
-            {' · '}
-            n={row.count}
-            {row.avgHoursPerHundredLines != null && (
-              <>
-                {' · '}
-                {row.avgHoursPerHundredLines.toFixed(1)}h approve / 100 lines
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
     </Panel>
   )
 }

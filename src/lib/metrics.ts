@@ -1,4 +1,11 @@
-import { eachWeekOfInterval, format, isWithinInterval, parseISO, startOfWeek } from 'date-fns'
+import {
+  differenceInCalendarDays,
+  eachWeekOfInterval,
+  format,
+  isWithinInterval,
+  parseISO,
+  startOfWeek,
+} from 'date-fns'
 import { isBotLogin } from './bots'
 import type { MetricsSnapshot, PeriodRange, PrFactRecord, PullRequestRecord } from './types'
 import type { Repositories } from '@/repositories'
@@ -14,25 +21,32 @@ function avg(nums: number[]): number | null {
   return nums.reduce((a, b) => a + b, 0) / nums.length
 }
 
-/** Pearson correlation coefficient; null if fewer than 3 points or zero variance. */
-function pearson(xs: number[], ys: number[]): number | null {
-  const n = Math.min(xs.length, ys.length)
-  if (n < 3) return null
-  const mx = avg(xs.slice(0, n))!
-  const my = avg(ys.slice(0, n))!
-  let num = 0
-  let dx = 0
-  let dy = 0
-  for (let i = 0; i < n; i++) {
-    const vx = xs[i] - mx
-    const vy = ys[i] - my
-    num += vx * vy
-    dx += vx * vx
-    dy += vy * vy
-  }
-  if (dx === 0 || dy === 0) return null
-  return num / Math.sqrt(dx * dy)
+function round1(n: number): number {
+  return Math.round(n * 10) / 10
 }
+
+/** Percentile for 0..1 (e.g. 0.5 = p50). Null if empty. */
+export function percentile(values: number[], p: number): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  if (sorted.length === 1) return sorted[0]
+  const idx = (sorted.length - 1) * Math.min(1, Math.max(0, p))
+  const lo = Math.floor(idx)
+  const hi = Math.ceil(idx)
+  if (lo === hi) return sorted[lo]
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
+}
+
+function open_pr_age_bucket(age_days: number): string {
+  if (age_days < 1) return '<1d'
+  if (age_days < 3) return '1–3d'
+  if (age_days < 7) return '3–7d'
+  if (age_days < 14) return '7–14d'
+  return '14d+'
+}
+
+const OPEN_AGE_BUCKET_ORDER = ['<1d', '1–3d', '3–7d', '7–14d', '14d+']
+const REVIEW_ROUNDS_ORDER = ['0', '1', '2', '3', '4+']
 
 function size_bucket(lines: number): string {
   if (lines < 50) return 'XS (<50)'
@@ -89,8 +103,111 @@ export async function compute_metrics(options: {
       .filter((h): h is number => h != null)
     return {
       date: format(week_start, 'yyyy-MM-dd'),
-      avgHours: hours.length ? Math.round((avg(hours) ?? 0) * 10) / 10 : 0,
+      avgHours: hours.length ? round1(avg(hours) ?? 0) : 0,
       count: week_merged.length,
+    }
+  })
+
+  const cycle_breakdown_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const create_to_ask: number[] = []
+    const ask_to_first: number[] = []
+    const first_to_approve: number[] = []
+    const approve_to_merge: number[] = []
+    for (const pr of week_merged) {
+      const c = pr.cycle
+      if (c.time_from_creation_to_asked_for_review != null) {
+        create_to_ask.push(c.time_from_creation_to_asked_for_review)
+      }
+      if (c.time_from_asked_for_review_to_first_review != null) {
+        ask_to_first.push(c.time_from_asked_for_review_to_first_review)
+      }
+      if (
+        c.time_from_asked_for_review_to_approved != null &&
+        c.time_from_asked_for_review_to_first_review != null
+      ) {
+        first_to_approve.push(
+          Math.max(
+            0,
+            c.time_from_asked_for_review_to_approved - c.time_from_asked_for_review_to_first_review,
+          ),
+        )
+      }
+      if (c.time_from_creation_to_merged != null && c.time_from_creation_to_approved != null) {
+        approve_to_merge.push(
+          Math.max(0, c.time_from_creation_to_merged - c.time_from_creation_to_approved),
+        )
+      }
+    }
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      createToAskHours: round1(avg(create_to_ask) ?? 0),
+      askToFirstReviewHours: round1(avg(ask_to_first) ?? 0),
+      firstReviewToApproveHours: round1(avg(first_to_approve) ?? 0),
+      approveToMergeHours: round1(avg(approve_to_merge) ?? 0),
+      count: week_merged.length,
+    }
+  })
+
+  const review_latency_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const tfr = week_merged
+      .map((pr) => pr.cycle.time_from_asked_for_review_to_first_review)
+      .filter((h): h is number => h != null)
+    const approve = week_merged
+      .map((pr) => pr.cycle.time_from_asked_for_review_to_approved)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      avgTimeToFirstReviewHours: round1(avg(tfr) ?? 0),
+      avgTimeToApproveHours: round1(avg(approve) ?? 0),
+      count: week_merged.length,
+    }
+  })
+
+  const cycle_percentile_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const hours = week_merged
+      .map((pr) => pr.cycle.time_from_creation_to_merged)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      p50Hours: round1(percentile(hours, 0.5) ?? 0),
+      p95Hours: round1(percentile(hours, 0.95) ?? 0),
+      count: week_merged.length,
+    }
+  })
+
+  const flow_volume_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const opened = prs.filter((pr) => {
+      const created = parseISO(pr.created_at)
+      return created >= week_start && created < week_end
+    }).length
+    const merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    }).length
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      opened,
+      merged,
     }
   })
 
@@ -142,26 +259,6 @@ export async function compute_metrics(options: {
       title: pr.title,
       repoFullName: pr.repo_full_name,
     }))
-
-  const approved_scatter = size_review_scatter.filter(
-    (p): p is typeof p & { timeToApproveHours: number } => p.timeToApproveHours != null,
-  )
-
-  const size_review_correlation = {
-    linesVsTimeToFirstReview: pearson(
-      merged_in_period
-        .filter((pr) => pr.cycle.time_from_asked_for_review_to_first_review != null)
-        .map((pr) => pr.lines_changed),
-      merged_in_period
-        .filter((pr) => pr.cycle.time_from_asked_for_review_to_first_review != null)
-        .map((pr) => pr.cycle.time_from_asked_for_review_to_first_review!),
-    ),
-    linesVsTimeToApprove: pearson(
-      approved_scatter.map((p) => p.lines),
-      approved_scatter.map((p) => p.timeToApproveHours),
-    ),
-    sampleSize: approved_scatter.length,
-  }
 
   const throughput_map = new Map<string, number>()
   for (const pr of merged_in_period) {
@@ -218,6 +315,190 @@ export async function compute_metrics(options: {
     .filter((pr) => pr.state === 'OPEN')
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
+  const now = new Date()
+  const open_age_counts = new Map<string, number>()
+  for (const b of OPEN_AGE_BUCKET_ORDER) open_age_counts.set(b, 0)
+  for (const pr of open_prs) {
+    const age_days = Math.max(0, differenceInCalendarDays(now, parseISO(pr.created_at)))
+    const bucket = open_pr_age_bucket(age_days)
+    open_age_counts.set(bucket, (open_age_counts.get(bucket) ?? 0) + 1)
+  }
+  const open_pr_age_buckets = OPEN_AGE_BUCKET_ORDER.map((bucket) => ({
+    bucket,
+    count: open_age_counts.get(bucket) ?? 0,
+  }))
+
+  const rounds_counts = new Map<string, number>()
+  for (const b of REVIEW_ROUNDS_ORDER) rounds_counts.set(b, 0)
+  for (const pr of merged_in_period) {
+    const key = pr.review_rounds >= 4 ? '4+' : String(pr.review_rounds)
+    rounds_counts.set(key, (rounds_counts.get(key) ?? 0) + 1)
+  }
+  const review_rounds_buckets = REVIEW_ROUNDS_ORDER.map((rounds) => ({
+    rounds,
+    count: rounds_counts.get(rounds) ?? 0,
+  }))
+
+  const no_review_count = merged_in_period.filter((pr) => pr.review_rounds === 0).length
+  const no_review_merges = {
+    mergedCount: merged_in_period.length,
+    noReviewCount: no_review_count,
+    noReviewRatio: merged_in_period.length === 0 ? null : no_review_count / merged_in_period.length,
+  }
+
+  const by_author = new Map<string, PrFactRecord[]>()
+  for (const pr of merged_in_period) {
+    const list = by_author.get(pr.author) ?? []
+    list.push(pr)
+    by_author.set(pr.author, list)
+  }
+  const author_leaderboard = [...by_author.entries()]
+    .map(([author, author_prs]) => {
+      const cycles = author_prs
+        .map((pr) => pr.cycle.time_from_creation_to_merged)
+        .filter((h): h is number => h != null)
+      return {
+        author,
+        mergedCount: author_prs.length,
+        avgCycleTimeHours: avg(cycles),
+        avgLinesChanged: avg(author_prs.map((pr) => pr.lines_changed)),
+        avgReviewRounds: avg(author_prs.map((pr) => pr.review_rounds)),
+      }
+    })
+    .sort((a, b) => b.mergedCount - a.mergedCount)
+    .slice(0, 15)
+
+  const draft_latency_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const hours = week_merged
+      .map((pr) => pr.cycle.time_from_creation_to_asked_for_review)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      avgHours: round1(avg(hours) ?? 0),
+      count: hours.length,
+    }
+  })
+
+  const lead_vs_cycle_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    const lead = week_merged
+      .map((pr) => pr.cycle.time_from_creation_to_merged)
+      .filter((h): h is number => h != null)
+    const review_cycle = week_merged
+      .map((pr) => pr.cycle.time_from_asked_for_review_to_approved)
+      .filter((h): h is number => h != null)
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      leadHours: round1(avg(lead) ?? 0),
+      reviewCycleHours: round1(avg(review_cycle) ?? 0),
+      count: week_merged.length,
+    }
+  })
+
+  const by_repo = new Map<string, PrFactRecord[]>()
+  for (const pr of merged_in_period) {
+    const list = by_repo.get(pr.repo_full_name) ?? []
+    list.push(pr)
+    by_repo.set(pr.repo_full_name, list)
+  }
+  const repo_comparison = [...by_repo.entries()]
+    .map(([repo, repo_prs]) => {
+      const cycles = repo_prs
+        .map((pr) => pr.cycle.time_from_creation_to_merged)
+        .filter((h): h is number => h != null)
+      return {
+        repo,
+        mergedCount: repo_prs.length,
+        avgCycleTimeHours: avg(cycles),
+        avgLinesChanged: avg(repo_prs.map((pr) => pr.lines_changed)),
+      }
+    })
+    .sort((a, b) => b.mergedCount - a.mergedCount)
+
+  const author_cycle_ranking = [...by_author.entries()]
+    .map(([author, author_prs]) => {
+      const cycles = author_prs
+        .map((pr) => pr.cycle.time_from_creation_to_merged)
+        .filter((h): h is number => h != null)
+      const avg_cycle = avg(cycles)
+      return avg_cycle == null
+        ? null
+        : {
+            author,
+            mergedCount: author_prs.length,
+            avgCycleTimeHours: round1(avg_cycle),
+          }
+    })
+    .filter((row): row is NonNullable<typeof row> => row != null)
+    .sort((a, b) => b.avgCycleTimeHours - a.avgCycleTimeHours)
+    .slice(0, 15)
+
+  const review_balance = reviewer_load
+    .map((row) => ({
+      person: row.reviewer,
+      given: row.given,
+      received: row.received,
+      ratio: row.received === 0 ? null : round1(row.given / row.received),
+    }))
+    .sort((a, b) => (b.ratio ?? -1) - (a.ratio ?? -1))
+
+  const review_state_mix_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    let approved = 0
+    let changes_requested = 0
+    let commented = 0
+    for (const review of reviews) {
+      const submitted = parseISO(review.submitted_at)
+      if (submitted < week_start || submitted >= week_end) continue
+      const pr = pr_by_id.get(review.pr_id)
+      if (!pr || review.author === pr.author) continue
+      if (review.state === 'APPROVED') approved += 1
+      else if (review.state === 'CHANGES_REQUESTED') changes_requested += 1
+      else if (review.state === 'COMMENTED') commented += 1
+    }
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      approved,
+      changesRequested: changes_requested,
+      commented,
+    }
+  })
+
+  const additions_deletions_series = weeks.map((week_start) => {
+    const week_end = new Date(week_start)
+    week_end.setDate(week_end.getDate() + 7)
+    const week_merged = merged_in_period.filter((pr) => {
+      const m = parseISO(pr.merged_at!)
+      return m >= week_start && m < week_end
+    })
+    return {
+      date: format(week_start, 'yyyy-MM-dd'),
+      additions: week_merged.reduce((sum, pr) => sum + pr.lines_added, 0),
+      deletions: week_merged.reduce((sum, pr) => sum + pr.lines_deleted, 0),
+    }
+  })
+
+  const rounds_vs_size = BUCKET_ORDER.map((bucket) => {
+    const in_bucket = merged_in_period.filter((pr) => size_bucket(pr.lines_changed) === bucket)
+    return {
+      bucket,
+      count: in_bucket.length,
+      avgReviewRounds: avg(in_bucket.map((pr) => pr.review_rounds)),
+    }
+  })
+
   const cycle_hours = merged_in_period
     .map((pr) => pr.cycle.time_from_creation_to_merged)
     .filter((h): h is number => h != null)
@@ -232,12 +513,27 @@ export async function compute_metrics(options: {
 
   return {
     cycleTimeSeries: cycle_time_series,
+    cycleBreakdownSeries: cycle_breakdown_series,
+    reviewLatencySeries: review_latency_series,
+    cyclePercentileSeries: cycle_percentile_series,
     prSizeBuckets: pr_size_buckets,
     sizeVsReviewTime: size_vs_review_time,
     sizeReviewScatter: size_review_scatter,
-    sizeReviewCorrelation: size_review_correlation,
     throughput,
     reviewerLoad: reviewer_load,
+    reviewRoundsBuckets: review_rounds_buckets,
+    noReviewMerges: no_review_merges,
+    authorLeaderboard: author_leaderboard,
+    openPrAgeBuckets: open_pr_age_buckets,
+    flowVolumeSeries: flow_volume_series,
+    draftLatencySeries: draft_latency_series,
+    leadVsCycleSeries: lead_vs_cycle_series,
+    repoComparison: repo_comparison,
+    authorCycleRanking: author_cycle_ranking,
+    reviewBalance: review_balance,
+    reviewStateMixSeries: review_state_mix_series,
+    additionsDeletionsSeries: additions_deletions_series,
+    roundsVsSize: rounds_vs_size,
     openPrs: open_prs,
     summary: {
       mergedCount: merged_in_period.length,

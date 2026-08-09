@@ -3,8 +3,10 @@ import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-h
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import {
   create_dashboard_tab,
+  normalize_dashboard_filters,
   normalize_dashboard_layout,
   normalize_settings_dashboards,
+  type DashboardTabFilters,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
@@ -131,6 +133,20 @@ export function create_memory_repositories(seed?: {
       }
       return normalize_settings(structuredClone(bag.settings))
     },
+    save_dashboard_filters: async (input: DashboardTabFilters & { dashboard_id: string }) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (!bag.settings.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      const filters = normalize_dashboard_filters(input)
+      bag.settings = {
+        ...bag.settings,
+        dashboards: bag.settings.dashboards.map((tab) =>
+          tab.id === input.dashboard_id ? { ...tab, ...filters } : tab,
+        ),
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
     create_dashboard: async (name: string) => {
       if (!bag.settings) throw new Error('Settings not initialized')
       const tab = create_dashboard_tab(name)
@@ -139,6 +155,40 @@ export function create_memory_repositories(seed?: {
         ...bag.settings,
         dashboards: [...bag.settings.dashboards, tab],
         active_dashboard_id: tab.id,
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    rename_dashboard: async (input) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      const name = input.name.trim()
+      if (!name) throw new Error('Dashboard name is required')
+      if (!bag.settings.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      bag.settings = {
+        ...bag.settings,
+        dashboards: bag.settings.dashboards.map((tab) =>
+          tab.id === input.dashboard_id ? { ...tab, name } : tab,
+        ),
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    delete_dashboard: async (dashboard_id: string) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (bag.settings.dashboards.length <= 1) {
+        throw new Error('Cannot delete the last dashboard')
+      }
+      if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      const dashboards = bag.settings.dashboards.filter((tab) => tab.id !== dashboard_id)
+      bag.settings = {
+        ...bag.settings,
+        dashboards,
+        active_dashboard_id:
+          bag.settings.active_dashboard_id === dashboard_id
+            ? dashboards[0].id
+            : bag.settings.active_dashboard_id,
       }
       return normalize_settings(structuredClone(bag.settings))
     },

@@ -20,10 +20,26 @@ export type DashboardWidgetId =
   | 'throughput'
   | 'pr_size'
   | 'reviewer_load'
-  | 'size_review_insight'
   | 'size_vs_review'
+  | 'size_review_cost'
   | 'size_review_scatter'
   | 'open_prs'
+  | 'cycle_breakdown'
+  | 'review_latency'
+  | 'cycle_percentiles'
+  | 'review_rounds'
+  | 'no_review_merges'
+  | 'author_leaderboard'
+  | 'open_pr_age'
+  | 'flow_volume'
+  | 'draft_latency'
+  | 'lead_vs_cycle'
+  | 'repo_comparison'
+  | 'author_cycle_ranking'
+  | 'review_balance'
+  | 'review_state_mix'
+  | 'additions_deletions'
+  | 'rounds_vs_size'
 
 export interface DashboardLayoutItem {
   /** Stable instance key (allows the same widget more than once later). */
@@ -36,6 +52,11 @@ export interface DashboardTab {
   /** Display name; empty for the built-in default tab (label from i18n). */
   name: string
   layout: DashboardLayoutItem[]
+  /** Selected GitHub logins for this tab; empty = all contributors. */
+  members: string[]
+  period_key: PeriodKey
+  custom_from: string
+  custom_to: string
 }
 
 export interface AppSettings {
@@ -196,6 +217,26 @@ export interface SyncProgress {
 
 export interface MetricsSnapshot {
   cycleTimeSeries: { date: string; avgHours: number; count: number }[]
+  cycleBreakdownSeries: {
+    date: string
+    createToAskHours: number
+    askToFirstReviewHours: number
+    firstReviewToApproveHours: number
+    approveToMergeHours: number
+    count: number
+  }[]
+  reviewLatencySeries: {
+    date: string
+    avgTimeToFirstReviewHours: number
+    avgTimeToApproveHours: number
+    count: number
+  }[]
+  cyclePercentileSeries: {
+    date: string
+    p50Hours: number
+    p95Hours: number
+    count: number
+  }[]
   prSizeBuckets: { bucket: string; count: number }[]
   sizeVsReviewTime: {
     bucket: string
@@ -214,13 +255,63 @@ export interface MetricsSnapshot {
     title: string
     repoFullName: string
   }[]
-  sizeReviewCorrelation: {
-    linesVsTimeToFirstReview: number | null
-    linesVsTimeToApprove: number | null
-    sampleSize: number
-  }
   throughput: { period: string; author: string; count: number }[]
   reviewerLoad: { reviewer: string; given: number; received: number }[]
+  reviewRoundsBuckets: { rounds: string; count: number }[]
+  noReviewMerges: {
+    mergedCount: number
+    noReviewCount: number
+    noReviewRatio: number | null
+  }
+  authorLeaderboard: {
+    author: string
+    mergedCount: number
+    avgCycleTimeHours: number | null
+    avgLinesChanged: number | null
+    avgReviewRounds: number | null
+  }[]
+  openPrAgeBuckets: { bucket: string; count: number }[]
+  flowVolumeSeries: { date: string; opened: number; merged: number }[]
+  draftLatencySeries: { date: string; avgHours: number; count: number }[]
+  leadVsCycleSeries: {
+    date: string
+    leadHours: number
+    reviewCycleHours: number
+    count: number
+  }[]
+  repoComparison: {
+    repo: string
+    mergedCount: number
+    avgCycleTimeHours: number | null
+    avgLinesChanged: number | null
+  }[]
+  authorCycleRanking: {
+    author: string
+    mergedCount: number
+    avgCycleTimeHours: number
+  }[]
+  reviewBalance: {
+    person: string
+    given: number
+    received: number
+    ratio: number | null
+  }[]
+  reviewStateMixSeries: {
+    date: string
+    approved: number
+    changesRequested: number
+    commented: number
+  }[]
+  additionsDeletionsSeries: {
+    date: string
+    additions: number
+    deletions: number
+  }[]
+  roundsVsSize: {
+    bucket: string
+    count: number
+    avgReviewRounds: number | null
+  }[]
   openPrs: PrFactRecord[]
   summary: {
     mergedCount: number

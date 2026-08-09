@@ -35,20 +35,41 @@ export const en_messages = {
 
   'dashboard.subtitle': 'Your custom dashboard',
   'dashboard.subtitle_editing': 'Add, reorder, or remove charts on your dashboard.',
+  'dashboard.filters': 'Filters',
+  'dashboard.filters.title': 'Filters',
+  'dashboard.filters.description':
+    'Narrow charts by repositories, teams, and members for this dashboard.',
+  'dashboard.filters.repos': 'Repositories',
+  'dashboard.filters.members': 'Members & teams',
   'dashboard.customize': 'Customize',
   'dashboard.done': 'Done',
   'dashboard.add_chart': 'Add chart',
   'dashboard.empty_title': 'No charts yet',
   'dashboard.empty_body': 'Pick prefabricated charts to build your dashboard.',
   'dashboard.add_title': 'Add a chart',
-  'dashboard.add_description': 'Choose a prefabricated chart to add to your dashboard.',
+  'dashboard.add_description':
+    'Browse the catalog on the left and preview the chart before adding it.',
+  'dashboard.add_preview': 'Preview',
+  'dashboard.add_confirm': 'Add to dashboard',
+  'dashboard.add_cancel': 'Cancel',
   'dashboard.move_up': 'Move up',
   'dashboard.move_down': 'Move down',
   'dashboard.remove': 'Remove {label}',
   'dashboard.default_name': 'Default',
   'dashboard.add_tab': 'Add dashboard',
+  'dashboard.tab_menu': 'Dashboard actions',
+  'dashboard.rename_tab': 'Rename',
+  'dashboard.delete_tab': 'Delete',
+  'dashboard.rename_title': 'Rename dashboard',
+  'dashboard.rename_description': 'Choose a new name for this dashboard.',
+  'dashboard.rename_confirm': 'Save',
+  'dashboard.delete_title': 'Delete dashboard?',
+  'dashboard.delete_description': 'This removes “{name}” and its charts. This cannot be undone.',
+  'dashboard.delete_confirm': 'Delete',
+  'dashboard.delete_disabled': 'Keep at least one dashboard',
   'dashboard.create_title': 'New dashboard',
-  'dashboard.create_description': 'Name this dashboard, then add the charts you want.',
+  'dashboard.create_description':
+    'Name this dashboard. Teams, date range, and charts are saved per dashboard.',
   'dashboard.create_name_label': 'Name',
   'dashboard.create_name_placeholder': 'e.g. Reviewers',
   'dashboard.create_cancel': 'Cancel',
@@ -65,35 +86,156 @@ export const en_messages = {
   'widget.pr_size.description': 'Distribution of PR sizes (XS–XL).',
   'widget.reviewer_load.label': 'Reviewer load',
   'widget.reviewer_load.description': 'Reviews given vs received per person.',
-  'widget.size_review_insight.label': 'Size vs review insight',
-  'widget.size_review_insight.description': 'Correlation between PR size and review time.',
   'widget.size_vs_review.label': 'Size vs review time',
   'widget.size_vs_review.description': 'Average review time by PR size bucket.',
+  'widget.size_review_cost.label': 'Approve cost per 100 lines',
+  'widget.size_review_cost.description': 'Approve hours normalized per 100 lines, by size bucket.',
   'widget.size_review_scatter.label': 'Size vs approve scatter',
   'widget.size_review_scatter.description': 'Lines changed vs request → approve.',
   'widget.open_prs.label': 'Open PRs',
   'widget.open_prs.description': 'Currently open pull requests with stale signals.',
+  'widget.cycle_breakdown.label': 'Cycle breakdown',
+  'widget.cycle_breakdown.description':
+    'Average time spent in each stage from create to merge, by week.',
+  'widget.review_latency.label': 'Review latency',
+  'widget.review_latency.description': 'Time to first review and time to approve by week.',
+  'widget.cycle_percentiles.label': 'Cycle percentiles',
+  'widget.cycle_percentiles.description': 'p50 and p95 cycle time by week.',
+  'widget.review_rounds.label': 'Review rounds',
+  'widget.review_rounds.description': 'How many review rounds merged PRs needed.',
+  'widget.no_review_merges.label': 'No-review merges',
+  'widget.no_review_merges.description': 'Merged PRs that had no human review rounds.',
+  'widget.author_leaderboard.label': 'Author leaderboard',
+  'widget.author_leaderboard.description': 'Merged volume and averages per author.',
+  'widget.open_pr_age.label': 'Open PR age',
+  'widget.open_pr_age.description': 'How old currently open PRs are.',
+  'widget.flow_volume.label': 'Opened vs merged',
+  'widget.flow_volume.description': 'PRs opened and merged per week.',
+  'widget.draft_latency.label': 'Draft / ready latency',
+  'widget.draft_latency.description': 'Time from PR creation to asking for review, by week.',
+  'widget.lead_vs_cycle.label': 'Lead vs review cycle',
+  'widget.lead_vs_cycle.description': 'Create → merge vs ask → approve by week.',
+  'widget.repo_comparison.label': 'Repo comparison',
+  'widget.repo_comparison.description': 'Merged volume per repository.',
+  'widget.author_cycle_ranking.label': 'Author cycle ranking',
+  'widget.author_cycle_ranking.description': 'Authors ranked by average cycle time.',
+  'widget.review_balance.label': 'Review balance',
+  'widget.review_balance.description': 'Reviews given ÷ received per person.',
+  'widget.review_state_mix.label': 'Review state mix',
+  'widget.review_state_mix.description': 'APPROVED vs CHANGES_REQUESTED vs COMMENTED by week.',
+  'widget.additions_deletions.label': 'Additions vs deletions',
+  'widget.additions_deletions.description': 'Lines added and deleted on merges by week.',
+  'widget.rounds_vs_size.label': 'Rounds vs size',
+  'widget.rounds_vs_size.description': 'Average review rounds by PR size bucket.',
 
   'stats.merged': 'Merged PRs',
+  'stats.merged.help':
+    'Count of pull requests that reached MERGED in the selected period, repos, and member filter. Bots ignored in settings are excluded.',
   'stats.cycle_time': 'Avg cycle time',
+  'stats.cycle_time.help':
+    'Average hours from PR creation to merge for merged PRs in scope. Uses calendar time unless business hours are enabled.',
   'stats.cycle_time_biz': 'Avg cycle time (biz)',
+  'stats.cycle_time_biz.help':
+    'Same as avg cycle time, counted only during configured business hours (workdays and hours in settings).',
   'stats.tfr': 'Time to first review',
+  'stats.tfr.help':
+    'Average hours from the review-wait start (first review request, else ready-for-review, else created) to the first human review. Excludes self-reviews and bots.',
   'stats.tfr_biz': 'Time to first review (biz)',
+  'stats.tfr_biz.help': 'Same as time to first review, measured in business hours only.',
   'stats.approve': 'Request → approve',
+  'stats.approve.help':
+    'Average hours from the review-wait start to the first human APPROVED review on merged PRs in scope.',
   'stats.approve_biz': 'Request → approve (biz)',
+  'stats.approve_biz.help': 'Same as request → approve, measured in business hours only.',
   'stats.avg_size': 'Avg PR size',
+  'stats.avg_size.help':
+    'Average additions + deletions (lines changed) across merged PRs in the selected period.',
   'stats.lines': '{count} lines',
 
+  'chart.help_aria': 'About this metric',
+  'chart.legend.wait_to_first_review': 'Ask/ready/created → 1st review (h)',
+  'chart.legend.wait_to_approve': 'Ask/ready/created → approve (h)',
   'chart.cycle_time.title': 'Cycle time over time',
+  'chart.cycle_time.help':
+    'Weekly average of create → merge hours for PRs merged that week.\n\nY-axis: hours (business hours if enabled).\nX-axis: week start (Monday).\n\nUse this to spot regressions in delivery speed over time.',
   'chart.throughput.title': 'Throughput',
+  'chart.throughput.help':
+    'Number of PRs merged each week (all authors combined in this chart).\n\nOnly MERGED PRs in the selected period and filters are counted. Bots are excluded.',
   'chart.pr_size.title': 'PR size distribution',
+  'chart.pr_size.help':
+    'How many merged PRs fall into each size bucket by lines changed (additions + deletions):\nXS <50, S 50–199, M 200–499, L 500–999, XL 1000+.\n\nIf there are no merges in the period, the chart falls back to PRs created or updated in the period.',
   'chart.reviewer.title': 'Review load',
+  'chart.reviewer.help':
+    'For each person: reviews given (they reviewed someone else’s PR) vs reviews received (others reviewed their PRs) in the period.\n\nSelf-reviews and bots are excluded. Top 20 by total activity.',
   'chart.size_vs_review.title': 'Avg review time by size',
-  'chart.size_vs_review.description':
-    'First human review vs time from review request to first approve.',
+  'chart.size_vs_review.help':
+    'Both series share the same start (“review wait”):\n1) first “request review” event if any\n2) else ready-for-review\n3) else PR created\n\nThen:\n• Ask/ready/created → 1st review — until the first human review (not self/bot)\n• Ask/ready/created → approve — until the first human APPROVED\n\nGrouped by PR size bucket. Only merged PRs with the relevant timestamps are included.',
+  'chart.size_review_cost.title': 'Approve cost per 100 lines',
+  'chart.size_review_cost.help':
+    'For each PR size bucket, average approve hours per 100 lines changed.\n\nApprove hours use the same review-wait start as other review metrics (first request review, else ready-for-review, else created → first APPROVED).\n\nOnly merged PRs with an APPROVED review and lines_changed > 0 are included.',
   'chart.scatter.title': 'Scatter: lines vs request → approve',
-  'chart.scatter.description': 'Each point is a merged PR with at least one human APPROVED review.',
+  'chart.scatter.help':
+    'Each point is one merged PR with a human APPROVED review.\n\nX: lines changed. Y: hours from review-wait start (first request review, else ready-for-review, else created) to first approve.\n\nOutliers far up/right are large and/or slow-to-approve PRs.',
   'chart.open_prs.title': 'Open pull requests',
+  'chart.open_prs.help':
+    'Currently OPEN PRs in the selected repos/members (not limited to the period).\n\nAge is since creation. “Stale” marks PRs open 7+ days. Sorted oldest first.',
+  'chart.cycle_breakdown.title': 'Cycle time breakdown',
+  'chart.cycle_breakdown.help':
+    'Stacked weekly averages of mutually exclusive stages for merged PRs:\n1) Create → ask for review\n2) Ask → first human review\n3) First review → first approve\n4) Approve → merge\n\nStages with missing timestamps are omitted from that week’s average.',
+  'chart.review_latency.title': 'Review latency over time',
+  'chart.review_latency.help':
+    'Two weekly series for merged PRs. Both start at the review-wait moment: first “request review”, else ready-for-review, else PR created.\n\n• Ask/ready/created → 1st review — until the first human review\n• Ask/ready/created → approve — until the first human APPROVED\n\nRising curves mean the review queue is slowing down.',
+  'chart.cycle_percentiles.title': 'Cycle time percentiles',
+  'chart.cycle_percentiles.help':
+    'Weekly p50 (median) and p95 of create → merge hours for PRs merged that week.\n\np50 shows the typical PR; p95 shows the slow tail. A wide gap means a few PRs dominate delay.',
+  'chart.review_rounds.title': 'Review rounds distribution',
+  'chart.review_rounds.help':
+    'How many review rounds merged PRs needed.\n\nRounds ≈ CHANGES_REQUESTED events + 1 if there was an APPROVED (0 if no human reviews). Bucket “4+” groups heavy bounce-backs.',
+  'chart.no_review_merges.title': 'Merges without review',
+  'chart.no_review_merges.help':
+    'Among merged PRs in scope, how many had zero human review rounds (no non-author, non-bot reviews).\n\nShare = no-review merges ÷ all merges in the period.',
+  'chart.no_review_merges.count': 'No-review merges',
+  'chart.no_review_merges.ratio': 'Share of merges',
+  'chart.no_review_merges.empty': 'No merged PRs in this period.',
+  'chart.author_leaderboard.title': 'Author leaderboard',
+  'chart.author_leaderboard.help':
+    'Top authors by merged PR count in the period (max 15).\n\nColumns: merges, average cycle time (create → merge), average lines changed, average review rounds.',
+  'chart.author_leaderboard.author': 'Author',
+  'chart.author_leaderboard.merged': 'Merged',
+  'chart.author_leaderboard.cycle': 'Avg cycle',
+  'chart.author_leaderboard.size': 'Avg size',
+  'chart.author_leaderboard.rounds': 'Avg rounds',
+  'chart.author_leaderboard.empty': 'No merged PRs in this period.',
+  'chart.open_pr_age.title': 'Open PR age',
+  'chart.open_pr_age.help':
+    'Distribution of currently OPEN PRs by age since creation: <1d, 1–3d, 3–7d, 7–14d, 14d+.\n\nNot filtered by the period control — shows live backlog for selected repos/members.',
+  'chart.flow_volume.title': 'Opened vs merged',
+  'chart.flow_volume.help':
+    'Weekly counts of PRs created (opened) vs PRs merged.\n\nOpened uses created_at; merged uses merged_at. If opened stays above merged, WIP is growing.',
+  'chart.draft_latency.title': 'Draft / ready latency',
+  'chart.draft_latency.help':
+    'Weekly average hours from PR creation to the review-wait start (first request review, else ready-for-review, else created — so this is often near 0 when no explicit ask).\n\nBased on merged PRs that week with a create→ask duration.',
+  'chart.lead_vs_cycle.title': 'Lead time vs review cycle',
+  'chart.lead_vs_cycle.help':
+    'Two weekly averages for merged PRs:\n• Lead — create → merge\n• Review cycle — ask/ready/created → first APPROVED\n\nLead includes coding wait before review; review cycle focuses on the review queue.',
+  'chart.repo_comparison.title': 'Merged volume by repo',
+  'chart.repo_comparison.help':
+    'How many PRs were merged per repository in the selected period (member filter applied).\n\nRepos are sorted by merge count. Short name is shown on the axis; full name is in the tooltip.',
+  'chart.author_cycle_ranking.title': 'Authors by avg cycle time',
+  'chart.author_cycle_ranking.help':
+    'Authors ranked by average create → merge hours for their merged PRs in the period (top 15 with at least one timed merge).\n\nHigher bars mean slower delivery for that author in this sample.',
+  'chart.review_balance.title': 'Review balance (given ÷ received)',
+  'chart.review_balance.help':
+    'For each person with human reviews in the period: reviews given ÷ reviews received.\n\nRatio > 1: gives more reviews than they get. Ratio < 1: receives more than they give. People with 0 received are omitted (undefined ratio).',
+  'chart.review_state_mix.title': 'Review state mix',
+  'chart.review_state_mix.help':
+    'Weekly counts of human review submissions by state: APPROVED, CHANGES_REQUESTED, COMMENTED.\n\nSelf-reviews and bots are excluded. DISMISSED/PENDING are omitted.',
+  'chart.additions_deletions.title': 'Additions vs deletions',
+  'chart.additions_deletions.help':
+    'Sum of lines added and lines deleted on PRs merged each week.\n\nShows whether the team is growing the codebase or churning/refactoring.',
+  'chart.rounds_vs_size.title': 'Avg review rounds by size',
+  'chart.rounds_vs_size.help':
+    'For each PR size bucket (XS–XL by lines changed), average review rounds on merged PRs in the period.\n\nRounds ≈ CHANGES_REQUESTED events + 1 if APPROVED (0 if no human reviews).',
   'open_prs.empty': 'No open pull requests in the selected scope.',
   'open_prs.stale': 'stale',
   'open_prs.meta': '{repo} · @{author} · {lines} lines',
@@ -101,16 +243,6 @@ export const en_messages = {
   'open_prs.next': 'Next',
   'open_prs.page': 'Page {page} of {total}',
   'open_prs.range': '{from}–{to} of {count}',
-
-  'insight.title': 'Does PR size slow down review?',
-  'insight.metric_approve': 'request → approve',
-  'insight.insufficient': 'Not enough data yet (need ≥10 merged PRs with both size and {metric}).',
-  'insight.strong_pos': 'Strong positive correlation (r={r}): larger PRs take longer to {metric}.',
-  'insight.moderate_pos':
-    'Moderate positive correlation (r={r}): larger PRs tend to take longer to {metric}.',
-  'insight.weak': 'Weak/no linear correlation (r={r}) between lines changed and time to {metric}.',
-  'insight.negative':
-    'Negative correlation (r={r}): larger PRs are not slower to {metric} in this sample.',
 
   'period.7d': '7d',
   'period.30d': '30d',
