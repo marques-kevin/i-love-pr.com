@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { get_umami_data_domains, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from './src/lib/umami.js'
 
 const root_dir = path.dirname(fileURLToPath(import.meta.url))
 
@@ -14,6 +15,24 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'prod-umami',
+      apply: 'build',
+      transformIndexHtml() {
+        return [
+          {
+            tag: 'script',
+            attrs: {
+              defer: true,
+              src: UMAMI_SCRIPT_URL,
+              'data-website-id': UMAMI_WEBSITE_ID,
+              'data-domains': get_umami_data_domains(),
+            },
+            injectTo: 'head',
+          },
+        ]
+      },
+    },
     {
       name: 'dev-react-scan',
       apply: 'serve',
