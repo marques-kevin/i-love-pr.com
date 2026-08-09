@@ -1,15 +1,13 @@
-import { useMemo, useState, type FormEvent } from 'react'
-import { FormattedMessage, useIntl } from 'react-intl'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { RepoPicker } from '@/components/repo_picker'
+import { useMemo, useState } from 'react'
+import { useIntl } from 'react-intl'
 import { GitHubClient } from '@/lib/github-client'
+import { analyze_token_scopes, type TokenScopeAnalysis } from '@/lib/github_token_scopes'
 import type { RateLimitInfo } from '@/lib/types'
 import { LocaleSwitcher } from '@/modules/i18n'
-import { load_available_repos as load_available_repos_thunk } from '@/store'
 import { connector, type ConnectorProps } from './onboarding.connector'
+import { OnboardingRepoStep } from './onboarding_repo_step'
+import { OnboardingStepIndicator } from './onboarding_step_indicator'
+import { OnboardingTokenStep } from './onboarding_token_step'
 
 export function Wrapper({
   available_repos,
@@ -19,35 +17,58 @@ export function Wrapper({
   clear_available_repos,
 }: ConnectorProps) {
   const intl = useIntl()
+  const [step, set_step] = useState<1 | 2>(1)
   const [token, set_token] = useState('')
   const [repos, set_repos] = useState<string[]>([])
   const [login, set_login] = useState<string | null>(null)
   const [rate_limit, set_rate_limit] = useState<RateLimitInfo | null>(null)
+  const [scope_analysis, set_scope_analysis] = useState<TokenScopeAnalysis | null>(null)
   const [validating, set_validating] = useState(false)
   const [saving, set_saving] = useState(false)
   const [error, set_error] = useState<string | null>(null)
+
+  const can_continue = useMemo(
+    () => Boolean(login) && Boolean(scope_analysis?.has_required_access),
+    [login, scope_analysis],
+  )
 
   const can_submit = useMemo(
     () => Boolean(token.trim()) && repos.length > 0 && Boolean(login),
     [token, repos, login],
   )
 
+  function reset_token_state() {
+    set_login(null)
+    set_rate_limit(null)
+    set_scope_analysis(null)
+    clear_available_repos()
+    set_repos([])
+    set_error(null)
+  }
+
+  function handle_token_change(next_token: string) {
+    set_token(next_token)
+    reset_token_state()
+  }
+
   async function validate_token() {
     set_error(null)
     set_validating(true)
     set_login(null)
+    set_scope_analysis(null)
     clear_available_repos()
     try {
       const trimmed = token.trim()
       const client = new GitHubClient(trimmed)
-      const result = await client.validateToken()
+      const [result, scope_result] = await Promise.all([
+        client.validateToken(),
+        client.inspectTokenScopes(),
+      ])
       set_login(result.login)
       set_rate_limit(result.rateLimit)
+      set_scope_analysis(analyze_token_scopes(scope_result.scopes, scope_result.token_type))
 
-      const action = await load_available_repos({ token: trimmed, force: true })
-      if (load_available_repos_thunk.fulfilled.match(action) && action.payload.repos.length === 0) {
-        set_error(intl.formatMessage({ id: 'onboarding.error.no_repos' }))
-      }
+      await load_available_repos({ token: trimmed, force: true })
     } catch (e) {
       set_error(
         e instanceof Error
@@ -59,8 +80,7 @@ export function Wrapper({
     }
   }
 
-  async function handle_submit(e: FormEvent) {
-    e.preventDefault()
+  async function handle_submit() {
     if (!can_submit) return
     set_saving(true)
     set_error(null)
@@ -78,7 +98,7 @@ export function Wrapper({
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
-      <header className="mb-12">
+      <header className="mb-8">
         <div className="mb-4 flex justify-end">
           <LocaleSwitcher />
         </div>
@@ -90,83 +110,41 @@ export function Wrapper({
         </p>
       </header>
 
-      <form onSubmit={(e) => void handle_submit(e)} className="space-y-8">
-        <div className="space-y-2">
-          <Label htmlFor="token">{intl.formatMessage({ id: 'onboarding.token_label' })}</Label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              id="token"
-              type="password"
-              autoComplete="off"
-              value={token}
-              onChange={(e) => {
-                set_token(e.target.value)
-                set_login(null)
-                clear_available_repos()
-                set_repos([])
-              }}
-              placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
-              className="h-10 flex-1"
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              className="h-10"
-              onClick={() => void validate_token()}
-              disabled={!token.trim() || validating}
-            >
-              {validating
-                ? intl.formatMessage({ id: 'onboarding.checking' })
-                : intl.formatMessage({ id: 'onboarding.validate' })}
-            </Button>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            <FormattedMessage
-              id="onboarding.token_help"
-              values={{
-                repo: <code className="text-foreground">repo</code>,
-                public_repo: <code className="text-foreground">public_repo</code>,
-              }}
-            />
-          </p>
-          {login && (
-            <p className="text-sm text-primary">
-              {intl.formatMessage({ id: 'onboarding.authenticated_as' }, { login })}
-              {rate_limit && (
-                <>
-                  {' '}
-                  ·{' '}
-                  {intl.formatMessage(
-                    { id: 'onboarding.rate_limit' },
-                    { remaining: rate_limit.remaining, limit: rate_limit.limit },
-                  )}
-                </>
-              )}
-            </p>
-          )}
-        </div>
+      <OnboardingStepIndicator current_step={step} />
 
-        <RepoPicker
-          availableRepos={available_repos}
-          selected={repos}
-          onChange={set_repos}
+      {step === 1 ? (
+        <OnboardingTokenStep
+          token={token}
+          on_token_change={handle_token_change}
+          login={login}
+          rate_limit={rate_limit}
+          scope_analysis={scope_analysis}
+          validating={validating}
+          error={error}
+          on_validate={() => void validate_token()}
+          on_continue={() => {
+            set_error(null)
+            set_step(2)
+          }}
+          can_continue={can_continue}
+        />
+      ) : (
+        <OnboardingRepoStep
+          available_repos={available_repos}
+          repos={repos}
+          on_repos_change={set_repos}
           token={token}
           loading={available_repos_loading || validating}
-          disabled={!login}
+          saving={saving}
+          error={error}
+          on_back={() => {
+            set_error(null)
+            set_step(1)
+          }}
+          on_submit={() => void handle_submit()}
+          can_submit={can_submit}
         />
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <Button type="submit" size="lg" disabled={!can_submit || saving}>
-          {saving
-            ? intl.formatMessage({ id: 'onboarding.starting' })
-            : intl.formatMessage({ id: 'onboarding.start' })}
-        </Button>
-      </form>
+      )}
     </div>
   )
 }

@@ -19,9 +19,56 @@ export const fr_messages = define_locale_messages({
   'onboarding.rate_limit': '{remaining}/{limit} points GraphQL restants',
   'onboarding.start': 'Commencer l’analyse',
   'onboarding.starting': 'Démarrage…',
-  'onboarding.error.no_repos': 'Aucun dépôt trouvé pour ce token.',
   'onboarding.error.invalid_token': 'Token invalide',
   'onboarding.error.save_failed': 'Échec de l’enregistrement des paramètres',
+  'onboarding.steps_label': 'Étapes de configuration',
+  'onboarding.step.token': 'Token GitHub',
+  'onboarding.step.repos': 'Dépôts',
+  'onboarding.step.token_title': 'Connectez votre token GitHub',
+  'onboarding.step.token_description':
+    'Créez un personal access token avec accès en lecture aux pull requests. Nous affichons uniquement les scopes accordés à votre token.',
+  'onboarding.step.repos_title': 'Choisissez les dépôts à suivre',
+  'onboarding.step.repos_description':
+    'Sélectionnez des dépôts de votre compte, ou ajoutez un dépôt public par son URL.',
+  'onboarding.next': 'Continuer',
+  'onboarding.back': 'Retour',
+  'onboarding.add_public_repo_link': 'Ajouter un dépôt public ?',
+  'onboarding.scopes.title': 'Scopes du token',
+  'onboarding.scopes.classic_help':
+    'Les scopes requis sont mis en avant. Accordez au moins l’un d’entre eux pour continuer.',
+  'onboarding.scopes.fine_grained_help':
+    'Les tokens fine-grained ne peuvent pas être inspectés automatiquement. Assurez-vous d’avoir un accès en lecture aux pull requests des dépôts à suivre.',
+  'onboarding.scopes.required_badge': 'Requis',
+  'onboarding.scopes.status.granted': 'Accordé',
+  'onboarding.scopes.status.missing': 'Manquant',
+  'onboarding.scopes.status.covered': 'Couvert par repo',
+  'onboarding.scopes.missing_title': 'Scope requis manquant',
+  'onboarding.scopes.missing_description':
+    'Votre token doit avoir au minimum le scope public_repo ou repo pour lire les pull requests.',
+  'onboarding.scopes.permissive_title': 'Token trop permissif',
+  'onboarding.scopes.permissive_description':
+    'Ce token accorde des scopes dont iLovePR n’a pas besoin : {scopes}. Envisagez de créer un token plus restrictif.',
+  'onboarding.scopes.repo_tip':
+    'Si vous ne suivez que des dépôts publics, préférez un token avec public_repo plutôt que le scope repo plus large.',
+  'onboarding.scope.public_repo': 'Accès en lecture aux dépôts publics et à leurs pull requests.',
+  'onboarding.scope.repo':
+    'Accès complet aux dépôts privés (inclut public_repo). À utiliser uniquement si vous avez besoin des dépôts privés.',
+  'onboarding.scope.read_user': 'Lecture des informations de profil de base (optionnel).',
+
+  'repo_picker.label': 'Dépôts à suivre',
+  'repo_picker.loading': 'Chargement des dépôts…',
+  'repo_picker.validate_first': 'Validez d’abord votre token',
+  'repo_picker.no_repos': 'Aucun dépôt trouvé',
+  'repo_picker.select_placeholder': 'Sélectionner un dépôt…',
+  'repo_picker.search_placeholder': 'Rechercher owner/repo…',
+  'repo_picker.search_empty': 'Aucun dépôt trouvé.',
+  'repo_picker.private_badge': 'privé',
+  'repo_picker.manual_placeholder': 'Coller un dépôt public : owner/repo',
+  'repo_picker.add': 'Ajouter',
+  'repo_picker.checking': 'Vérification…',
+  'repo_picker.remove': 'Retirer {repo}',
+  'repo_picker.error.format': 'Format attendu : owner/repo',
+  'repo_picker.error.not_found': 'Dépôt introuvable ou inaccessible',
 
   'sync.syncing': 'Synchronisation…',
   'sync.never': 'Jamais synchronisé',

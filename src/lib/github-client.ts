@@ -1,4 +1,7 @@
+import { detect_token_type, type GitHubTokenType } from './github_token_scopes'
 import type { NormalizedPullRequest, PrState, RateLimitInfo, ReviewState } from './types'
+
+const REST_API_URL = 'https://api.github.com'
 
 const GRAPHQL_URL = 'https://api.github.com/graphql'
 
@@ -252,6 +255,41 @@ export class GitHubClient {
       login: data.viewer.login,
       rateLimit: to_rate_limit_info(data.rateLimit),
     }
+  }
+
+  /** Inspect OAuth scopes granted to a classic personal access token. */
+  async inspectTokenScopes(): Promise<{ scopes: string[]; token_type: GitHubTokenType }> {
+    const token_type = detect_token_type(this.token)
+    if (token_type === 'fine_grained') {
+      return { scopes: [], token_type }
+    }
+
+    const response = await fetch(`${REST_API_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: 'application/vnd.github+json',
+      },
+    })
+
+    const header_rate_limit = parseRateLimitFromHeaders(response.headers)
+    if (header_rate_limit) this.lastRateLimit = header_rate_limit
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new GitHubApiError(
+        `GitHub API error ${response.status}: ${text.slice(0, 200)}`,
+        response.status,
+        this.lastRateLimit,
+      )
+    }
+
+    const scopes_header = response.headers.get('x-oauth-scopes') ?? ''
+    const scopes = scopes_header
+      .split(',')
+      .map((scope) => scope.trim())
+      .filter(Boolean)
+
+    return { scopes, token_type }
   }
 
   /** List repositories accessible with the current token (paginated, capped). */
