@@ -47,27 +47,28 @@ npm run build
 
 Deploy the `dist/` folder to any static host.
 
-### Cloudflare (static hosting)
+### Cloudflare Pages
 
-Cloudflare’s dashboard now creates **Workers** by default — classic **Pages**
-projects are harder to find. For this app that’s fine: we deploy an
-**assets-only Worker** (no server code), which behaves like Pages.
+Pages still exists (separate from Workers). Prefer it for this static app.
 
-Config: `wrangler.jsonc` → serves `./dist` as a SPA.
+**Dashboard**
+
+1. [Workers & Pages](https://dash.cloudflare.com/?to=/:account/workers-and-pages) → **Create application** → **Pages** → **Connect to Git**
+2. Build command: `npm run build`
+3. Build output directory: `dist`
+4. Environment variable: `NODE_VERSION=24`
+
+**CLI** (Direct Upload)
 
 ```bash
-npm install
-npx wrangler login   # once
-npm run deploy       # build + wrangler deploy
+npx wrangler login
+npx wrangler pages project create ilovepr   # once
+npm run deploy                             # build + pages deploy
 ```
 
-In the dashboard (Connect to Git), use the same idea:
+Note: `wrangler deploy` (without `pages`) creates a **Workers** assets project — that’s why you saw a Worker with no logs (no Worker script runs). Use `wrangler pages deploy` for a real Pages project (`*.pages.dev`).
 
-- **Build command:** `npm run build`
-- **Deploy / output:** `dist` (or Wrangler config `assets.directory`)
-- **Node version:** `24`
-
-No Worker script (`main`) is required — only static assets.
+If you already created a Worker named `ilovepr`, delete it in the dashboard (or rename the Pages project) to avoid confusion.
 
 ## Privacy
 
