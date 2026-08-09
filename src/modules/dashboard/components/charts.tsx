@@ -18,7 +18,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
-import type { MessageKey } from '@/lib/i18n'
 import type { MetricsSnapshot } from '@/lib/types'
 
 const cycleConfig = {
@@ -409,32 +408,4 @@ export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSer
       </BarChart>
     </ChartContainer>
   )
-}
-
-type FormatMessage = (
-  descriptor: { id: MessageKey },
-  values?: Record<string, string | number>,
-) => string
-
-export function correlationInsight(
-  r: number | null,
-  sampleSize: number,
-  metric_label: string,
-  format_message: FormatMessage,
-): string {
-  if (r == null || sampleSize < 10) {
-    return format_message({ id: 'insight.insufficient' }, { metric: metric_label })
-  }
-  const r_str = r.toFixed(2)
-  const abs = Math.abs(r)
-  if (abs < 0.2) {
-    return format_message({ id: 'insight.weak' }, { r: r_str, metric: metric_label })
-  }
-  if (r < 0) {
-    return format_message({ id: 'insight.negative' }, { r: r_str, metric: metric_label })
-  }
-  if (abs < 0.5) {
-    return format_message({ id: 'insight.moderate_pos' }, { r: r_str, metric: metric_label })
-  }
-  return format_message({ id: 'insight.strong_pos' }, { r: r_str, metric: metric_label })
 }

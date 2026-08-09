@@ -20,7 +20,6 @@ export type DashboardWidgetId =
   | 'throughput'
   | 'pr_size'
   | 'reviewer_load'
-  | 'size_review_insight'
   | 'size_vs_review'
   | 'size_review_scatter'
   | 'open_prs'
@@ -242,11 +241,6 @@ export interface MetricsSnapshot {
     title: string
     repoFullName: string
   }[]
-  sizeReviewCorrelation: {
-    linesVsTimeToFirstReview: number | null
-    linesVsTimeToApprove: number | null
-    sampleSize: number
-  }
   throughput: { period: string; author: string; count: number }[]
   reviewerLoad: { reviewer: string; given: number; received: number }[]
   reviewRoundsBuckets: { rounds: string; count: number }[]

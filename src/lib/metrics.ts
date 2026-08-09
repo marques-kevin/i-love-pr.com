@@ -48,26 +48,6 @@ function open_pr_age_bucket(age_days: number): string {
 const OPEN_AGE_BUCKET_ORDER = ['<1d', '1–3d', '3–7d', '7–14d', '14d+']
 const REVIEW_ROUNDS_ORDER = ['0', '1', '2', '3', '4+']
 
-/** Pearson correlation coefficient; null if fewer than 3 points or zero variance. */
-function pearson(xs: number[], ys: number[]): number | null {
-  const n = Math.min(xs.length, ys.length)
-  if (n < 3) return null
-  const mx = avg(xs.slice(0, n))!
-  const my = avg(ys.slice(0, n))!
-  let num = 0
-  let dx = 0
-  let dy = 0
-  for (let i = 0; i < n; i++) {
-    const vx = xs[i] - mx
-    const vy = ys[i] - my
-    num += vx * vy
-    dx += vx * vx
-    dy += vy * vy
-  }
-  if (dx === 0 || dy === 0) return null
-  return num / Math.sqrt(dx * dy)
-}
-
 function size_bucket(lines: number): string {
   if (lines < 50) return 'XS (<50)'
   if (lines < 200) return 'S (50–199)'
@@ -280,26 +260,6 @@ export async function compute_metrics(options: {
       repoFullName: pr.repo_full_name,
     }))
 
-  const approved_scatter = size_review_scatter.filter(
-    (p): p is typeof p & { timeToApproveHours: number } => p.timeToApproveHours != null,
-  )
-
-  const size_review_correlation = {
-    linesVsTimeToFirstReview: pearson(
-      merged_in_period
-        .filter((pr) => pr.cycle.time_from_asked_for_review_to_first_review != null)
-        .map((pr) => pr.lines_changed),
-      merged_in_period
-        .filter((pr) => pr.cycle.time_from_asked_for_review_to_first_review != null)
-        .map((pr) => pr.cycle.time_from_asked_for_review_to_first_review!),
-    ),
-    linesVsTimeToApprove: pearson(
-      approved_scatter.map((p) => p.lines),
-      approved_scatter.map((p) => p.timeToApproveHours),
-    ),
-    sampleSize: approved_scatter.length,
-  }
-
   const throughput_map = new Map<string, number>()
   for (const pr of merged_in_period) {
     const week = format(startOfWeek(parseISO(pr.merged_at!), { weekStartsOn: 1 }), 'yyyy-MM-dd')
@@ -428,7 +388,6 @@ export async function compute_metrics(options: {
     prSizeBuckets: pr_size_buckets,
     sizeVsReviewTime: size_vs_review_time,
     sizeReviewScatter: size_review_scatter,
-    sizeReviewCorrelation: size_review_correlation,
     throughput,
     reviewerLoad: reviewer_load,
     reviewRoundsBuckets: review_rounds_buckets,

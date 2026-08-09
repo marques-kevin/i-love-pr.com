@@ -21,7 +21,6 @@ export const DASHBOARD_WIDGET_CATALOG: DashboardWidgetMeta[] = [
   { widget_id: 'no_review_merges', span: 'half' },
   { widget_id: 'reviewer_load', span: 'half' },
   { widget_id: 'author_leaderboard', span: 'full' },
-  { widget_id: 'size_review_insight', span: 'full' },
   { widget_id: 'size_vs_review', span: 'half' },
   { widget_id: 'size_review_scatter', span: 'half' },
   { widget_id: 'open_pr_age', span: 'half' },

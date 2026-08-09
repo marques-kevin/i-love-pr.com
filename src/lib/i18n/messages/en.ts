@@ -79,8 +79,6 @@ export const en_messages = {
   'widget.pr_size.description': 'Distribution of PR sizes (XS–XL).',
   'widget.reviewer_load.label': 'Reviewer load',
   'widget.reviewer_load.description': 'Reviews given vs received per person.',
-  'widget.size_review_insight.label': 'Size vs review insight',
-  'widget.size_review_insight.description': 'Correlation between PR size and review time.',
   'widget.size_vs_review.label': 'Size vs review time',
   'widget.size_vs_review.description': 'Average review time by PR size bucket.',
   'widget.size_review_scatter.label': 'Size vs approve scatter',
@@ -191,18 +189,6 @@ export const en_messages = {
   'open_prs.next': 'Next',
   'open_prs.page': 'Page {page} of {total}',
   'open_prs.range': '{from}–{to} of {count}',
-
-  'insight.title': 'Does PR size slow down review?',
-  'insight.help':
-    'Pearson correlation between lines changed and request → approve hours on merged PRs with both values.\n\nr near 0: little linear link. Positive r: larger PRs take longer to approve. Needs ≥10 samples for a reliable read.',
-  'insight.metric_approve': 'request → approve',
-  'insight.insufficient': 'Not enough data yet (need ≥10 merged PRs with both size and {metric}).',
-  'insight.strong_pos': 'Strong positive correlation (r={r}): larger PRs take longer to {metric}.',
-  'insight.moderate_pos':
-    'Moderate positive correlation (r={r}): larger PRs tend to take longer to {metric}.',
-  'insight.weak': 'Weak/no linear correlation (r={r}) between lines changed and time to {metric}.',
-  'insight.negative':
-    'Negative correlation (r={r}): larger PRs are not slower to {metric} in this sample.',
 
   'period.7d': '7d',
   'period.30d': '30d',

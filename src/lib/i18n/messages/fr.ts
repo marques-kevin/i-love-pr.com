@@ -83,8 +83,6 @@ export const fr_messages = define_locale_messages({
   'widget.pr_size.description': 'Distribution des tailles de PR (XS–XL).',
   'widget.reviewer_load.label': 'Charge de review',
   'widget.reviewer_load.description': 'Reviews données vs reçues par personne.',
-  'widget.size_review_insight.label': 'Insight taille vs review',
-  'widget.size_review_insight.description': 'Corrélation entre taille de PR et temps de review.',
   'widget.size_vs_review.label': 'Taille vs temps de review',
   'widget.size_vs_review.description': 'Temps de review moyen par bucket de taille.',
   'widget.size_review_scatter.label': 'Nuage taille vs approve',
@@ -197,20 +195,6 @@ export const fr_messages = define_locale_messages({
   'open_prs.next': 'Suivant',
   'open_prs.page': 'Page {page} sur {total}',
   'open_prs.range': '{from}–{to} sur {count}',
-
-  'insight.title': 'La taille des PR ralentit-elle la review ?',
-  'insight.help':
-    'Corrélation de Pearson entre lignes changées et heures demande → approve sur les PRs mergées ayant les deux valeurs.\n\nr proche de 0 : peu de lien linéaire. r positif : les plus grosses PRs mettent plus longtemps à être approved. Il faut ≥10 échantillons pour une lecture fiable.',
-  'insight.metric_approve': 'demande → approve',
-  'insight.insufficient': 'Pas assez de données (il faut ≥10 PRs mergées avec taille et {metric}).',
-  'insight.strong_pos':
-    'Forte corrélation positive (r={r}) : les plus grosses PRs mettent plus longtemps à {metric}.',
-  'insight.moderate_pos':
-    'Corrélation positive modérée (r={r}) : les plus grosses PRs tendent à prendre plus longtemps à {metric}.',
-  'insight.weak':
-    'Corrélation linéaire faible / nulle (r={r}) entre lignes changées et temps à {metric}.',
-  'insight.negative':
-    'Corrélation négative (r={r}) : les plus grosses PRs ne sont pas plus lentes à {metric} dans cet échantillon.',
 
   'period.7d': '7j',
   'period.30d': '30j',
