@@ -1,5 +1,9 @@
 import { isBotLogin } from './bots'
-import { elapsedHours, type BusinessHoursConfig } from './business-hours'
+import {
+  create_elapsed_hours_fn,
+  type BusinessHoursConfig,
+  type ElapsedHoursFn,
+} from './business-hours'
 import type { EnrichedPullRequest, PrFacts, PullRequestRecord, ReviewRecord } from './types'
 
 /**
@@ -18,6 +22,7 @@ export function derivePrFacts(
   reviews: ReviewRecord[],
   ignoredBots: string[],
   businessHours?: BusinessHoursConfig | null,
+  elapsed: ElapsedHoursFn = create_elapsed_hours_fn(businessHours),
 ): PrFacts {
   const humanReviews = reviews
     .filter((r) => !isBotLogin(r.author, ignoredBots) && r.author !== pr.author)
@@ -27,22 +32,19 @@ export function derivePrFacts(
 
   let cycleTimeHours: number | null = null
   if (pr.mergedAt) {
-    cycleTimeHours = elapsedHours(pr.createdAt, pr.mergedAt, businessHours)
+    cycleTimeHours = elapsed(pr.createdAt, pr.mergedAt)
   }
 
   let timeToFirstReviewHours: number | null = null
   if (humanReviews.length > 0) {
-    timeToFirstReviewHours = Math.max(
-      0,
-      elapsedHours(waitStart, humanReviews[0].submittedAt, businessHours),
-    )
+    timeToFirstReviewHours = Math.max(0, elapsed(waitStart, humanReviews[0].submittedAt))
   }
 
   const firstApproval = humanReviews.find((r) => r.state === 'APPROVED')
   const firstApprovedAt = firstApproval?.submittedAt ?? null
   let timeToApproveHours: number | null = null
   if (firstApprovedAt) {
-    timeToApproveHours = Math.max(0, elapsedHours(waitStart, firstApprovedAt, businessHours))
+    timeToApproveHours = Math.max(0, elapsed(waitStart, firstApprovedAt))
   }
 
   return {
@@ -61,8 +63,12 @@ export function enrichPullRequest(
   reviews: ReviewRecord[],
   ignoredBots: string[],
   businessHours?: BusinessHoursConfig | null,
+  elapsed?: ElapsedHoursFn,
 ): EnrichedPullRequest {
-  return { ...pr, ...derivePrFacts(pr, reviews, ignoredBots, businessHours) }
+  return {
+    ...pr,
+    ...derivePrFacts(pr, reviews, ignoredBots, businessHours, elapsed),
+  }
 }
 
 function countReviewRounds(

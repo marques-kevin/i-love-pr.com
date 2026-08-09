@@ -1,5 +1,6 @@
 import { eachWeekOfInterval, format, isWithinInterval, parseISO, startOfWeek } from 'date-fns'
 import { isBotLogin } from './bots'
+import { create_elapsed_hours_fn } from './business-hours'
 import { enrichPullRequest } from './derive'
 import type { EnrichedPullRequest, MetricsSnapshot, PeriodRange, PullRequestRecord } from './types'
 import type { Repositories } from '@/repositories'
@@ -67,8 +68,9 @@ export async function compute_metrics(options: {
     reviews_by_pr.set(review.prId, list)
   }
 
+  const elapsed = create_elapsed_hours_fn(business_hours)
   let prs: EnrichedPullRequest[] = raw_prs.map((pr) =>
-    enrichPullRequest(pr, reviews_by_pr.get(pr.id) ?? [], ignored_bots, business_hours),
+    enrichPullRequest(pr, reviews_by_pr.get(pr.id) ?? [], ignored_bots, business_hours, elapsed),
   )
 
   prs = prs.filter((pr) => !pr.isBot)

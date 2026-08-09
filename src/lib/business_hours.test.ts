@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_BUSINESS_HOURS,
+  create_elapsed_hours_fn,
   elapsedHours,
   minutesToTimeInput,
   timeInputToMinutes,
@@ -45,5 +46,19 @@ describe('business_hours helpers', () => {
     }
     const hours = elapsedHours('2026-08-06T07:00:00.000Z', '2026-08-06T10:00:00.000Z', cfg)
     expect(hours).toBe(3)
+  })
+
+  it('reuses day windows across many calls via create_elapsed_hours_fn', () => {
+    const cfg = {
+      ...DEFAULT_BUSINESS_HOURS,
+      enabled: true,
+      timeZone: 'Europe/Paris',
+      workdays: [1, 2, 3, 4, 5],
+      startMinutes: 9 * 60,
+      endMinutes: 18 * 60,
+    }
+    const elapsed = create_elapsed_hours_fn(cfg)
+    expect(elapsed('2026-08-07T15:00:00.000Z', '2026-08-10T08:00:00.000Z')).toBe(2)
+    expect(elapsed('2026-08-07T15:00:00.000Z', '2026-08-10T08:00:00.000Z')).toBe(2)
   })
 })
