@@ -38,4 +38,23 @@ describe('create_memory_repositories settings', () => {
     expect(next.dashboards[1].layout).toEqual([])
     expect(next.active_dashboard_id).toBe(next.dashboards[1].id)
   })
+
+  it('renames and deletes a dashboard', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({ token: 't', repos: ['a/b'] })
+    const created = await repositories.settings.create_dashboard('Reviewers')
+    const renamed = await repositories.settings.rename_dashboard({
+      dashboard_id: created.dashboards[1].id,
+      name: 'Authors',
+    })
+    expect(renamed.dashboards[1].name).toBe('Authors')
+
+    const deleted = await repositories.settings.delete_dashboard(created.dashboards[1].id)
+    expect(deleted.dashboards).toHaveLength(1)
+    expect(deleted.active_dashboard_id).toBe(deleted.dashboards[0].id)
+
+    await expect(repositories.settings.delete_dashboard(deleted.dashboards[0].id)).rejects.toThrow(
+      /last dashboard/i,
+    )
+  })
 })

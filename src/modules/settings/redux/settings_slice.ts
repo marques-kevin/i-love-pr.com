@@ -100,6 +100,20 @@ export const create_dashboard = create_app_async_thunk<AppSettings, string>(
   },
 )
 
+export const rename_dashboard = create_app_async_thunk<
+  AppSettings,
+  { dashboard_id: string; name: string }
+>('settings/rename_dashboard', async (input, { extra }) => {
+  return extra.repositories.settings.rename_dashboard(input)
+})
+
+export const delete_dashboard = create_app_async_thunk<AppSettings, string>(
+  'settings/delete_dashboard',
+  async (dashboard_id, { extra }) => {
+    return extra.repositories.settings.delete_dashboard(dashboard_id)
+  },
+)
+
 export const set_active_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/set_active_dashboard',
   async (dashboard_id, { extra }) => {
@@ -195,6 +209,12 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(create_dashboard.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(rename_dashboard.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(delete_dashboard.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(set_active_dashboard.fulfilled, (state, action) => {

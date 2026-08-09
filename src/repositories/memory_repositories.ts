@@ -142,6 +142,40 @@ export function create_memory_repositories(seed?: {
       }
       return normalize_settings(structuredClone(bag.settings))
     },
+    rename_dashboard: async (input) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      const name = input.name.trim()
+      if (!name) throw new Error('Dashboard name is required')
+      if (!bag.settings.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      bag.settings = {
+        ...bag.settings,
+        dashboards: bag.settings.dashboards.map((tab) =>
+          tab.id === input.dashboard_id ? { ...tab, name } : tab,
+        ),
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    delete_dashboard: async (dashboard_id: string) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (bag.settings.dashboards.length <= 1) {
+        throw new Error('Cannot delete the last dashboard')
+      }
+      if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {
+        throw new Error('Dashboard not found')
+      }
+      const dashboards = bag.settings.dashboards.filter((tab) => tab.id !== dashboard_id)
+      bag.settings = {
+        ...bag.settings,
+        dashboards,
+        active_dashboard_id:
+          bag.settings.active_dashboard_id === dashboard_id
+            ? dashboards[0].id
+            : bag.settings.active_dashboard_id,
+      }
+      return normalize_settings(structuredClone(bag.settings))
+    },
     set_active_dashboard: async (dashboard_id: string) => {
       if (!bag.settings) throw new Error('Settings not initialized')
       if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {

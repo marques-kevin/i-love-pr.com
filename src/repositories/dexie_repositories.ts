@@ -121,6 +121,46 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     return next
   }
 
+  const rename_dashboard = async (input: {
+    dashboard_id: string
+    name: string
+  }): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    const name = input.name.trim()
+    if (!name) throw new Error('Dashboard name is required')
+    if (!existing.dashboards.some((tab) => tab.id === input.dashboard_id)) {
+      throw new Error('Dashboard not found')
+    }
+    const next: AppSettings = {
+      ...existing,
+      dashboards: existing.dashboards.map((tab) =>
+        tab.id === input.dashboard_id ? { ...tab, name } : tab,
+      ),
+    }
+    await database.settings.put(next)
+    return next
+  }
+
+  const delete_dashboard = async (dashboard_id: string): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    if (existing.dashboards.length <= 1) {
+      throw new Error('Cannot delete the last dashboard')
+    }
+    if (!existing.dashboards.some((tab) => tab.id === dashboard_id)) {
+      throw new Error('Dashboard not found')
+    }
+    const dashboards = existing.dashboards.filter((tab) => tab.id !== dashboard_id)
+    const active_dashboard_id =
+      existing.active_dashboard_id === dashboard_id
+        ? dashboards[0].id
+        : existing.active_dashboard_id
+    const next: AppSettings = { ...existing, dashboards, active_dashboard_id }
+    await database.settings.put(next)
+    return next
+  }
+
   const set_active_dashboard = async (dashboard_id: string): Promise<AppSettings> => {
     const existing = await get()
     if (!existing) throw new Error('Settings not initialized')
@@ -149,6 +189,8 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     save_teams,
     save_dashboard_layout,
     create_dashboard,
+    rename_dashboard,
+    delete_dashboard,
     set_active_dashboard,
     save_locale,
     upsert_team: async (input) => {

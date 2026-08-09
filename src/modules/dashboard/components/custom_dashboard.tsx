@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, MoreHorizontal, Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,6 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -35,10 +41,11 @@ function dashboard_tab_label(
   tab: DashboardTab,
   format_message: ReturnType<typeof useIntl>['formatMessage'],
 ) {
-  if (tab.id === DEFAULT_DASHBOARD_ID || !tab.name) {
+  if (tab.name.trim()) return tab.name
+  if (tab.id === DEFAULT_DASHBOARD_ID) {
     return format_message({ id: 'dashboard.default_name' })
   }
-  return tab.name
+  return format_message({ id: 'dashboard.default_name' })
 }
 
 export function Wrapper({
@@ -47,6 +54,8 @@ export function Wrapper({
   layout,
   save_layout,
   create_dashboard_tab,
+  rename_dashboard_tab,
+  delete_dashboard_tab,
   set_active_dashboard_id,
 }: ConnectorProps) {
   const intl = useIntl()
@@ -56,7 +65,17 @@ export function Wrapper({
     DASHBOARD_WIDGET_CATALOG[0].widget_id,
   )
   const [create_open, set_create_open] = useState(false)
+  const [rename_open, set_rename_open] = useState(false)
+  const [delete_open, set_delete_open] = useState(false)
   const [new_name, set_new_name] = useState('')
+  const [rename_name, set_rename_name] = useState('')
+
+  const active_tab =
+    dashboards.find((tab) => tab.id === active_dashboard_id) ?? dashboards[0] ?? null
+  const active_label = active_tab
+    ? dashboard_tab_label(active_tab, intl.formatMessage)
+    : intl.formatMessage({ id: 'dashboard.default_name' })
+  const can_delete_tab = dashboards.length > 1
 
   const open_picker = () => {
     set_preview_widget_id(DASHBOARD_WIDGET_CATALOG[0].widget_id)
@@ -81,6 +100,26 @@ export function Wrapper({
     set_editing(true)
   }
 
+  const open_rename = () => {
+    if (!active_tab) return
+    set_rename_name(active_tab.name.trim() ? active_tab.name : active_label)
+    set_rename_open(true)
+  }
+
+  const submit_rename = () => {
+    const name = rename_name.trim()
+    if (!name || !active_tab) return
+    rename_dashboard_tab(active_tab.id, name)
+    set_rename_open(false)
+  }
+
+  const submit_delete = () => {
+    if (!active_tab || !can_delete_tab) return
+    delete_dashboard_tab(active_tab.id)
+    set_delete_open(false)
+    set_editing(false)
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -100,6 +139,40 @@ export function Wrapper({
               ))}
             </TabsList>
           </Tabs>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="min-w-40">
+              <DropdownMenuItem onClick={open_rename}>
+                <Pencil className="size-4" />
+                {intl.formatMessage({ id: 'dashboard.rename_tab' })}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!can_delete_tab}
+                onClick={() => {
+                  if (!can_delete_tab) return
+                  set_delete_open(true)
+                }}
+                title={
+                  can_delete_tab
+                    ? undefined
+                    : intl.formatMessage({ id: 'dashboard.delete_disabled' })
+                }
+              >
+                <Trash2 className="size-4" />
+                {intl.formatMessage({ id: 'dashboard.delete_tab' })}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             type="button"
             variant="outline"
@@ -334,6 +407,69 @@ export function Wrapper({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={rename_open}
+        onOpenChange={(open) => {
+          set_rename_open(open)
+          if (!open) set_rename_name('')
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{intl.formatMessage({ id: 'dashboard.rename_title' })}</DialogTitle>
+            <DialogDescription>
+              {intl.formatMessage({ id: 'dashboard.rename_description' })}
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              submit_rename()
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="dashboard-rename">
+                {intl.formatMessage({ id: 'dashboard.create_name_label' })}
+              </Label>
+              <Input
+                id="dashboard-rename"
+                value={rename_name}
+                onChange={(event) => set_rename_name(event.target.value)}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => set_rename_open(false)}>
+                {intl.formatMessage({ id: 'dashboard.create_cancel' })}
+              </Button>
+              <Button type="submit" disabled={!rename_name.trim()}>
+                {intl.formatMessage({ id: 'dashboard.rename_confirm' })}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={delete_open} onOpenChange={set_delete_open}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{intl.formatMessage({ id: 'dashboard.delete_title' })}</DialogTitle>
+            <DialogDescription>
+              {intl.formatMessage({ id: 'dashboard.delete_description' }, { name: active_label })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => set_delete_open(false)}>
+              {intl.formatMessage({ id: 'dashboard.create_cancel' })}
+            </Button>
+            <Button type="button" variant="destructive" onClick={submit_delete}>
+              {intl.formatMessage({ id: 'dashboard.delete_confirm' })}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
