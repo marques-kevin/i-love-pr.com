@@ -45,7 +45,26 @@ Open the app, paste a PAT with `repo` (or `public_repo`) read scope, add reposit
 npm run build
 ```
 
-Deploy the `dist/` folder to any static host. For GitHub Pages, set `base` in `vite.config.ts` if the app is served from a subpath.
+Deploy the `dist/` folder to any static host.
+
+### Cloudflare Pages (recommended for this app)
+
+iLovePR is a **static** Vite PWA — no server code. Prefer **Workers & Pages → Create → Pages** (not a Worker).
+
+If Cloudflare auto-created a **Worker** when you connected the repo:
+
+1. Workers & Pages → delete / disconnect that Worker project
+2. Create application → **Pages** → Connect to Git → this repository
+3. Build settings:
+   - **Framework preset:** Vite
+   - **Build command:** `npm run build`
+   - **Build output directory:** `dist`
+   - **Node version:** `24` (matches `.nvmrc`)
+4. Save and deploy
+
+No `wrangler.toml` or Worker script is required.
+
+For GitHub Pages, set `base` in `vite.config.ts` if the app is served from a subpath.
 
 ## Privacy
 
