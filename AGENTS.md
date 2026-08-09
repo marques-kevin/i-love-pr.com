@@ -60,3 +60,7 @@ src/
 - Types: `npm run typecheck`
 - Tests: `npm run test`
 - Full gate: `npm run check`
+
+## GitHub
+
+- **Board tickets** (GitHub Projects / issues) and **pull requests** (titles + descriptions) must be written in **English**
