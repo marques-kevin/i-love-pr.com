@@ -25,7 +25,6 @@ import {
   type BusinessHoursConfig,
 } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
-import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
 import { estimateStorage, formatBytes } from '@/lib/storage'
 import { connector, type ConnectorProps } from './settings.connector'
 
@@ -45,19 +44,21 @@ const COMMON_TIMEZONES = [
 export function Wrapper({
   settings,
   open,
+  available_repos,
+  available_repos_loading,
+  available_repos_error,
   set_show_settings,
   save_settings,
   reset_sync_data,
   clear_all_data,
   load_settings,
+  load_available_repos,
   set_bootstrapped,
   refresh_metrics,
   run_sync,
 }: ConnectorProps) {
   const [token, set_token] = useState(settings?.token ?? '')
   const [repos, set_repos] = useState(settings?.repos ?? [])
-  const [available_repos, set_available_repos] = useState<GitHubRepoOption[]>([])
-  const [loading_repos, set_loading_repos] = useState(false)
   const [sync_interval_hours, set_sync_interval_hours] = useState(settings?.syncIntervalHours ?? 24)
   const [backfill_limit, set_backfill_limit] = useState(
     settings?.backfillLimit ?? DEFAULT_BACKFILL_LIMIT,
@@ -90,26 +91,12 @@ export function Wrapper({
     set_business_hours(normalizeBusinessHours(settings.businessHours))
     set_message(null)
     void estimateStorage().then(set_storage_info)
-    void load_repos(settings.token)
   }, [open, settings])
 
-  async function load_repos(pat: string) {
-    if (!pat.trim()) {
-      set_available_repos([])
-      return
-    }
-    set_loading_repos(true)
-    try {
-      const client = new GitHubClient(pat.trim())
-      const listed = await client.listRepositories()
-      set_available_repos(listed.repos)
-    } catch (err) {
-      set_message(err instanceof Error ? err.message : 'Failed to load repositories')
-      set_available_repos([])
-    } finally {
-      set_loading_repos(false)
-    }
-  }
+  useEffect(() => {
+    if (!available_repos_error) return
+    set_message(available_repos_error)
+  }, [available_repos_error])
 
   if (!settings) return null
 
@@ -184,7 +171,11 @@ export function Wrapper({
               type="password"
               value={token}
               onChange={(e) => set_token(e.target.value)}
-              onBlur={() => void load_repos(token)}
+              onBlur={() => {
+                const next = token.trim()
+                if (!next || next === settings.token) return
+                void load_available_repos({ token: next, force: true })
+              }}
             />
           </div>
 
@@ -194,7 +185,7 @@ export function Wrapper({
             selected={repos}
             onChange={set_repos}
             token={token}
-            loading={loading_repos}
+            loading={available_repos_loading}
             disabled={!token.trim()}
           />
 

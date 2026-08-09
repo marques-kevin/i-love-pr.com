@@ -1,0 +1,99 @@
+import type { ListenerMiddlewareInstance, TypedStartListening } from '@reduxjs/toolkit'
+import { global_app_initialized } from '@/modules/app/redux/app_events'
+import {
+  set_custom_from,
+  set_custom_to,
+  set_members,
+  set_period_key,
+  set_selected_repos,
+  sync_selected_repos_with_settings,
+  refresh_metrics,
+} from '@/modules/dashboard/redux/dashboard_slice'
+import {
+  load_available_repos,
+  load_settings,
+  save_settings,
+} from '@/modules/settings/redux/settings_slice'
+import { refresh_sync_states, run_sync, set_bootstrapped } from '@/modules/sync/redux/sync_slice'
+import type { AppDispatch } from './create_store'
+import type { RootState } from './root_reducer'
+import type { ThunkExtra } from './thunk_extra'
+
+type AppStartListening = TypedStartListening<RootState, AppDispatch, ThunkExtra>
+
+export function register_app_listeners(
+  middleware: ListenerMiddlewareInstance<RootState, AppDispatch, ThunkExtra>,
+) {
+  const start_listening = middleware.startListening as AppStartListening
+
+  start_listening({
+    actionCreator: global_app_initialized,
+    effect: async (_action, api) => {
+      await api.dispatch(load_settings())
+    },
+  })
+
+  start_listening({
+    actionCreator: load_settings.fulfilled,
+    effect: async (action, api) => {
+      const settings = action.payload
+      if (!settings) return
+
+      api.dispatch(sync_selected_repos_with_settings(settings.repos))
+      void api.dispatch(load_available_repos())
+      void api.dispatch(refresh_sync_states())
+
+      if (!api.getState().sync.bootstrapped) {
+        api.dispatch(set_bootstrapped(true))
+        void api.dispatch(run_sync({ force: false }))
+      }
+    },
+  })
+
+  start_listening({
+    actionCreator: save_settings.fulfilled,
+    effect: async (action, api) => {
+      const settings = action.payload
+      api.dispatch(sync_selected_repos_with_settings(settings.repos))
+      void api.dispatch(load_available_repos({ token: settings.token }))
+
+      if (!api.getState().sync.bootstrapped) {
+        api.dispatch(set_bootstrapped(true))
+        void api.dispatch(run_sync({ force: false }))
+      }
+    },
+  })
+
+  start_listening({
+    actionCreator: run_sync.fulfilled,
+    effect: async (_action, api) => {
+      void api.dispatch(refresh_metrics())
+    },
+  })
+
+  start_listening({
+    actionCreator: run_sync.rejected,
+    effect: async (_action, api) => {
+      void api.dispatch(refresh_sync_states())
+      void api.dispatch(refresh_metrics())
+    },
+  })
+
+  const filter_actions = [
+    set_selected_repos,
+    set_members,
+    set_period_key,
+    set_custom_from,
+    set_custom_to,
+    sync_selected_repos_with_settings,
+  ] as const
+
+  for (const action_creator of filter_actions) {
+    start_listening({
+      actionCreator: action_creator,
+      effect: async (_action, api) => {
+        void api.dispatch(refresh_metrics())
+      },
+    })
+  }
+}

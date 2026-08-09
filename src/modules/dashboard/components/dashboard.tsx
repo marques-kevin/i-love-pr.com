@@ -1,7 +1,6 @@
 import { CycleTimeChart } from './cycle_time_chart'
 import { MemberFilter } from './member_filter'
 import { MetricsGate } from './metrics_gate'
-import { MetricsRefresher } from './metrics_refresher'
 import { OpenPRsList } from './open_prs_list'
 import { PeriodFilter } from './period_filter'
 import { PRSizeChart } from './pr_size_chart'
@@ -16,7 +15,6 @@ import { ThroughputChart } from './throughput_chart'
 export function Wrapper() {
   return (
     <div className="space-y-8">
-      <MetricsRefresher />
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <RepoFilter />

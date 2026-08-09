@@ -4,5 +4,24 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/modules/app/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "importNames": ["useEffect", "useLayoutEffect"],
+                "message": "App shell is Redux event-oriented: dispatch global_app_initialized and use listeners, not React effects."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

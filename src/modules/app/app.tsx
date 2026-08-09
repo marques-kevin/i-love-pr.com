@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dashboard } from '@/modules/dashboard'
 import { Onboarding } from '@/modules/onboarding'
@@ -6,42 +5,7 @@ import { Settings } from '@/modules/settings'
 import { SyncStatus } from '@/modules/sync'
 import { connector, type ConnectorProps } from './app.connector'
 
-export function Wrapper(props: ConnectorProps) {
-  const {
-    settings,
-    settings_loading,
-    bootstrapped,
-    syncing,
-    load_settings,
-    sync_selected_repos_with_settings,
-    set_bootstrapped,
-    run_sync,
-    refresh_sync_states,
-    refresh_metrics,
-    set_show_settings,
-  } = props
-
-  useEffect(() => {
-    void load_settings()
-  }, [load_settings])
-
-  useEffect(() => {
-    if (!settings) return
-    sync_selected_repos_with_settings(settings.repos)
-  }, [settings, sync_selected_repos_with_settings])
-
-  useEffect(() => {
-    if (!settings || bootstrapped) return
-    set_bootstrapped(true)
-    void run_sync({ force: false })
-  }, [settings, bootstrapped, run_sync, set_bootstrapped])
-
-  useEffect(() => {
-    if (syncing) return
-    void refresh_sync_states()
-    void refresh_metrics()
-  }, [syncing, refresh_sync_states, refresh_metrics])
-
+export function Wrapper({ settings, settings_loading, set_show_settings }: ConnectorProps) {
   if (settings_loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">

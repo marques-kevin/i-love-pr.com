@@ -1,24 +1,31 @@
-import { configureStore } from '@reduxjs/toolkit'
-import { dashboard_reducer } from '@/modules/dashboard/redux/dashboard_slice'
-import { settings_reducer } from '@/modules/settings/redux/settings_slice'
-import { sync_reducer } from '@/modules/sync/redux/sync_slice'
+import {
+  configureStore,
+  createListenerMiddleware,
+  type ThunkDispatch,
+  type UnknownAction,
+} from '@reduxjs/toolkit'
+import { register_app_listeners } from './register_app_listeners'
+import { root_reducer, type RootState } from './root_reducer'
 import type { ThunkExtra } from './thunk_extra'
 
+export type AppDispatch = ThunkDispatch<RootState, ThunkExtra, UnknownAction>
+
 export function create_store(extra: ThunkExtra) {
+  const listener_middleware = createListenerMiddleware<RootState, AppDispatch, ThunkExtra>({
+    extra,
+  })
+
+  register_app_listeners(listener_middleware)
+
   return configureStore({
-    reducer: {
-      settings: settings_reducer,
-      sync: sync_reducer,
-      dashboard: dashboard_reducer,
-    },
+    reducer: root_reducer,
     middleware: (get_default_middleware) =>
       get_default_middleware({
         thunk: { extraArgument: extra },
         serializableCheck: false,
-      }),
+      }).prepend(listener_middleware.middleware),
   })
 }
 
 export type AppStore = ReturnType<typeof create_store>
-export type RootState = ReturnType<AppStore['getState']>
-export type AppDispatch = AppStore['dispatch']
+export type { RootState }

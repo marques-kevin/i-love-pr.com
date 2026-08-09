@@ -29,6 +29,8 @@ src/
 
 - Use **Redux Toolkit** + `react-redux` **`connect`** — presentational pattern
 - **Forbidden**: `useAppDispatch`, `useAppSelector`, and other Redux hooks
+- **Event-oriented boot**: `main.tsx` dispatches `global_app_initialized()` after `create_store`; side effects chain via **listener middleware** (`src/store/register_app_listeners.ts`) — not `useEffect` in App
+- **Forbidden in `src/modules/app/**`**: `useEffect` / `useLayoutEffect` (enforced by oxlint)
 - Pattern:
   - `mon_fichier.connector.tsx` — `map_state_to_props`, `map_dispatch_to_props`, `connector`, `ConnectorProps`
   - `mon_fichier.tsx` — `export function Wrapper` + `export const MonFichier = connector(Wrapper)`

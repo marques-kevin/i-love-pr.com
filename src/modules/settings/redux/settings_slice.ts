@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
+import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
 import { requestPersistentStorage } from '@/lib/storage'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
@@ -9,12 +10,20 @@ export type SettingsState = {
   settings: AppSettings | null
   loading: boolean
   error: string | null
+  available_repos: GitHubRepoOption[]
+  available_repos_loading: boolean
+  available_repos_error: string | null
+  available_repos_token: string | null
 }
 
 const initial_state: SettingsState = {
   settings: null,
   loading: true,
   error: null,
+  available_repos: [],
+  available_repos_loading: false,
+  available_repos_error: null,
+  available_repos_token: null,
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -78,6 +87,37 @@ export const clear_all_data = create_app_async_thunk<void, void>(
   },
 )
 
+export type LoadAvailableReposArg = {
+  token?: string
+  force?: boolean
+}
+
+export const load_available_repos = create_app_async_thunk<
+  { repos: GitHubRepoOption[]; token: string },
+  LoadAvailableReposArg | void
+>(
+  'settings/load_available_repos',
+  async (arg, { getState }) => {
+    const token = (arg?.token ?? getState().settings.settings?.token ?? '').trim()
+    if (!token) {
+      return { repos: [], token: '' }
+    }
+    const client = new GitHubClient(token)
+    const listed = await client.listRepositories()
+    return { repos: listed.repos, token }
+  },
+  {
+    condition: (arg, { getState }) => {
+      const token = (arg?.token ?? getState().settings.settings?.token ?? '').trim()
+      if (!token) return false
+      const state = getState().settings
+      if (state.available_repos_loading) return false
+      if (!arg?.force && state.available_repos_token === token) return false
+      return true
+    },
+  },
+)
+
 const settings_slice = createSlice({
   name: 'settings',
   initialState: initial_state,
@@ -85,6 +125,12 @@ const settings_slice = createSlice({
     set_settings(state, action: PayloadAction<AppSettings | null>) {
       state.settings = action.payload
       state.loading = false
+    },
+    clear_available_repos(state) {
+      state.available_repos = []
+      state.available_repos_loading = false
+      state.available_repos_error = null
+      state.available_repos_token = null
     },
   },
   extraReducers: (builder) => {
@@ -114,9 +160,28 @@ const settings_slice = createSlice({
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
         state.loading = false
+        state.available_repos = []
+        state.available_repos_loading = false
+        state.available_repos_error = null
+        state.available_repos_token = null
+      })
+      .addCase(load_available_repos.pending, (state) => {
+        state.available_repos_loading = true
+        state.available_repos_error = null
+      })
+      .addCase(load_available_repos.fulfilled, (state, action) => {
+        state.available_repos = action.payload.repos
+        state.available_repos_token = action.payload.token || null
+        state.available_repos_loading = false
+      })
+      .addCase(load_available_repos.rejected, (state, action) => {
+        state.available_repos_loading = false
+        state.available_repos_error = action.error.message ?? 'Failed to load repositories'
+        state.available_repos = []
+        state.available_repos_token = null
       })
   },
 })
 
-export const { set_settings } = settings_slice.actions
+export const { set_settings, clear_available_repos } = settings_slice.actions
 export const settings_reducer = settings_slice.reducer

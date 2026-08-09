@@ -4,15 +4,20 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RepoPicker } from '@/components/repo_picker'
-import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import { GitHubClient } from '@/lib/github-client'
 import type { RateLimitInfo } from '@/lib/types'
+import { load_available_repos as load_available_repos_thunk } from '@/store'
 import { connector, type ConnectorProps } from './onboarding.connector'
 
-export function Wrapper({ save_settings }: ConnectorProps) {
+export function Wrapper({
+  available_repos,
+  available_repos_loading,
+  save_settings,
+  load_available_repos,
+  clear_available_repos,
+}: ConnectorProps) {
   const [token, set_token] = useState('')
   const [repos, set_repos] = useState<string[]>([])
-  const [available_repos, set_available_repos] = useState<GitHubRepoOption[]>([])
-  const [loading_repos, set_loading_repos] = useState(false)
   const [login, set_login] = useState<string | null>(null)
   const [rate_limit, set_rate_limit] = useState<RateLimitInfo | null>(null)
   const [validating, set_validating] = useState(false)
@@ -27,26 +32,26 @@ export function Wrapper({ save_settings }: ConnectorProps) {
   async function validate_token() {
     set_error(null)
     set_validating(true)
-    set_loading_repos(true)
     set_login(null)
-    set_available_repos([])
+    clear_available_repos()
     try {
-      const client = new GitHubClient(token.trim())
+      const trimmed = token.trim()
+      const client = new GitHubClient(trimmed)
       const result = await client.validateToken()
       set_login(result.login)
       set_rate_limit(result.rateLimit)
 
-      const listed = await client.listRepositories()
-      set_available_repos(listed.repos)
-      if (listed.rateLimit) set_rate_limit(listed.rateLimit)
-      if (listed.repos.length === 0) {
+      const action = await load_available_repos({ token: trimmed, force: true })
+      if (
+        load_available_repos_thunk.fulfilled.match(action) &&
+        action.payload.repos.length === 0
+      ) {
         set_error('No repositories found for this token.')
       }
     } catch (e) {
       set_error(e instanceof Error ? e.message : 'Invalid token')
     } finally {
       set_validating(false)
-      set_loading_repos(false)
     }
   }
 
@@ -86,7 +91,7 @@ export function Wrapper({ save_settings }: ConnectorProps) {
               onChange={(e) => {
                 set_token(e.target.value)
                 set_login(null)
-                set_available_repos([])
+                clear_available_repos()
                 set_repos([])
               }}
               placeholder="ghp_… or github_pat_…"
@@ -124,7 +129,7 @@ export function Wrapper({ save_settings }: ConnectorProps) {
           selected={repos}
           onChange={set_repos}
           token={token}
-          loading={loading_repos}
+          loading={available_repos_loading || validating}
           disabled={!login}
         />
 
