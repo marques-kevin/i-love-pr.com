@@ -1,13 +1,17 @@
 import { differenceInDays, formatDistanceToNow, parseISO } from 'date-fns'
+import { enUS, fr } from 'date-fns/locale'
+import { useIntl } from 'react-intl'
 import { Badge } from '@/components/ui/badge'
 import { Panel } from './panel'
 import { connector, type ConnectorProps } from './open_prs_list.connector'
 
 export function Wrapper({ prs }: ConnectorProps) {
+  const intl = useIntl()
+  const date_locale = intl.locale.startsWith('fr') ? fr : enUS
   if (!prs) return null
 
   return (
-    <Panel title="Open pull requests">
+    <Panel title={intl.formatMessage({ id: 'chart.open_prs.title' })}>
       {prs.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No open pull requests in the selected scope.
@@ -36,7 +40,10 @@ export function Wrapper({ prs }: ConnectorProps) {
                   </p>
                 </div>
                 <Badge variant={stale ? 'destructive' : 'secondary'}>
-                  {formatDistanceToNow(parseISO(pr.created_at), { addSuffix: true })}
+                  {formatDistanceToNow(parseISO(pr.created_at), {
+                    addSuffix: true,
+                    locale: date_locale,
+                  })}
                   {stale ? ' · stale' : ''}
                 </Badge>
               </li>

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { rebuild_pr_facts_for_prs, ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { create_memory_repositories } from '@/repositories'
-import { PR_FACTS_VERSION, type PullRequestRecord, type ReviewRecord } from '@/lib/types'
+import {
+  PR_FACTS_VERSION,
+  type AppSettings,
+  type PullRequestRecord,
+  type ReviewRecord,
+} from '@/lib/types'
 
 function sample_pr(overrides: Partial<PullRequestRecord> = {}): PullRequestRecord {
   return {
@@ -40,13 +45,13 @@ function sample_review(overrides: Partial<ReviewRecord> = {}): ReviewRecord {
   }
 }
 
-const sample_settings = {
-  id: 'settings' as const,
+const sample_settings: AppSettings = {
+  id: 'settings',
   token: 't',
   repos: ['org/repo'],
   sync_interval_hours: 24,
   backfill_limit: 200,
-  ignored_bots: [] as string[],
+  ignored_bots: [],
   teams: [],
   business_hours: {
     enabled: false,
@@ -56,6 +61,7 @@ const sample_settings = {
     end_minutes: 18 * 60,
   },
   dashboard_layout: [],
+  locale: 'en',
   onboarded_at: '2026-01-01T00:00:00.000Z',
 }
 

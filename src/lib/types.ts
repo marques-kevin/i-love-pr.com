@@ -4,6 +4,7 @@ export type ReviewState = 'APPROVED' | 'CHANGES_REQUESTED' | 'COMMENTED' | 'DISM
 
 export type { BusinessHoursConfig } from './business-hours'
 import type { BusinessHoursConfig } from './business-hours'
+import type { AppLocale } from './i18n/locale'
 
 export interface MemberTeam {
   id: string
@@ -43,6 +44,8 @@ export interface AppSettings {
   business_hours: BusinessHoursConfig
   /** Ordered custom dashboard widgets (empty = blank canvas). */
   dashboard_layout: DashboardLayoutItem[]
+  /** UI language */
+  locale: AppLocale
   onboarded_at: string
 }
 

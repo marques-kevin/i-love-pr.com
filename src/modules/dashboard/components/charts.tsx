@@ -230,21 +230,30 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
   )
 }
 
+type FormatMessage = (
+  descriptor: { id: string },
+  values?: Record<string, string | number>,
+) => string
+
 export function correlationInsight(
   r: number | null,
   sampleSize: number,
-  label = 'time to first review',
+  metric_label: string,
+  format_message: FormatMessage,
 ): string {
-  if (r == null || sampleSize < 3) {
-    return `Not enough approved PRs in this scope to correlate size with ${label}.`
+  if (r == null || sampleSize < 10) {
+    return format_message({ id: 'insight.insufficient' }, { metric: metric_label })
   }
-  const strength = Math.abs(r) < 0.2 ? 'weak / none' : Math.abs(r) < 0.5 ? 'moderate' : 'strong'
-  const direction = r > 0.05 ? 'positive' : r < -0.05 ? 'negative' : 'flat'
-  if (direction === 'flat') {
-    return `Correlation ≈ ${r.toFixed(2)} (${strength}, n=${sampleSize}): PR size barely predicts ${label}.`
+  const r_str = r.toFixed(2)
+  const abs = Math.abs(r)
+  if (abs < 0.2) {
+    return format_message({ id: 'insight.weak' }, { r: r_str, metric: metric_label })
   }
-  if (direction === 'positive') {
-    return `Correlation ≈ ${r.toFixed(2)} (${strength} positive, n=${sampleSize}): larger PRs tend to take longer for ${label}.`
+  if (r < 0) {
+    return format_message({ id: 'insight.negative' }, { r: r_str, metric: metric_label })
   }
-  return `Correlation ≈ ${r.toFixed(2)} (${strength} negative, n=${sampleSize}): larger PRs are not slower for ${label} here.`
+  if (abs < 0.5) {
+    return format_message({ id: 'insight.moderate_pos' }, { r: r_str, metric: metric_label })
+  }
+  return format_message({ id: 'insight.strong_pos' }, { r: r_str, metric: metric_label })
 }

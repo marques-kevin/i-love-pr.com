@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,16 +7,19 @@ import { Label } from '@/components/ui/label'
 import { RepoPicker } from '@/components/repo_picker'
 import { GitHubClient } from '@/lib/github-client'
 import type { RateLimitInfo } from '@/lib/types'
+import { LocaleSwitcher } from '@/modules/i18n'
 import { load_available_repos as load_available_repos_thunk } from '@/store'
 import { connector, type ConnectorProps } from './onboarding.connector'
 
 export function Wrapper({
   available_repos,
   available_repos_loading,
+  locale,
   save_settings,
   load_available_repos,
   clear_available_repos,
 }: ConnectorProps) {
+  const intl = useIntl()
   const [token, set_token] = useState('')
   const [repos, set_repos] = useState<string[]>([])
   const [login, set_login] = useState<string | null>(null)
@@ -46,10 +50,12 @@ export function Wrapper({
         load_available_repos_thunk.fulfilled.match(action) &&
         action.payload.repos.length === 0
       ) {
-        set_error('No repositories found for this token.')
+        set_error(intl.formatMessage({ id: 'onboarding.error.no_repos' }))
       }
     } catch (e) {
-      set_error(e instanceof Error ? e.message : 'Invalid token')
+      set_error(
+        e instanceof Error ? e.message : intl.formatMessage({ id: 'onboarding.error.invalid_token' }),
+      )
     } finally {
       set_validating(false)
     }
@@ -61,9 +67,13 @@ export function Wrapper({
     set_saving(true)
     set_error(null)
     try {
-      await save_settings({ token: token.trim(), repos })
+      await save_settings({ token: token.trim(), repos, locale })
     } catch (err) {
-      set_error(err instanceof Error ? err.message : 'Failed to save settings')
+      set_error(
+        err instanceof Error
+          ? err.message
+          : intl.formatMessage({ id: 'onboarding.error.save_failed' }),
+      )
       set_saving(false)
     }
   }
@@ -71,17 +81,20 @@ export function Wrapper({
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
       <header className="mb-12">
+        <div className="mb-4 flex justify-end">
+          <LocaleSwitcher />
+        </div>
         <p className="font-display text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl">
           iLovePR
         </p>
         <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-          Self-hosted GitHub PR analytics. Your token never leaves this browser.
+          {intl.formatMessage({ id: 'onboarding.tagline' })}
         </p>
       </header>
 
       <form onSubmit={(e) => void handle_submit(e)} className="space-y-8">
         <div className="space-y-2">
-          <Label htmlFor="token">GitHub Personal Access Token</Label>
+          <Label htmlFor="token">{intl.formatMessage({ id: 'onboarding.token_label' })}</Label>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Input
               id="token"
@@ -94,7 +107,7 @@ export function Wrapper({
                 clear_available_repos()
                 set_repos([])
               }}
-              placeholder="ghp_… or github_pat_…"
+              placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
               className="h-10 flex-1"
             />
             <Button
@@ -104,20 +117,31 @@ export function Wrapper({
               onClick={() => void validate_token()}
               disabled={!token.trim() || validating}
             >
-              {validating ? 'Checking…' : 'Validate'}
+              {validating
+                ? intl.formatMessage({ id: 'onboarding.checking' })
+                : intl.formatMessage({ id: 'onboarding.validate' })}
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            Classic PAT with <code className="text-foreground">repo</code> (or{' '}
-            <code className="text-foreground">public_repo</code>) read access.
+            <FormattedMessage
+              id="onboarding.token_help"
+              values={{
+                repo: <code className="text-foreground">repo</code>,
+                public_repo: <code className="text-foreground">public_repo</code>,
+              }}
+            />
           </p>
           {login && (
             <p className="text-sm text-primary">
-              Authenticated as <strong>@{login}</strong>
+              {intl.formatMessage({ id: 'onboarding.authenticated_as' }, { login })}
               {rate_limit && (
                 <>
                   {' '}
-                  · {rate_limit.remaining}/{rate_limit.limit} GraphQL points remaining
+                  ·{' '}
+                  {intl.formatMessage(
+                    { id: 'onboarding.rate_limit' },
+                    { remaining: rate_limit.remaining, limit: rate_limit.limit },
+                  )}
                 </>
               )}
             </p>
@@ -140,7 +164,9 @@ export function Wrapper({
         )}
 
         <Button type="submit" size="lg" disabled={!can_submit || saving}>
-          {saving ? 'Starting…' : 'Start analyzing'}
+          {saving
+            ? intl.formatMessage({ id: 'onboarding.starting' })
+            : intl.formatMessage({ id: 'onboarding.start' })}
         </Button>
       </form>
     </div>

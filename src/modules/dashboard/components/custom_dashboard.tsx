@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -28,7 +29,12 @@ function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: nu
   return next
 }
 
+function widget_label(widget_id: DashboardWidgetId, format_message: ReturnType<typeof useIntl>['formatMessage']) {
+  return format_message({ id: `widget.${widget_id}.label` })
+}
+
 export function Wrapper({ layout, save_layout }: ConnectorProps) {
+  const intl = useIntl()
   const [editing, set_editing] = useState(false)
   const [picker_open, set_picker_open] = useState(false)
 
@@ -46,14 +52,14 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {editing
-            ? 'Add, reorder, or remove charts on your dashboard.'
-            : 'Your custom dashboard'}
+            ? intl.formatMessage({ id: 'dashboard.subtitle_editing' })
+            : intl.formatMessage({ id: 'dashboard.subtitle' })}
         </p>
         <div className="flex flex-wrap gap-2">
           {editing && (
             <Button type="button" variant="outline" size="sm" onClick={() => set_picker_open(true)}>
               <Plus className="size-4" />
-              Add chart
+              {intl.formatMessage({ id: 'dashboard.add_chart' })}
             </Button>
           )}
           <Button
@@ -65,12 +71,12 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             {editing ? (
               <>
                 <X className="size-4" />
-                Done
+                {intl.formatMessage({ id: 'dashboard.done' })}
               </>
             ) : (
               <>
                 <Pencil className="size-4" />
-                Customize
+                {intl.formatMessage({ id: 'dashboard.customize' })}
               </>
             )}
           </Button>
@@ -79,9 +85,11 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
 
       {layout.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-6 py-16 text-center">
-          <p className="font-display text-lg font-semibold text-foreground">No charts yet</p>
+          <p className="font-display text-lg font-semibold text-foreground">
+            {intl.formatMessage({ id: 'dashboard.empty_title' })}
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Pick prefabricated charts to build your dashboard.
+            {intl.formatMessage({ id: 'dashboard.empty_body' })}
           </p>
           <Button
             type="button"
@@ -92,19 +100,20 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             }}
           >
             <Plus className="size-4" />
-            Add chart
+            {intl.formatMessage({ id: 'dashboard.add_chart' })}
           </Button>
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           {layout.map((item, index) => {
             const meta = DASHBOARD_WIDGET_BY_ID[item.widget_id]
+            const label = widget_label(item.widget_id, intl.formatMessage)
             const span_class = meta.span === 'full' ? 'lg:col-span-2' : ''
             return (
               <div key={item.instance_id} className={`relative min-w-0 ${span_class}`}>
                 {editing && (
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
-                    <span className="text-sm font-medium text-foreground">{meta.label}</span>
+                    <span className="text-sm font-medium text-foreground">{label}</span>
                     <div className="flex gap-1">
                       <Button
                         type="button"
@@ -112,7 +121,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         size="icon-sm"
                         disabled={index === 0}
                         onClick={() => save_layout(move_item(layout, item.instance_id, -1))}
-                        aria-label="Move up"
+                        aria-label={intl.formatMessage({ id: 'dashboard.move_up' })}
                       >
                         <ArrowUp className="size-4" />
                       </Button>
@@ -122,7 +131,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         size="icon-sm"
                         disabled={index === layout.length - 1}
                         onClick={() => save_layout(move_item(layout, item.instance_id, 1))}
-                        aria-label="Move down"
+                        aria-label={intl.formatMessage({ id: 'dashboard.move_down' })}
                       >
                         <ArrowDown className="size-4" />
                       </Button>
@@ -131,7 +140,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => remove_widget(item.instance_id)}
-                        aria-label={`Remove ${meta.label}`}
+                        aria-label={intl.formatMessage({ id: 'dashboard.remove' }, { label })}
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -148,9 +157,9 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
       <Dialog open={picker_open} onOpenChange={set_picker_open}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add a chart</DialogTitle>
+            <DialogTitle>{intl.formatMessage({ id: 'dashboard.add_title' })}</DialogTitle>
             <DialogDescription>
-              Choose a prefabricated chart to add to your dashboard.
+              {intl.formatMessage({ id: 'dashboard.add_description' })}
             </DialogDescription>
           </DialogHeader>
           <ul className="mt-2 space-y-2">
@@ -161,8 +170,12 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                   className="flex w-full flex-col items-start gap-1 rounded-md border border-border px-4 py-3 text-left transition-colors hover:bg-muted/50"
                   onClick={() => add_widget(widget.widget_id)}
                 >
-                  <span className="font-medium text-foreground">{widget.label}</span>
-                  <span className="text-sm text-muted-foreground">{widget.description}</span>
+                  <span className="font-medium text-foreground">
+                    {widget_label(widget.widget_id, intl.formatMessage)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {intl.formatMessage({ id: `widget.${widget.widget_id}.description` })}
+                  </span>
                 </button>
               </li>
             ))}

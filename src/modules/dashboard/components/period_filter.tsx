@@ -1,3 +1,4 @@
+import { useIntl } from 'react-intl'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { PeriodKey } from '@/lib/types'
@@ -11,13 +12,15 @@ export function Wrapper({
   set_custom_from,
   set_custom_to,
 }: ConnectorProps) {
+  const intl = useIntl()
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <Tabs value={period_key} onValueChange={(v) => set_period_key(v as PeriodKey)}>
         <TabsList>
           {(['7d', '30d', '90d', 'custom'] as PeriodKey[]).map((key) => (
             <TabsTrigger key={key} value={key}>
-              {key}
+              {intl.formatMessage({ id: `period.${key}` })}
             </TabsTrigger>
           ))}
         </TabsList>

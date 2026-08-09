@@ -15,6 +15,7 @@ import {
   load_settings,
   save_settings,
 } from '@/modules/settings/redux/settings_slice'
+import { hydrate_locale_from_settings } from '@/modules/i18n/redux/i18n_slice'
 import { refresh_sync_states, run_sync, set_bootstrapped } from '@/modules/sync/redux/sync_slice'
 import type { AppDispatch } from './create_store'
 import type { RootState } from './root_reducer'
@@ -38,6 +39,7 @@ export function register_app_listeners(
     actionCreator: load_settings.fulfilled,
     effect: async (action, api) => {
       const settings = action.payload
+      api.dispatch(hydrate_locale_from_settings(settings))
       if (!settings) return
 
       await ensure_pr_facts(api.extra.repositories)
@@ -56,6 +58,7 @@ export function register_app_listeners(
     actionCreator: save_settings.fulfilled,
     effect: async (action, api) => {
       const settings = action.payload
+      api.dispatch(hydrate_locale_from_settings(settings))
       api.dispatch(sync_selected_repos_with_settings(settings.repos))
       void api.dispatch(load_available_repos({ token: settings.token }))
 

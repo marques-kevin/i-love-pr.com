@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useIntl } from 'react-intl'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import { estimateStorage, formatBytes } from '@/lib/storage'
+import { LocaleSwitcher } from '@/modules/i18n'
 import { connector, type ConnectorProps } from './settings.connector'
 
 const COMMON_TIMEZONES = [
@@ -57,6 +59,7 @@ export function Wrapper({
   refresh_metrics,
   run_sync,
 }: ConnectorProps) {
+  const intl = useIntl()
   const [token, set_token] = useState(settings?.token ?? '')
   const [repos, set_repos] = useState(settings?.repos ?? [])
   const [sync_interval_hours, set_sync_interval_hours] = useState(
@@ -122,18 +125,20 @@ export function Wrapper({
       void run_sync({ force: false })
       set_show_settings(false)
     } catch (err) {
-      set_message(err instanceof Error ? err.message : 'Save failed')
+      set_message(
+        err instanceof Error ? err.message : intl.formatMessage({ id: 'settings.save_failed' }),
+      )
     } finally {
       set_busy(false)
     }
   }
 
   async function handle_reset_data() {
-    if (!confirm('Clear all PR/review data and re-run a full backfill?')) return
+    if (!confirm(intl.formatMessage({ id: 'settings.reset_sync_confirm' }))) return
     set_busy(true)
     try {
       await reset_sync_data()
-      set_message('Local PR data cleared. Sync will backfill on next refresh.')
+      set_message(intl.formatMessage({ id: 'settings.reset_sync_done' }))
       set_bootstrapped(false)
       set_show_settings(false)
       void load_settings()
@@ -143,7 +148,7 @@ export function Wrapper({
   }
 
   async function handle_factory_reset() {
-    if (!confirm('Erase ALL local data including token and settings?')) return
+    if (!confirm(intl.formatMessage({ id: 'settings.clear_all_confirm' }))) return
     set_busy(true)
     try {
       await clear_all_data()
@@ -159,15 +164,22 @@ export function Wrapper({
     <Dialog open={open} onOpenChange={set_show_settings}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Settings</DialogTitle>
+          <DialogTitle className="font-display text-xl">
+            {intl.formatMessage({ id: 'settings.title' })}
+          </DialogTitle>
           <DialogDescription>
-            Token and data stay in this browser. Nothing is sent to a backend.
+            {intl.formatMessage({ id: 'settings.description' })}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={(e) => void handle_save(e)} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="settings-token">GitHub token</Label>
+            <Label>{intl.formatMessage({ id: 'settings.language' })}</Label>
+            <LocaleSwitcher />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="settings-token">{intl.formatMessage({ id: 'settings.token' })}</Label>
             <Input
               id="settings-token"
               type="password"
@@ -193,7 +205,9 @@ export function Wrapper({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="sync-interval">Sync interval (hours)</Label>
+              <Label htmlFor="sync-interval">
+                {intl.formatMessage({ id: 'settings.sync_interval' })}
+              </Label>
               <Input
                 id="sync-interval"
                 type="number"
@@ -207,7 +221,9 @@ export function Wrapper({
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="backfill-limit">PRs per sync batch</Label>
+              <Label htmlFor="backfill-limit">
+                {intl.formatMessage({ id: 'settings.backfill_limit' })}
+              </Label>
               <Input
                 id="backfill-limit"
                 type="number"
@@ -227,7 +243,7 @@ export function Wrapper({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bots">Ignored bot logins</Label>
+            <Label htmlFor="bots">{intl.formatMessage({ id: 'settings.ignored_bots' })}</Label>
             <Textarea
               id="bots"
               rows={5}
@@ -248,10 +264,11 @@ export function Wrapper({
           <div className="space-y-3 rounded-xl border border-border p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <Label htmlFor="business-hours">Business hours</Label>
+                <Label htmlFor="business-hours">
+                  {intl.formatMessage({ id: 'settings.business_hours' })}
+                </Label>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Cycle time, time to first review, and request→approve count only working windows.
-                  No re-sync needed.
+                  {intl.formatMessage({ id: 'settings.business_hours_help' })}
                 </p>
               </div>
               <Switch
@@ -264,7 +281,7 @@ export function Wrapper({
             {business_hours.enabled && (
               <div className="space-y-4 pt-1">
                 <div className="space-y-2">
-                  <Label htmlFor="bh-tz">Timezone</Label>
+                  <Label htmlFor="bh-tz">{intl.formatMessage({ id: 'settings.timezone' })}</Label>
                   <select
                     id="bh-tz"
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -285,7 +302,7 @@ export function Wrapper({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Working days</Label>
+                  <Label>{intl.formatMessage({ id: 'settings.workdays' })}</Label>
                   <div className="flex flex-wrap gap-2">
                     {WEEKDAY_LABELS.map(({ day, label }) => {
                       const active = business_hours.workdays.includes(day)
@@ -314,7 +331,7 @@ export function Wrapper({
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="bh-start">Start</Label>
+                    <Label htmlFor="bh-start">{intl.formatMessage({ id: 'settings.start' })}</Label>
                     <Input
                       id="bh-start"
                       type="time"
@@ -328,7 +345,7 @@ export function Wrapper({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bh-end">End</Label>
+                    <Label htmlFor="bh-end">{intl.formatMessage({ id: 'settings.end' })}</Label>
                     <Input
                       id="bh-end"
                       type="time"
@@ -347,7 +364,9 @@ export function Wrapper({
           </div>
 
           <div className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Local storage</p>
+            <p className="font-medium text-foreground">
+              {intl.formatMessage({ id: 'settings.storage' })}
+            </p>
             {storage_info ? (
               <p className="mt-1">
                 {formatBytes(storage_info.usage)} used of {formatBytes(storage_info.quota)} (
@@ -374,7 +393,7 @@ export function Wrapper({
                 disabled={busy}
                 onClick={() => void handle_reset_data()}
               >
-                Reset local data
+                {intl.formatMessage({ id: 'settings.reset_sync' })}
               </Button>
               <Button
                 type="button"
@@ -382,11 +401,13 @@ export function Wrapper({
                 disabled={busy}
                 onClick={() => void handle_factory_reset()}
               >
-                Factory reset
+                {intl.formatMessage({ id: 'settings.clear_all' })}
               </Button>
             </div>
             <Button type="submit" disabled={busy || repos.length === 0}>
-              Save
+              {busy
+                ? intl.formatMessage({ id: 'settings.saving' })
+                : intl.formatMessage({ id: 'settings.save' })}
             </Button>
           </DialogFooter>
         </form>

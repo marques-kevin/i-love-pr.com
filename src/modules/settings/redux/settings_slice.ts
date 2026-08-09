@@ -45,6 +45,7 @@ export const save_settings = create_app_async_thunk<
     backfill_limit?: number
     ignored_bots?: string[]
     business_hours?: BusinessHoursConfig
+    locale?: AppSettings['locale']
   }
 >('settings/save', async (input, { extra }) => {
   const previous = await extra.repositories.settings.get()
@@ -55,6 +56,7 @@ export const save_settings = create_app_async_thunk<
     backfill_limit: input.backfill_limit,
     ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
     business_hours: input.business_hours,
+    locale: input.locale,
   }
   const next = await extra.repositories.settings.save(payload)
   await extra.repositories.settings.upsert_repos(next.repos)

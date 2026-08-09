@@ -19,6 +19,7 @@ export interface SettingsRepository {
   save: (partial: SaveSettingsInput) => Promise<AppSettings>
   save_teams: (teams: MemberTeam[]) => Promise<AppSettings>
   save_dashboard_layout: (layout: DashboardLayoutItem[]) => Promise<AppSettings>
+  save_locale: (locale: AppSettings['locale']) => Promise<AppSettings>
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>

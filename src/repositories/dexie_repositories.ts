@@ -3,6 +3,7 @@ import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-h
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import type { AppSettings, MemberTeam, SyncState } from '@/lib/types'
 import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
+import { detect_locale, normalize_locale } from '@/lib/i18n'
 import type {
   PullRequestRepository,
   PrFactsRepository,
@@ -32,6 +33,7 @@ function normalize_settings(settings: AppSettings): AppSettings {
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
     dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
+    locale: normalize_locale(settings.locale ?? detect_locale()),
   }
 }
 
@@ -60,6 +62,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       dashboard_layout: normalize_dashboard_layout(
         partial.dashboard_layout ?? existing?.dashboard_layout,
       ),
+      locale: normalize_locale(partial.locale ?? existing?.locale ?? detect_locale()),
       onboarded_at: existing?.onboarded_at ?? new Date().toISOString(),
     }
     await database.settings.put(next)
@@ -87,11 +90,20 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     return next
   }
 
+  const save_locale = async (locale: AppSettings['locale']): Promise<AppSettings> => {
+    const existing = await get()
+    if (!existing) throw new Error('Settings not initialized')
+    const next: AppSettings = { ...existing, locale: normalize_locale(locale) }
+    await database.settings.put(next)
+    return next
+  }
+
   return {
     get,
     save,
     save_teams,
     save_dashboard_layout,
+    save_locale,
     upsert_team: async (input) => {
       const existing = await get()
       if (!existing) throw new Error('Settings not initialized')

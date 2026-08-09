@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
 import { normalize_dashboard_layout } from './dashboard_layout'
+import { detect_locale, normalize_locale } from './i18n'
 import type {
   AppSettings,
   PrFactRecord,
@@ -58,6 +59,7 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
         ? (row.dashboard_layout as AppSettings['dashboard_layout'])
         : undefined,
     ),
+    locale: normalize_locale(row.locale ?? detect_locale()),
     onboarded_at: String(row.onboarded_at ?? row.onboardedAt ?? new Date().toISOString()),
   }
 }

@@ -5,6 +5,7 @@ import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import { App } from '@/modules/app'
 import { global_app_initialized } from '@/modules/app/redux/app_events'
+import { IntlShell } from '@/modules/i18n'
 import { db } from './lib/db'
 import { create_dexie_repositories } from './repositories'
 import { create_store } from './store'
@@ -20,7 +21,9 @@ store.dispatch(global_app_initialized())
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <App />
+      <IntlShell>
+        <App />
+      </IntlShell>
     </Provider>
   </StrictMode>,
 )

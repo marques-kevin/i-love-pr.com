@@ -1,0 +1,142 @@
+import type { MessageKey } from './en'
+
+export const fr_messages: Record<MessageKey, string> = {
+  'app.loading': 'Chargement…',
+  'app.tagline': 'Des analytics de PR qui restent sur votre machine',
+  'app.settings': 'Paramètres',
+  'app.language': 'Langue',
+  'app.locale.en': 'English',
+  'app.locale.fr': 'Français',
+
+  'onboarding.tagline':
+    'Analytics GitHub PR self-hosted. Votre token ne quitte jamais ce navigateur.',
+  'onboarding.token_label': 'Personal Access Token GitHub',
+  'onboarding.token_placeholder': 'ghp_… ou github_pat_…',
+  'onboarding.token_help':
+    'PAT classique avec accès en lecture {repo} (ou {public_repo}).',
+  'onboarding.validate': 'Valider',
+  'onboarding.checking': 'Vérification…',
+  'onboarding.authenticated_as': 'Authentifié en tant que @{login}',
+  'onboarding.rate_limit': '{remaining}/{limit} points GraphQL restants',
+  'onboarding.start': 'Commencer l’analyse',
+  'onboarding.starting': 'Démarrage…',
+  'onboarding.error.no_repos': 'Aucun dépôt trouvé pour ce token.',
+  'onboarding.error.invalid_token': 'Token invalide',
+  'onboarding.error.save_failed': 'Échec de l’enregistrement des paramètres',
+
+  'sync.syncing': 'Synchronisation…',
+  'sync.never': 'Jamais synchronisé',
+  'sync.last': 'Dernière sync {relative}',
+  'sync.api': 'API {remaining}/{limit}',
+  'sync.more_history': 'Plus d’historique disponible',
+  'sync.backfilling': 'Backfill…',
+  'sync.sync_history': 'Synchroniser l’historique',
+  'sync.sync_more': 'Synchroniser plus d’historique',
+  'sync.tooltip':
+    'Récupère le prochain lot de PRs. Relancez après le reset du rate limit pour aller plus loin dans l’historique.',
+
+  'metrics.empty': 'Pas encore de données. Lancez une sync pour récupérer les pull requests.',
+
+  'dashboard.subtitle': 'Votre dashboard personnalisé',
+  'dashboard.subtitle_editing': 'Ajoutez, réordonnez ou retirez des graphiques.',
+  'dashboard.customize': 'Personnaliser',
+  'dashboard.done': 'Terminé',
+  'dashboard.add_chart': 'Ajouter un graphique',
+  'dashboard.empty_title': 'Aucun graphique',
+  'dashboard.empty_body': 'Choisissez des graphiques préfabriqués pour composer votre dashboard.',
+  'dashboard.add_title': 'Ajouter un graphique',
+  'dashboard.add_description': 'Choisissez un graphique préfabriqué à ajouter.',
+  'dashboard.move_up': 'Monter',
+  'dashboard.move_down': 'Descendre',
+  'dashboard.remove': 'Retirer {label}',
+
+  'widget.summary_stats.label': 'Résumé',
+  'widget.summary_stats.description':
+    'PRs mergées, cycle time, latence de review et taille moyenne.',
+  'widget.cycle_time.label': 'Cycle time',
+  'widget.cycle_time.description': 'Cycle time moyen par semaine.',
+  'widget.throughput.label': 'Throughput',
+  'widget.throughput.description': 'PRs mergées par semaine et par auteur.',
+  'widget.pr_size.label': 'Taille des PR',
+  'widget.pr_size.description': 'Distribution des tailles de PR (XS–XL).',
+  'widget.reviewer_load.label': 'Charge de review',
+  'widget.reviewer_load.description': 'Reviews données vs reçues par personne.',
+  'widget.size_review_insight.label': 'Insight taille vs review',
+  'widget.size_review_insight.description': 'Corrélation entre taille de PR et temps de review.',
+  'widget.size_vs_review.label': 'Taille vs temps de review',
+  'widget.size_vs_review.description': 'Temps de review moyen par bucket de taille.',
+  'widget.size_review_scatter.label': 'Nuage taille vs approve',
+  'widget.size_review_scatter.description': 'Lignes changées vs demande → approve.',
+  'widget.open_prs.label': 'PRs ouvertes',
+  'widget.open_prs.description': 'Pull requests ouvertes avec signaux de staleness.',
+
+  'stats.merged': 'PRs mergées',
+  'stats.cycle_time': 'Cycle time moyen',
+  'stats.cycle_time_biz': 'Cycle time moyen (biz)',
+  'stats.tfr': 'Temps jusqu’à 1ʳᵉ review',
+  'stats.tfr_biz': 'Temps jusqu’à 1ʳᵉ review (biz)',
+  'stats.approve': 'Demande → approve',
+  'stats.approve_biz': 'Demande → approve (biz)',
+  'stats.avg_size': 'Taille moyenne de PR',
+  'stats.lines': '{count} lignes',
+
+  'chart.cycle_time.title': 'Cycle time dans le temps',
+  'chart.throughput.title': 'Throughput',
+  'chart.pr_size.title': 'Distribution des tailles de PR',
+  'chart.reviewer.title': 'Charge de review',
+  'chart.size_vs_review.title': 'Temps de review moyen par taille',
+  'chart.size_vs_review.description':
+    'Première review humaine vs temps de la demande de review au premier approve.',
+  'chart.scatter.title': 'Nuage : lignes vs demande → approve',
+  'chart.scatter.description':
+    'Chaque point est une PR mergée avec au moins une review APPROVED humaine.',
+  'chart.open_prs.title': 'Pull requests ouvertes',
+
+  'insight.title': 'La taille des PR ralentit-elle la review ?',
+  'insight.metric_approve': 'demande → approve',
+  'insight.insufficient':
+    'Pas assez de données (il faut ≥10 PRs mergées avec taille et {metric}).',
+  'insight.strong_pos':
+    'Forte corrélation positive (r={r}) : les plus grosses PRs mettent plus longtemps à {metric}.',
+  'insight.moderate_pos':
+    'Corrélation positive modérée (r={r}) : les plus grosses PRs tendent à prendre plus longtemps à {metric}.',
+  'insight.weak':
+    'Corrélation linéaire faible / nulle (r={r}) entre lignes changées et temps à {metric}.',
+  'insight.negative':
+    'Corrélation négative (r={r}) : les plus grosses PRs ne sont pas plus lentes à {metric} dans cet échantillon.',
+
+  'period.7d': '7j',
+  'period.30d': '30j',
+  'period.90d': '90j',
+  'period.custom': 'Perso',
+
+  'settings.title': 'Paramètres',
+  'settings.description': 'Token, dépôts, cadence de sync et données locales.',
+  'settings.language': 'Langue',
+  'settings.save': 'Enregistrer',
+  'settings.saving': 'Enregistrement…',
+  'settings.saved': 'Paramètres enregistrés.',
+  'settings.save_failed': 'Échec de l’enregistrement',
+  'settings.token': 'Token GitHub',
+  'settings.repos': 'Dépôts',
+  'settings.sync_interval': 'Intervalle de sync (heures)',
+  'settings.backfill_limit': 'Taille du lot de backfill',
+  'settings.ignored_bots': 'Bots ignorés (un login par ligne)',
+  'settings.business_hours': 'Heures ouvrées uniquement',
+  'settings.business_hours_help':
+    'Ne compter les temps de cycle/review que pendant les fenêtres de travail.',
+  'settings.timezone': 'Fuseau horaire',
+  'settings.workdays': 'Jours ouvrés',
+  'settings.start': 'Début',
+  'settings.end': 'Fin',
+  'settings.storage': 'Stockage local',
+  'settings.reset_sync': 'Effacer les données PR synchronisées',
+  'settings.reset_sync_confirm':
+    'Effacer toutes les données PR/reviews et relancer un backfill complet ?',
+  'settings.reset_sync_done':
+    'Données PR locales effacées. La sync fera un backfill au prochain refresh.',
+  'settings.clear_all': 'Effacer toutes les données locales',
+  'settings.clear_all_confirm':
+    'Effacer TOUTES les données locales, y compris le token et les paramètres ?',
+  'settings.close': 'Fermer',
+}
