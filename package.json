@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Self-hosted GitHub PR analytics PWA — no backend, IndexedDB only",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -28,7 +28,11 @@ npx shadcn@latest add <component>
 
 ## Quick start
 
+Requires [Node.js 24+](https://nodejs.org/) (see `.nvmrc`). With [nvm](https://github.com/nvm-sh/nvm):
+
 ```bash
+nvm install
+nvm use
 npm install
 npm run dev
 ```
