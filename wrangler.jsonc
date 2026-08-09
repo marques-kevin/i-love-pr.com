@@ -2,7 +2,6 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ilovepr",
   "compatibility_date": "2026-08-09",
-  // Cloudflare Pages project (static Vite output).
-  // Deploy with: npm run deploy  →  wrangler pages deploy
-  "pages_build_output_dir": "./dist"
+  // Used by Cloudflare Pages (Git-connected builds).
+  "pages_build_output_dir": "./dist",
 }

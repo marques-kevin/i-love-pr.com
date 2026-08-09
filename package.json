@@ -21,8 +21,7 @@
     "i18n:check-unused": "tsx scripts/i18n_check_unused.ts",
     "i18n:check": "npm run i18n:check-parity && npm run i18n:check-unused",
     "check": "npm run typecheck && npm run lint && npm run test && npm run i18n:check",
-    "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=ilovepr"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
