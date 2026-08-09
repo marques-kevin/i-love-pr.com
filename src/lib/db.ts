@@ -1,8 +1,5 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
-import {
-  normalize_active_dashboard_id,
-  normalize_dashboards,
-} from './dashboard_layout'
+import { normalize_active_dashboard_id, normalize_dashboards } from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
 import type {
   AppSettings,

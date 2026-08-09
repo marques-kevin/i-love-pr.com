@@ -56,10 +56,14 @@ src/
 ## Tooling
 
 - Lint: **oxlint** (`npm run lint`)
-- Format: **Prettier** (`npm run format`)
+- Format: **Prettier** (`npm run format` / `npm run format:check`)
 - Types: `npm run typecheck`
 - Tests: `npm run test`
-- Full gate: `npm run check`
+- Full gate: `npm run check` (typecheck + lint + format:check + test + i18n)
+- **Git hooks** (Husky, installed via `npm install` → `prepare`):
+  - `pre-commit` — Prettier on staged files via lint-staged
+  - `pre-push` — full `npm run check`
+- **Never** skip hooks (`--no-verify` / `--no-gpg-sign` to bypass) — agents included
 
 ## GitHub
 

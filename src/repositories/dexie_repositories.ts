@@ -54,7 +54,9 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
   const get = async (): Promise<AppSettings | undefined> => {
     const settings = await database.settings.get('settings')
     if (!settings) return undefined
-    return normalize_settings(settings as AppSettings & { dashboard_layout?: DashboardLayoutItem[] })
+    return normalize_settings(
+      settings as AppSettings & { dashboard_layout?: DashboardLayoutItem[] },
+    )
   }
 
   const save = async (partial: SaveSettingsInput): Promise<AppSettings> => {
