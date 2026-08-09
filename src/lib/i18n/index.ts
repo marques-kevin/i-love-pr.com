@@ -11,8 +11,18 @@ export {
   normalize_stored_locale,
   resolve_locale,
 } from './locale'
+export {
+  DYNAMICALLY_REFERENCED_MESSAGE_KEYS,
+  locale_message_key,
+  period_message_key,
+  widget_description_key,
+  widget_label_key,
+} from './keys'
+export { define_locale_messages } from './define_locale_messages'
 
 export const messages_by_locale: Record<AppLocale, Record<MessageKey, string>> = {
-  en: en_messages,
+  en: { ...en_messages },
   fr: fr_messages,
 }
+
+export { en_messages, fr_messages }

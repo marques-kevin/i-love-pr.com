@@ -1,6 +1,6 @@
-import type { MessageKey } from './en'
+import { define_locale_messages } from '../define_locale_messages'
 
-export const fr_messages: Record<MessageKey, string> = {
+export const fr_messages = define_locale_messages({
   'app.loading': 'Chargement…',
   'app.tagline': 'Des analytics de PR qui restent sur votre machine',
   'app.settings': 'Paramètres',
@@ -115,7 +115,6 @@ export const fr_messages: Record<MessageKey, string> = {
   'settings.language': 'Langue',
   'settings.save': 'Enregistrer',
   'settings.saving': 'Enregistrement…',
-  'settings.saved': 'Paramètres enregistrés.',
   'settings.save_failed': 'Échec de l’enregistrement',
   'settings.token': 'Token GitHub',
   'settings.repos': 'Dépôts',
@@ -138,5 +137,4 @@ export const fr_messages: Record<MessageKey, string> = {
   'settings.clear_all': 'Effacer toutes les données locales',
   'settings.clear_all_confirm':
     'Effacer TOUTES les données locales, y compris le token et les paramètres ?',
-  'settings.close': 'Fermer',
-}
+})

@@ -1,6 +1,7 @@
 import { useIntl } from 'react-intl'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { period_message_key } from '@/lib/i18n'
 import type { PeriodKey } from '@/lib/types'
 import { connector, type ConnectorProps } from './period_filter.connector'
 
@@ -20,7 +21,7 @@ export function Wrapper({
         <TabsList>
           {(['7d', '30d', '90d', 'custom'] as PeriodKey[]).map((key) => (
             <TabsTrigger key={key} value={key}>
-              {intl.formatMessage({ id: `period.${key}` })}
+              {intl.formatMessage({ id: period_message_key(key) })}
             </TabsTrigger>
           ))}
         </TabsList>

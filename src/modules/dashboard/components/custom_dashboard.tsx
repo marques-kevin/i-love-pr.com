@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
 import { create_layout_item } from '@/lib/dashboard_layout'
+import { widget_description_key, widget_label_key } from '@/lib/i18n'
 import {
   DASHBOARD_WIDGET_BY_ID,
   DASHBOARD_WIDGET_CATALOG,
@@ -27,10 +28,6 @@ function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: nu
   const [item] = next.splice(index, 1)
   next.splice(next_index, 0, item)
   return next
-}
-
-function widget_label(widget_id: DashboardWidgetId, format_message: ReturnType<typeof useIntl>['formatMessage']) {
-  return format_message({ id: `widget.${widget_id}.label` })
 }
 
 export function Wrapper({ layout, save_layout }: ConnectorProps) {
@@ -107,7 +104,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
         <div className="grid gap-6 lg:grid-cols-2">
           {layout.map((item, index) => {
             const meta = DASHBOARD_WIDGET_BY_ID[item.widget_id]
-            const label = widget_label(item.widget_id, intl.formatMessage)
+            const label = intl.formatMessage({ id: widget_label_key(item.widget_id) })
             const span_class = meta.span === 'full' ? 'lg:col-span-2' : ''
             return (
               <div key={item.instance_id} className={`relative min-w-0 ${span_class}`}>
@@ -171,10 +168,10 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                   onClick={() => add_widget(widget.widget_id)}
                 >
                   <span className="font-medium text-foreground">
-                    {widget_label(widget.widget_id, intl.formatMessage)}
+                    {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {intl.formatMessage({ id: `widget.${widget.widget_id}.description` })}
+                    {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
                   </span>
                 </button>
               </li>

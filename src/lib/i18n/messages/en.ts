@@ -112,7 +112,6 @@ export const en_messages = {
   'settings.language': 'Language',
   'settings.save': 'Save',
   'settings.saving': 'Saving…',
-  'settings.saved': 'Settings saved.',
   'settings.save_failed': 'Save failed',
   'settings.token': 'GitHub token',
   'settings.repos': 'Repositories',
@@ -132,7 +131,6 @@ export const en_messages = {
   'settings.reset_sync_done': 'Local PR data cleared. Sync will backfill on next refresh.',
   'settings.clear_all': 'Erase all local data',
   'settings.clear_all_confirm': 'Erase ALL local data including token and settings?',
-  'settings.close': 'Close',
 } as const
 
 export type MessageKey = keyof typeof en_messages

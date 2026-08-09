@@ -18,6 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import type { MessageKey } from '@/lib/i18n'
 import type { MetricsSnapshot } from '@/lib/types'
 
 const cycleConfig = {
@@ -231,7 +232,7 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
 }
 
 type FormatMessage = (
-  descriptor: { id: string },
+  descriptor: { id: MessageKey },
   values?: Record<string, string | number>,
 ) => string
 

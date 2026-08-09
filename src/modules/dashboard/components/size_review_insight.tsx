@@ -18,7 +18,7 @@ export function Wrapper({ correlation }: ConnectorProps) {
           correlation.linesVsTimeToApprove,
           correlation.sampleSize,
           metric_label,
-          intl.formatMessage,
+          (descriptor, values) => intl.formatMessage(descriptor, values),
         )}
       </p>
     </div>

@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check": "npm run typecheck && npm run lint && npm run test",
+    "i18n:check-parity": "tsx scripts/i18n_check_parity.ts",
+    "i18n:check-unused": "tsx scripts/i18n_check_unused.ts",
+    "i18n:check": "npm run i18n:check-parity && npm run i18n:check-unused",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run i18n:check",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -46,6 +49,7 @@
     "prettier": "^3.8.1",
     "react-scan": "^0.5.7",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.11",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vite-plugin-pwa": "^1.3.0",

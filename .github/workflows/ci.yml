@@ -134,3 +134,26 @@ jobs:
           name: coverage
           path: coverage/
           if-no-files-found: ignore
+
+  i18n:
+    name: i18n
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          fail-on-cache-miss: true
+
+      - name: Check i18n parity and unused keys
+        run: npm run i18n:check

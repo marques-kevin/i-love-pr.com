@@ -193,15 +193,18 @@ export function Wrapper({
             />
           </div>
 
-          <RepoPicker
-            id="settings-repo"
-            availableRepos={available_repos}
-            selected={repos}
-            onChange={set_repos}
-            token={token}
-            loading={available_repos_loading}
-            disabled={!token.trim()}
-          />
+          <div className="space-y-2">
+            <Label>{intl.formatMessage({ id: 'settings.repos' })}</Label>
+            <RepoPicker
+              id="settings-repo"
+              availableRepos={available_repos}
+              selected={repos}
+              onChange={set_repos}
+              token={token}
+              loading={available_repos_loading}
+              disabled={!token.trim()}
+            />
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
