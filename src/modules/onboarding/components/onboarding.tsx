@@ -14,7 +14,6 @@ import { connector, type ConnectorProps } from './onboarding.connector'
 export function Wrapper({
   available_repos,
   available_repos_loading,
-  locale,
   save_settings,
   load_available_repos,
   clear_available_repos,
@@ -67,7 +66,7 @@ export function Wrapper({
     set_saving(true)
     set_error(null)
     try {
-      await save_settings({ token: token.trim(), repos, locale })
+      await save_settings({ token: token.trim(), repos })
     } catch (err) {
       set_error(
         err instanceof Error

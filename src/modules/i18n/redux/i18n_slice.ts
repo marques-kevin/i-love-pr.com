@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { AppLocale } from '@/lib/i18n'
-import { detect_locale, normalize_locale } from '@/lib/i18n'
+import { detect_locale, normalize_locale, resolve_locale } from '@/lib/i18n'
 import type { AppSettings } from '@/lib/types'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
@@ -32,10 +32,8 @@ const i18n_slice = createSlice({
       state.locale = normalize_locale(action.payload)
     },
     hydrate_locale_from_settings(_state, action: PayloadAction<AppSettings | null>) {
-      if (action.payload?.locale) {
-        return { locale: normalize_locale(action.payload.locale) }
-      }
-      return _state
+      // Saved preference wins; otherwise re-detect from the browser (EN fallback).
+      return { locale: resolve_locale(action.payload?.locale) }
     },
   },
   extraReducers: (builder) => {

@@ -2,7 +2,7 @@ import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import { normalize_dashboard_layout } from '@/lib/dashboard_layout'
-import { detect_locale, normalize_locale } from '@/lib/i18n'
+import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
   AppSettings,
   DashboardLayoutItem,
@@ -40,7 +40,7 @@ function normalize_settings(settings: AppSettings): AppSettings {
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
     dashboard_layout: normalize_dashboard_layout(settings.dashboard_layout),
-    locale: normalize_locale(settings.locale ?? detect_locale()),
+    locale: normalize_stored_locale(settings.locale),
   }
 }
 
@@ -95,7 +95,10 @@ export function create_memory_repositories(seed?: {
         dashboard_layout: normalize_dashboard_layout(
           partial.dashboard_layout ?? existing?.dashboard_layout,
         ),
-        locale: normalize_locale(partial.locale ?? existing?.locale ?? detect_locale()),
+        locale:
+          partial.locale !== undefined
+            ? normalize_stored_locale(partial.locale)
+            : normalize_stored_locale(existing?.locale),
         onboarded_at: existing?.onboarded_at ?? new Date().toISOString(),
       }
       return normalize_settings(structuredClone(bag.settings))
@@ -111,7 +114,10 @@ export function create_memory_repositories(seed?: {
     },
     save_locale: async (locale) => {
       if (!bag.settings) throw new Error('Settings not initialized')
-      bag.settings = { ...bag.settings, locale: normalize_locale(locale) }
+      bag.settings = {
+        ...bag.settings,
+        locale: locale == null ? null : normalize_locale(locale),
+      }
       return normalize_settings(structuredClone(bag.settings))
     },
     upsert_team: async (input) => {

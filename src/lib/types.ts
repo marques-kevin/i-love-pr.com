@@ -44,8 +44,8 @@ export interface AppSettings {
   business_hours: BusinessHoursConfig
   /** Ordered custom dashboard widgets (empty = blank canvas). */
   dashboard_layout: DashboardLayoutItem[]
-  /** UI language */
-  locale: AppLocale
+  /** Explicit UI language; `null` = follow browser on each app init. */
+  locale: AppLocale | null
   onboarded_at: string
 }
 

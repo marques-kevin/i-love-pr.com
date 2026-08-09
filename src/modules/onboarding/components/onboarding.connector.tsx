@@ -5,7 +5,6 @@ import { clear_available_repos, load_available_repos, save_settings } from '@/st
 export const map_state_to_props = (state: RootState) => ({
   available_repos: state.settings.available_repos,
   available_repos_loading: state.settings.available_repos_loading,
-  locale: state.i18n.locale,
 })
 
 export const map_dispatch_to_props = {

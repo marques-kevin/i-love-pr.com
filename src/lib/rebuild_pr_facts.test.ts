@@ -61,7 +61,7 @@ const sample_settings: AppSettings = {
     end_minutes: 18 * 60,
   },
   dashboard_layout: [],
-  locale: 'en',
+  locale: null,
   onboarded_at: '2026-01-01T00:00:00.000Z',
 }
 
