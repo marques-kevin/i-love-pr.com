@@ -50,6 +50,7 @@ export type DashboardTabFilters = {
   period_key: PeriodKey
   custom_from: string
   custom_to: string
+  hide_test_files: boolean
 }
 
 export function default_dashboard_filters(): DashboardTabFilters {
@@ -58,6 +59,7 @@ export function default_dashboard_filters(): DashboardTabFilters {
     period_key: '30d',
     custom_from: '',
     custom_to: '',
+    hide_test_files: false,
   }
 }
 
@@ -82,6 +84,8 @@ export function normalize_dashboard_filters(
     period_key: normalize_period_key(value.period_key),
     custom_from: typeof value.custom_from === 'string' ? value.custom_from : defaults.custom_from,
     custom_to: typeof value.custom_to === 'string' ? value.custom_to : defaults.custom_to,
+    hide_test_files:
+      typeof value.hide_test_files === 'boolean' ? value.hide_test_files : defaults.hide_test_files,
   }
 }
 

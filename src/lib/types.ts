@@ -57,6 +57,8 @@ export interface DashboardTab {
   period_key: PeriodKey
   custom_from: string
   custom_to: string
+  /** Exclude test-file line counts from size metrics on this dashboard. */
+  hide_test_files: boolean
 }
 
 export interface AppSettings {
@@ -67,6 +69,8 @@ export interface AppSettings {
   /** Max PRs to pull per repo during a backfill (most recently updated first) */
   backfill_limit: number
   ignored_bots: string[]
+  /** Glob patterns for test files (one per line in settings UI). */
+  test_file_globs: string[]
   /** Saved member filter presets (teams) */
   teams: MemberTeam[]
   business_hours: BusinessHoursConfig
@@ -134,6 +138,15 @@ export interface ReviewRecord {
   submitted_at: string
 }
 
+/** Per-file diff stats synced from GitHub for test-file filtering. */
+export interface PrChangedFileRecord {
+  id: string
+  pr_id: string
+  path: string
+  additions: number
+  deletions: number
+}
+
 /** Metrics computed at derive-time (in-memory enrich). */
 export interface PrFacts {
   is_bot: boolean
@@ -197,6 +210,7 @@ export interface RateLimitInfo {
 export interface NormalizedPullRequest {
   pull_request: PullRequestRecord
   reviews: ReviewRecord[]
+  changed_files: PrChangedFileRecord[]
 }
 
 export type PeriodKey = '7d' | '30d' | '90d' | 'custom'

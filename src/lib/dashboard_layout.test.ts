@@ -83,6 +83,7 @@ describe('normalize_settings_dashboards', () => {
           period_key: '7d',
           custom_from: '',
           custom_to: '',
+          hide_test_files: false,
         },
       ],
       active_dashboard_id: 'missing',

@@ -20,6 +20,7 @@ export type DashboardState = {
   period_key: PeriodKey
   custom_from: string
   custom_to: string
+  hide_test_files: boolean
   metrics: MetricsSnapshot | null
   contributors: string[]
   loading: boolean
@@ -32,6 +33,7 @@ const initial_state: DashboardState = {
   period_key: '30d',
   custom_from: '',
   custom_to: '',
+  hide_test_files: false,
   metrics: null,
   contributors: [],
   loading: false,
@@ -42,7 +44,8 @@ export const refresh_metrics = create_app_async_thunk<
   { metrics: MetricsSnapshot | null; contributors: string[] },
   void
 >('dashboard/refresh_metrics', async (_, { extra, getState }) => {
-  const { selected_repos, members, period_key, custom_from, custom_to } = getState().dashboard
+  const { selected_repos, members, period_key, custom_from, custom_to, hide_test_files } =
+    getState().dashboard
   if (selected_repos.length === 0) {
     return { metrics: null, contributors: [] }
   }
@@ -53,6 +56,7 @@ export const refresh_metrics = create_app_async_thunk<
       repos: selected_repos,
       members,
       period,
+      hide_test_files,
     }),
     list_contributors(extra.repositories, selected_repos),
   ])
@@ -83,11 +87,15 @@ const dashboard_slice = createSlice({
     set_custom_to(state, action: PayloadAction<string>) {
       state.custom_to = action.payload
     },
+    set_hide_test_files(state, action: PayloadAction<boolean>) {
+      state.hide_test_files = action.payload
+    },
     hydrate_dashboard_filters(state, action: PayloadAction<DashboardTabFilters>) {
       state.members = action.payload.members
       state.period_key = action.payload.period_key
       state.custom_from = action.payload.custom_from
       state.custom_to = action.payload.custom_to
+      state.hide_test_files = action.payload.hide_test_files
     },
     set_show_settings(state, action: PayloadAction<boolean>) {
       state.show_settings = action.payload
@@ -116,6 +124,7 @@ export const {
   set_period_key,
   set_custom_from,
   set_custom_to,
+  set_hide_test_files,
   hydrate_dashboard_filters,
   set_show_settings,
 } = dashboard_slice.actions

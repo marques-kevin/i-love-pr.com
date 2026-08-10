@@ -7,7 +7,15 @@ import {
   startOfWeek,
 } from 'date-fns'
 import { isBotLogin } from './bots'
-import type { MetricsSnapshot, PeriodRange, PrFactRecord, PullRequestRecord } from './types'
+import { apply_test_file_line_filter } from './pr_line_adjustment'
+import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
+import type {
+  MetricsSnapshot,
+  PeriodRange,
+  PrChangedFileRecord,
+  PrFactRecord,
+  PullRequestRecord,
+} from './types'
 import type { Repositories } from '@/repositories'
 
 function in_period(iso: string | null | undefined, range: PeriodRange): boolean {
@@ -63,8 +71,9 @@ export async function compute_metrics(options: {
   repos: string[]
   members: string[]
   period: PeriodRange
+  hide_test_files?: boolean
 }): Promise<MetricsSnapshot> {
-  const { repositories, repos, members, period } = options
+  const { repositories, repos, members, period, hide_test_files = false } = options
   const member_set = new Set(members)
   const has_member_filter = member_set.size > 0
   const settings = await repositories.settings.get()
@@ -74,6 +83,24 @@ export async function compute_metrics(options: {
   prs = prs.filter((pr) => !pr.is_bot)
   if (has_member_filter) {
     prs = prs.filter((pr) => member_set.has(pr.author))
+  }
+
+  if (hide_test_files && prs.length > 0) {
+    const test_file_globs = settings?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS
+    const changed_files = await repositories.pr_changed_files.list_by_pr_ids(
+      prs.map((pr) => pr.pr_id),
+    )
+    const files_by_pr = new Map<string, PrChangedFileRecord[]>()
+    for (const file of changed_files) {
+      const list = files_by_pr.get(file.pr_id) ?? []
+      list.push(file)
+      files_by_pr.set(file.pr_id, list)
+    }
+    prs = prs.map((pr) => {
+      const files = files_by_pr.get(pr.pr_id) ?? []
+      if (files.length === 0) return pr
+      return apply_test_file_line_filter(pr, files, test_file_globs)
+    })
   }
 
   const pr_by_id = new Map(prs.map((pr) => [pr.pr_id, pr]))
