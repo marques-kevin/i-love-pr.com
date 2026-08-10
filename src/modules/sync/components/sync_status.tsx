@@ -5,6 +5,7 @@ import { useIntl } from 'react-intl'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SyncCoverage } from './sync_coverage'
 import { connector, type ConnectorProps } from './sync_status.connector'
 
 export function Wrapper({
@@ -65,6 +66,7 @@ export function Wrapper({
         {!syncing && has_more_history && (
           <Badge variant="outline">{intl.formatMessage({ id: 'sync.more_history' })}</Badge>
         )}
+        <SyncCoverage />
         <Button
           type="button"
           variant="outline"

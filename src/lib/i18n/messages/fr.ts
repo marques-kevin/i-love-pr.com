@@ -34,13 +34,12 @@ export const fr_messages = define_locale_messages({
   'sync.tooltip':
     'Récupère le prochain lot de PRs. Relancez après le reset du rate limit pour aller plus loin dans l’historique.',
   'sync.coverage.title': 'Historique des PR synchronisées',
+  'sync.coverage.trigger_aria': 'Voir la plage de dates des pull requests synchronisées',
   'sync.coverage.empty': 'Aucune pull request synchronisée pour l’instant.',
   'sync.coverage.count':
     '{count, plural, one {# pull request synchronisée} other {# pull requests synchronisées}}',
   'sync.coverage.oldest': 'Plus ancienne',
   'sync.coverage.newest': 'Plus récente',
-  'sync.coverage.help':
-    'Affiche l’intervalle de dates de création des pull requests stockées localement pour les dépôts sélectionnés.',
   'sync.coverage.range_aria': 'Historique synchronisé du {oldest} au {newest}',
 
   'metrics.empty': 'Pas encore de données. Lancez une sync pour récupérer les pull requests.',
