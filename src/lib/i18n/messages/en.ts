@@ -77,6 +77,14 @@ export const en_messages = {
   'sync.sync_more': 'Sync more history',
   'sync.tooltip':
     'Pull the next batch of PRs. Re-run after the rate limit resets to go deeper into history.',
+  'sync.coverage.title': 'Synced PR history',
+  'sync.coverage.trigger_aria': 'View synced pull request date range',
+  'sync.coverage.empty': 'No pull requests synced yet.',
+  'sync.coverage.count':
+    '{count, plural, one {# pull request synced} other {# pull requests synced}}',
+  'sync.coverage.oldest': 'Oldest',
+  'sync.coverage.newest': 'Newest',
+  'sync.coverage.range_aria': 'Synced history from {oldest} to {newest}',
 
   'metrics.empty': 'No data yet. Run a sync to pull pull requests.',
 

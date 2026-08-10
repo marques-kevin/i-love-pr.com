@@ -320,6 +320,15 @@ export function create_dexie_pull_request_repository(
       }
       return database.pull_requests.where('repo_full_name').anyOf(repos).toArray()
     },
+    get_created_at_bounds_by_repos: async (repos) => {
+      if (repos.length === 0) return null
+      const { compute_created_at_bounds } = await import('@/lib/pr_coverage')
+      const prs =
+        repos.length === 1
+          ? await database.pull_requests.where('repo_full_name').equals(repos[0]).toArray()
+          : await database.pull_requests.where('repo_full_name').anyOf(repos).toArray()
+      return compute_created_at_bounds(prs.map((pr) => pr.created_at))
+    },
     count_by_repo: async (repo_full_name) =>
       database.pull_requests.where('repo_full_name').equals(repo_full_name).count(),
     put_many: async (prs) => {

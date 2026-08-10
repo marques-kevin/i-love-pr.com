@@ -8,6 +8,7 @@ import type {
   SyncState,
   DashboardLayoutItem,
 } from '@/lib/types'
+import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
 import type { DashboardTabFilters } from '@/lib/dashboard_layout'
 
 export type SaveSettingsInput = Partial<Omit<AppSettings, 'id'>> & {
@@ -37,6 +38,7 @@ export interface SettingsRepository {
 
 export interface PullRequestRepository {
   list_by_repos: (repos: string[]) => Promise<PullRequestRecord[]>
+  get_created_at_bounds_by_repos: (repos: string[]) => Promise<PrCreatedAtBounds | null>
   count_by_repo: (repo_full_name: string) => Promise<number>
   put_many: (prs: PullRequestRecord[]) => Promise<void>
   clear: () => Promise<void>

@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { sync_all_repos } from '@/lib/sync'
+import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
 import type { RateLimitInfo, SyncProgress, SyncState } from '@/lib/types'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
@@ -9,6 +10,7 @@ export type SyncSliceState = {
   rate_limit: RateLimitInfo | null
   error: string | null
   sync_states: SyncState[]
+  pr_coverage: PrCreatedAtBounds | null
   bootstrapped: boolean
 }
 
@@ -18,6 +20,7 @@ const initial_state: SyncSliceState = {
   rate_limit: null,
   error: null,
   sync_states: [],
+  pr_coverage: null,
   bootstrapped: false,
 }
 
@@ -29,6 +32,13 @@ export const refresh_sync_states = create_app_async_thunk<SyncState[], void>(
     return extra.repositories.sync_state.list()
   },
 )
+
+export const refresh_pr_coverage = create_app_async_thunk<
+  PrCreatedAtBounds | null,
+  { repos: string[] }
+>('sync/refresh_pr_coverage', async ({ repos }, { extra }) => {
+  return extra.repositories.pull_requests.get_created_at_bounds_by_repos(repos)
+})
 
 export const run_sync = create_app_async_thunk<
   { rate_limit: RateLimitInfo | null },
@@ -88,6 +98,9 @@ const sync_slice = createSlice({
       })
       .addCase(refresh_sync_states.fulfilled, (state, action) => {
         state.sync_states = action.payload
+      })
+      .addCase(refresh_pr_coverage.fulfilled, (state, action) => {
+        state.pr_coverage = action.payload
       })
   },
 })

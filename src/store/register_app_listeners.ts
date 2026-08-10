@@ -21,7 +21,12 @@ import {
   set_active_dashboard,
 } from '@/modules/settings/redux/settings_slice'
 import { hydrate_locale_from_settings } from '@/modules/i18n/redux/i18n_slice'
-import { refresh_sync_states, run_sync, set_bootstrapped } from '@/modules/sync/redux/sync_slice'
+import {
+  refresh_sync_states,
+  run_sync,
+  set_bootstrapped,
+  refresh_pr_coverage,
+} from '@/modules/sync/redux/sync_slice'
 import {
   get_active_dashboard,
   normalize_dashboard_filters,
@@ -32,6 +37,11 @@ import type { RootState } from './root_reducer'
 import type { ThunkExtra } from './thunk_extra'
 
 type AppStartListening = TypedStartListening<RootState, AppDispatch, ThunkExtra>
+
+function dispatch_refresh_pr_coverage(api: { getState: () => RootState; dispatch: AppDispatch }) {
+  const { selected_repos } = api.getState().dashboard
+  void api.dispatch(refresh_pr_coverage({ repos: selected_repos }))
+}
 
 function hydrate_filters_from_active_dashboard(api: {
   getState: () => RootState
@@ -68,6 +78,7 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(load_available_repos())
       void api.dispatch(refresh_sync_states())
+      dispatch_refresh_pr_coverage(api)
 
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
@@ -82,6 +93,7 @@ export function register_app_listeners(
       const settings = action.payload
       api.dispatch(hydrate_locale_from_settings(settings))
       api.dispatch(sync_selected_repos_with_settings(settings.repos))
+      dispatch_refresh_pr_coverage(api)
       void api.dispatch(load_available_repos({ token: settings.token }))
 
       if (!api.getState().sync.bootstrapped) {
@@ -94,6 +106,7 @@ export function register_app_listeners(
   start_listening({
     actionCreator: run_sync.fulfilled,
     effect: async (_action, api) => {
+      dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
     },
   })
@@ -102,6 +115,7 @@ export function register_app_listeners(
     actionCreator: run_sync.rejected,
     effect: async (_action, api) => {
       void api.dispatch(refresh_sync_states())
+      dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
     },
   })
@@ -164,6 +178,7 @@ export function register_app_listeners(
     start_listening({
       actionCreator: action_creator,
       effect: async (_action, api) => {
+        dispatch_refresh_pr_coverage(api)
         void api.dispatch(refresh_metrics())
       },
     })
