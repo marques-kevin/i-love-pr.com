@@ -163,6 +163,7 @@ const LIST_REPOSITORIES_QUERY = `
         first: 100
         after: $cursor
         affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
+        ownerAffiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]
         orderBy: { field: UPDATED_AT, direction: DESC }
       ) {
         pageInfo {
