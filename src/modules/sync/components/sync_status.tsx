@@ -14,23 +14,31 @@ export function Wrapper({
   rate_limit,
   sync_states,
   error,
+  active_repo,
   run_sync,
 }: ConnectorProps) {
   const intl = useIntl()
   const date_locale = intl.locale.startsWith('fr') ? fr : enUS
 
-  const last_synced = sync_states
+  const active_states = sync_states.filter((state) => state.repo_full_name === active_repo)
+  const active_progress = progress && progress.repo_full_name === active_repo ? progress : null
+  const active_syncing = Boolean(
+    syncing && (active_progress || active_states.some((state) => state.mode !== 'idle')),
+  )
+
+  const last_synced = active_states
     .map((s) => s.last_synced_at)
     .filter(Boolean)
     .sort()
     .at(-1)
 
-  const paused_error = sync_states.find((s) => s.last_error)?.last_error
-  const is_backfilling = syncing && (progress?.mode === 'backfill' || progress?.mode === 'paused')
-  const has_more_history = sync_states.some((s) => Boolean(s.page_cursor))
+  const paused_error = active_states.find((s) => s.last_error)?.last_error
+  const is_backfilling =
+    active_syncing && (active_progress?.mode === 'backfill' || active_progress?.mode === 'paused')
+  const has_more_history = active_states.some((s) => Boolean(s.page_cursor))
 
-  const status_label = syncing
-    ? (progress?.message ?? intl.formatMessage({ id: 'sync.syncing' }))
+  const status_label = active_syncing
+    ? (active_progress?.message ?? intl.formatMessage({ id: 'sync.syncing' }))
     : last_synced
       ? intl.formatMessage(
           { id: 'sync.last' },
@@ -43,7 +51,7 @@ export function Wrapper({
         )
       : intl.formatMessage({ id: 'sync.never' })
 
-  const button_label = syncing
+  const button_label = active_syncing
     ? is_backfilling
       ? intl.formatMessage({ id: 'sync.backfilling' })
       : intl.formatMessage({ id: 'sync.syncing' })
@@ -63,19 +71,21 @@ export function Wrapper({
             )}
           </Badge>
         )}
-        {!syncing && has_more_history && (
-          <Badge variant="outline">{intl.formatMessage({ id: 'sync.more_history' })}</Badge>
-        )}
         <SyncCoverage />
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => void run_sync({ force: true })}
-          disabled={syncing}
+          onClick={() =>
+            void run_sync({
+              force: true,
+              repos: active_repo ? [active_repo] : [],
+            })
+          }
+          disabled={syncing || !active_repo}
           title={intl.formatMessage({ id: 'sync.tooltip' })}
         >
-          <RefreshCwIcon className={syncing ? 'animate-spin' : undefined} />
+          <RefreshCwIcon className={active_syncing ? 'animate-spin' : undefined} />
           {button_label}
         </Button>
       </div>

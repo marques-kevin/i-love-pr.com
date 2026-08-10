@@ -1,29 +1,46 @@
-import { StrictMode } from 'react'
+import { StrictMode, useEffect, useSyncExternalStore } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import { App } from '@/modules/app'
-import { global_app_initialized } from '@/modules/app/redux/app_events'
 import { IntlShell } from '@/modules/i18n'
-import { db } from './lib/db'
-import { create_dexie_repositories } from './repositories'
-import { create_store } from './store'
+import { init_cuelume } from '@/lib/cuelume'
+import { session_manager } from '@/lib/session'
 
 registerSW({ immediate: true })
+init_cuelume()
 
-const store = create_store({
-  repositories: create_dexie_repositories(db),
-})
+function SessionRoot() {
+  const session = useSyncExternalStore(
+    session_manager.subscribe,
+    session_manager.get_snapshot,
+    session_manager.get_snapshot,
+  )
 
-store.dispatch(global_app_initialized())
+  useEffect(() => {
+    void session_manager.boot()
+  }, [])
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Provider store={store}>
+  if (!session.ready || !session.store) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+        Loading…
+      </div>
+    )
+  }
+
+  return (
+    <Provider store={session.store} key={session.login ?? `guest-${session.adding_account}`}>
       <IntlShell>
         <App />
       </IntlShell>
     </Provider>
+  )
+}
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <SessionRoot />
   </StrictMode>,
 )

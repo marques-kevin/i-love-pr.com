@@ -51,6 +51,8 @@ export interface DashboardTab {
   id: string
   /** Display name; empty for the built-in default tab (label from i18n). */
   name: string
+  /** Repo this tab belongs to (`owner/name`). */
+  repo_full_name: string
   layout: DashboardLayoutItem[]
   /** Selected GitHub logins for this tab; empty = all contributors. */
   members: string[]
@@ -65,6 +67,8 @@ export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
+  /** Currently focused repo in the app shell (`owner/name`). */
+  active_repo: string | null
   sync_interval_hours: number
   /** Max PRs to pull per repo during a backfill (most recently updated first) */
   backfill_limit: number
@@ -74,13 +78,39 @@ export interface AppSettings {
   /** Saved member filter presets (teams) */
   teams: MemberTeam[]
   business_hours: BusinessHoursConfig
-  /** Named dashboard tabs (first is the default). */
+  /** Named dashboard tabs (scoped by `repo_full_name`). */
   dashboards: DashboardTab[]
-  /** Selected dashboard tab id. */
+  /** Selected dashboard tab id for the current `active_repo`. */
   active_dashboard_id: string
+  /** Last active dashboard tab id per repo. */
+  active_dashboard_by_repo: Record<string, string>
   /** Explicit UI language; `null` = follow browser on each app init. */
   locale: AppLocale | null
   onboarded_at: string
+}
+
+/** GitHub viewer profile returned by token validation. */
+export interface GitHubViewerProfile {
+  login: string
+  name: string | null
+  email: string | null
+  avatar_url: string | null
+}
+
+/** Persisted account in the meta DB (survives logout). */
+export interface SavedAccount {
+  login: string
+  name: string | null
+  email: string | null
+  avatar_url: string | null
+  token: string
+  last_used_at: string
+}
+
+export interface SessionRecord {
+  id: 'session'
+  active_login: string | null
+  legacy_migrated: boolean
 }
 
 export interface RepoRecord {
@@ -102,6 +132,8 @@ export interface SyncState {
   total_fetched: number
   /** PRs fetched so far in the current backfill campaign (toward backfill_limit) */
   backfill_fetched: number
+  /** Oldest PR createdAt on GitHub (CREATED_AT ASC probe), used for sync-depth % */
+  remote_oldest_created_at: string | null
 }
 
 /** Raw PR metadata as synced from GitHub — no derived metrics. */

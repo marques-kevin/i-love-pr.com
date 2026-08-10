@@ -49,6 +49,7 @@ const sample_settings: AppSettings = {
   id: 'settings',
   token: 't',
   repos: ['org/repo'],
+  active_repo: 'org/repo',
   sync_interval_hours: 24,
   backfill_limit: 200,
   ignored_bots: [],
@@ -65,6 +66,7 @@ const sample_settings: AppSettings = {
     {
       id: 'default',
       name: '',
+      repo_full_name: 'org/repo',
       layout: [],
       members: [],
       period_key: '30d',
@@ -74,6 +76,7 @@ const sample_settings: AppSettings = {
     },
   ],
   active_dashboard_id: 'default',
+  active_dashboard_by_repo: { 'org/repo': 'default' },
   locale: null,
   onboarded_at: '2026-01-01T00:00:00.000Z',
 }

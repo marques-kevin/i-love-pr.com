@@ -49,10 +49,13 @@ export const save_settings = create_app_async_thunk<
     locale?: AppSettings['locale']
   }
 >('settings/save', async (input, { extra }) => {
+  const token = input.token.trim()
+  const repos = input.repos.map((r) => r.trim()).filter(Boolean)
+
   const previous = await extra.repositories.settings.get()
   const payload: SaveSettingsInput = {
-    token: input.token.trim(),
-    repos: input.repos.map((r) => r.trim()).filter(Boolean),
+    token,
+    repos,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
     ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
@@ -62,6 +65,30 @@ export const save_settings = create_app_async_thunk<
   }
   const next = await extra.repositories.settings.save(payload)
   await extra.repositories.settings.upsert_repos(next.repos)
+
+  try {
+    const client = new GitHubClient(token)
+    const profile = await client.validateToken()
+    await extra.session.upsert_account_profile({
+      login: profile.login,
+      name: profile.name,
+      email: profile.email,
+      avatar_url: profile.avatar_url,
+      token,
+    })
+  } catch {
+    const login = extra.session.get_active_login()
+    if (login) {
+      const existing = extra.session.get_accounts().find((account) => account.login === login)
+      await extra.session.upsert_account_profile({
+        login,
+        name: existing?.name ?? null,
+        email: existing?.email ?? null,
+        avatar_url: existing?.avatar_url ?? null,
+        token,
+      })
+    }
+  }
 
   const bots_changed =
     JSON.stringify(previous?.ignored_bots ?? []) !== JSON.stringify(next.ignored_bots)
@@ -73,6 +100,26 @@ export const save_settings = create_app_async_thunk<
 
   return next
 })
+
+export const complete_onboarding = create_app_async_thunk<void, { token: string }>(
+  'settings/complete_onboarding',
+  async (input, { extra }) => {
+    const token = input.token.trim()
+    const client = new GitHubClient(token)
+    const profile = await client.validateToken()
+    await extra.session.activate_account({
+      profile: {
+        login: profile.login,
+        name: profile.name,
+        email: profile.email,
+        avatar_url: profile.avatar_url,
+      },
+      token,
+      repos: [],
+      ignored_bots: DEFAULT_IGNORED_BOTS,
+    })
+  },
+)
 
 export const upsert_team = create_app_async_thunk<
   AppSettings,
@@ -137,6 +184,13 @@ export const set_active_dashboard = create_app_async_thunk<AppSettings, string>(
   },
 )
 
+export const set_active_repo = create_app_async_thunk<AppSettings, string>(
+  'settings/set_active_repo',
+  async (repo_full_name, { extra }) => {
+    return extra.repositories.settings.set_active_repo(repo_full_name)
+  },
+)
+
 export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
   async (_, { extra }) => {
@@ -147,7 +201,7 @@ export const reset_sync_data = create_app_async_thunk<void, void>(
 export const clear_all_data = create_app_async_thunk<void, void>(
   'settings/clear_all_data',
   async (_, { extra }) => {
-    await extra.repositories.settings.clear_all_data()
+    await extra.session.wipe_active_account()
   },
 )
 
@@ -237,6 +291,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(set_active_dashboard.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(set_active_repo.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {

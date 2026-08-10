@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
-import { normalize_active_dashboard_id, normalize_dashboards } from './dashboard_layout'
+import { normalize_settings_dashboards } from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
 import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
 import type {
@@ -42,15 +42,24 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
   const legacy_layout = Array.isArray(row.dashboard_layout)
     ? (row.dashboard_layout as DashboardLayoutItem[])
     : undefined
-  const dashboards = normalize_dashboards(
-    Array.isArray(row.dashboards) ? (row.dashboards as DashboardTab[]) : undefined,
-    legacy_layout,
-  )
+  const repos = Array.isArray(row.repos) ? (row.repos as string[]) : []
+  const dashboards_fields = normalize_settings_dashboards({
+    repos,
+    active_repo: typeof row.active_repo === 'string' ? row.active_repo : null,
+    dashboards: Array.isArray(row.dashboards) ? (row.dashboards as DashboardTab[]) : undefined,
+    active_dashboard_id:
+      typeof row.active_dashboard_id === 'string' ? row.active_dashboard_id : undefined,
+    active_dashboard_by_repo:
+      row.active_dashboard_by_repo && typeof row.active_dashboard_by_repo === 'object'
+        ? (row.active_dashboard_by_repo as Record<string, string>)
+        : undefined,
+    dashboard_layout: legacy_layout,
+  })
 
   return {
     id: 'settings',
     token: String(row.token ?? ''),
-    repos: Array.isArray(row.repos) ? (row.repos as string[]) : [],
+    repos,
     sync_interval_hours: Number(row.sync_interval_hours ?? row.syncIntervalHours ?? 24),
     backfill_limit: Number(row.backfill_limit ?? row.backfillLimit ?? DEFAULT_BACKFILL_LIMIT),
     ignored_bots: Array.isArray(row.ignored_bots)
@@ -73,11 +82,7 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
       start_minutes: Number(business.start_minutes ?? business.startMinutes ?? 9 * 60),
       end_minutes: Number(business.end_minutes ?? business.endMinutes ?? 18 * 60),
     },
-    dashboards,
-    active_dashboard_id: normalize_active_dashboard_id(
-      typeof row.active_dashboard_id === 'string' ? row.active_dashboard_id : undefined,
-      dashboards,
-    ),
+    ...dashboards_fields,
     locale: normalize_stored_locale(row.locale),
     onboarded_at: String(row.onboarded_at ?? row.onboardedAt ?? new Date().toISOString()),
   }
@@ -106,6 +111,9 @@ function migrate_sync_state_row(row: LegacyRow): SyncState | null {
     last_error: (row.last_error ?? row.lastError ?? null) as string | null,
     total_fetched: Number(row.total_fetched ?? row.totalFetched ?? 0),
     backfill_fetched: Number(row.backfill_fetched ?? row.backfillFetched ?? 0),
+    remote_oldest_created_at: (row.remote_oldest_created_at ??
+      row.remoteOldestCreatedAt ??
+      null) as string | null,
   }
 }
 
@@ -189,6 +197,8 @@ async function migrate_to_snake_case(tx: Transaction): Promise<void> {
   }
 }
 
+export const LEGACY_WORKSPACE_DB_NAME = 'ilovepr'
+
 export class IlovePrDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>
   repos!: EntityTable<RepoRecord, 'full_name'>
@@ -199,8 +209,8 @@ export class IlovePrDatabase extends Dexie {
   pr_changed_files!: EntityTable<PrChangedFileRecord, 'id'>
   chart_specs!: EntityTable<LegacyChartSpecRow, 'id'>
 
-  constructor() {
-    super('ilovepr')
+  constructor(name = LEGACY_WORKSPACE_DB_NAME) {
+    super(name)
     this.version(1).stores({
       settings: 'id',
       repos: 'fullName, owner',
@@ -304,4 +314,14 @@ export class IlovePrDatabase extends Dexie {
   }
 }
 
-export const db = new IlovePrDatabase()
+export function workspace_db_name(login: string): string {
+  const safe = login
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, '_')
+  return `ilovepr-${safe || 'user'}`
+}
+
+export function open_workspace_db(login: string): IlovePrDatabase {
+  return new IlovePrDatabase(workspace_db_name(login))
+}

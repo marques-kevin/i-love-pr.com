@@ -29,6 +29,7 @@ export interface SettingsRepository {
   rename_dashboard: (input: { dashboard_id: string; name: string }) => Promise<AppSettings>
   delete_dashboard: (dashboard_id: string) => Promise<AppSettings>
   set_active_dashboard: (dashboard_id: string) => Promise<AppSettings>
+  set_active_repo: (repo_full_name: string) => Promise<AppSettings>
   save_locale: (locale: AppSettings['locale']) => Promise<AppSettings>
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>

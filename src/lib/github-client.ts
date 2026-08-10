@@ -163,6 +163,9 @@ const VALIDATE_TOKEN_QUERY = `
     }
     viewer {
       login
+      name
+      avatarUrl
+      email
     }
   }
 `
@@ -207,6 +210,24 @@ const RESOLVE_REPOSITORY_QUERY = `
     repository(owner: $owner, name: $name) {
       nameWithOwner
       isPrivate
+    }
+  }
+`
+
+const OLDEST_PULL_REQUEST_QUERY = `
+  query OldestPullRequest($owner: String!, $name: String!) {
+    rateLimit {
+      remaining
+      limit
+      resetAt
+      cost
+    }
+    repository(owner: $owner, name: $name) {
+      pullRequests(first: 1, orderBy: { field: CREATED_AT, direction: ASC }) {
+        nodes {
+          createdAt
+        }
+      }
     }
   }
 `
@@ -261,13 +282,27 @@ export class GitHubClient {
     return this.lastRateLimit
   }
 
-  async validateToken(): Promise<{ login: string; rateLimit: RateLimitInfo }> {
+  async validateToken(): Promise<{
+    login: string
+    name: string | null
+    email: string | null
+    avatar_url: string | null
+    rateLimit: RateLimitInfo
+  }> {
     const data = await this.graphql<{
       rateLimit: GraphQLRateLimit & { cost: number }
-      viewer: { login: string }
+      viewer: {
+        login: string
+        name: string | null
+        avatarUrl: string | null
+        email: string | null
+      }
     }>(VALIDATE_TOKEN_QUERY)
     return {
       login: data.viewer.login,
+      name: data.viewer.name,
+      email: data.viewer.email,
+      avatar_url: data.viewer.avatarUrl,
       rateLimit: to_rate_limit_info(data.rateLimit),
     }
   }
@@ -367,6 +402,42 @@ export class GitHubClient {
     return {
       fullName: data.repository.nameWithOwner,
       isPrivate: data.repository.isPrivate,
+    }
+  }
+
+  /**
+   * Probe the oldest pull request by createdAt ASC (cheap single-node query).
+   * Used as the left-hand target for sync-depth progress.
+   */
+  async fetchOldestPullRequestCreatedAt(
+    owner: string,
+    name: string,
+  ): Promise<{ created_at: string | null; rateLimit: RateLimitInfo }> {
+    type OldestPullRequestData = {
+      rateLimit: GraphQLRateLimit & { cost: number }
+      repository: {
+        pullRequests: {
+          nodes: { createdAt: string }[]
+        }
+      } | null
+    }
+
+    const data = await this.graphql<OldestPullRequestData>(OLDEST_PULL_REQUEST_QUERY, {
+      owner,
+      name,
+    })
+
+    if (!data.repository) {
+      throw new GitHubApiError(
+        `Repository ${owner}/${name} not found or inaccessible`,
+        404,
+        this.lastRateLimit,
+      )
+    }
+
+    return {
+      created_at: data.repository.pullRequests.nodes[0]?.createdAt ?? null,
+      rateLimit: this.lastRateLimit!,
     }
   }
 

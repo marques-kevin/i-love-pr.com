@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { RepoPicker } from '@/components/repo_picker'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import {
   DEFAULT_BUSINESS_HOURS,
@@ -28,6 +27,7 @@ import {
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import { estimateStorage, formatBytes } from '@/lib/storage'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
+import { is_sound_enabled, set_sound_enabled } from '@/lib/cuelume'
 import { LocaleSwitcher } from '@/modules/i18n'
 import { connector, type ConnectorProps } from './settings.connector'
 
@@ -47,22 +47,17 @@ const COMMON_TIMEZONES = [
 export function Wrapper({
   settings,
   open,
-  available_repos,
-  available_repos_loading,
-  available_repos_error,
   set_show_settings,
   save_settings,
   reset_sync_data,
   clear_all_data,
   load_settings,
-  load_available_repos,
   set_bootstrapped,
   refresh_metrics,
   run_sync,
 }: ConnectorProps) {
   const intl = useIntl()
   const [token, set_token] = useState(settings?.token ?? '')
-  const [repos, set_repos] = useState(settings?.repos ?? [])
   const [sync_interval_hours, set_sync_interval_hours] = useState(
     settings?.sync_interval_hours ?? 24,
   )
@@ -85,6 +80,7 @@ export function Wrapper({
   } | null>(null)
   const [message, set_message] = useState<string | null>(null)
   const [busy, set_busy] = useState(false)
+  const [sound_enabled, set_sound_enabled_state] = useState(is_sound_enabled)
 
   const time_zone_options = Array.from(
     new Set([business_hours.time_zone, DEFAULT_BUSINESS_HOURS.time_zone, ...COMMON_TIMEZONES]),
@@ -93,7 +89,6 @@ export function Wrapper({
   useEffect(() => {
     if (!open || !settings) return
     set_token(settings.token)
-    set_repos(settings.repos)
     set_sync_interval_hours(settings.sync_interval_hours)
     set_backfill_limit(settings.backfill_limit ?? DEFAULT_BACKFILL_LIMIT)
     set_ignored_bots(settings.ignored_bots.join('\n'))
@@ -103,12 +98,8 @@ export function Wrapper({
     void estimateStorage().then(set_storage_info)
   }, [open, settings])
 
-  useEffect(() => {
-    if (!available_repos_error) return
-    set_message(available_repos_error)
-  }, [available_repos_error])
-
   if (!settings) return null
+  const current_settings = settings
 
   async function handle_save(e: FormEvent) {
     e.preventDefault()
@@ -117,7 +108,7 @@ export function Wrapper({
     try {
       await save_settings({
         token: token.trim(),
-        repos,
+        repos: current_settings.repos,
         sync_interval_hours,
         backfill_limit,
         ignored_bots: ignored_bots
@@ -187,6 +178,23 @@ export function Wrapper({
             <LocaleSwitcher />
           </div>
 
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="settings-sound">{intl.formatMessage({ id: 'settings.sound' })}</Label>
+              <p className="text-xs text-muted-foreground">
+                {intl.formatMessage({ id: 'settings.sound_help' })}
+              </p>
+            </div>
+            <Switch
+              id="settings-sound"
+              checked={sound_enabled}
+              onCheckedChange={(enabled) => {
+                set_sound_enabled(enabled)
+                set_sound_enabled_state(enabled)
+              }}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="settings-token">{intl.formatMessage({ id: 'settings.token' })}</Label>
             <Input
@@ -194,24 +202,6 @@ export function Wrapper({
               type="password"
               value={token}
               onChange={(e) => set_token(e.target.value)}
-              onBlur={() => {
-                const next = token.trim()
-                if (!next || next === settings.token) return
-                void load_available_repos({ token: next, force: true })
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{intl.formatMessage({ id: 'settings.repos' })}</Label>
-            <RepoPicker
-              id="settings-repo"
-              availableRepos={available_repos}
-              selected={repos}
-              onChange={set_repos}
-              token={token}
-              loading={available_repos_loading}
-              disabled={!token.trim()}
             />
           </div>
 
@@ -440,7 +430,7 @@ export function Wrapper({
                 {intl.formatMessage({ id: 'settings.clear_all' })}
               </Button>
             </div>
-            <Button type="submit" disabled={busy || repos.length === 0}>
+            <Button type="submit" disabled={busy || current_settings.repos.length === 0}>
               {busy
                 ? intl.formatMessage({ id: 'settings.saving' })
                 : intl.formatMessage({ id: 'settings.save' })}

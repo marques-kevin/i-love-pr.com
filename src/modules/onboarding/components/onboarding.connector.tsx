@@ -1,16 +1,16 @@
 import { connect, type ConnectedProps } from 'react-redux'
 import type { RootState } from '@/store'
-import { clear_available_repos, load_available_repos, save_settings } from '@/store'
+import { cancel_add_account, clear_available_repos, complete_onboarding } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
-  available_repos: state.settings.available_repos,
-  available_repos_loading: state.settings.available_repos_loading,
+  accounts: state.accounts.accounts,
+  adding_account: state.accounts.adding_account,
 })
 
 export const map_dispatch_to_props = {
-  save_settings,
-  load_available_repos,
+  complete_onboarding,
   clear_available_repos,
+  cancel_add_account,
 }
 
 export const connector = connect(map_state_to_props, map_dispatch_to_props)

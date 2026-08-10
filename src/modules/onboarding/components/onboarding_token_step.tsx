@@ -15,10 +15,11 @@ interface OnboardingTokenStepProps {
   rate_limit: RateLimitInfo | null
   scope_analysis: TokenScopeAnalysis | null
   validating: boolean
+  saving: boolean
   error: string | null
   on_validate: () => void
-  on_continue: () => void
-  can_continue: boolean
+  on_submit: () => void
+  can_submit: boolean
 }
 
 function scope_status_label(
@@ -42,10 +43,11 @@ export function OnboardingTokenStep({
   rate_limit,
   scope_analysis,
   validating,
+  saving,
   error,
   on_validate,
-  on_continue,
-  can_continue,
+  on_submit,
+  can_submit,
 }: OnboardingTokenStepProps) {
   const intl = useIntl()
 
@@ -207,8 +209,10 @@ export function OnboardingTokenStep({
       )}
 
       <div className="flex justify-end">
-        <Button type="button" onClick={on_continue} disabled={!can_continue}>
-          {intl.formatMessage({ id: 'onboarding.next' })}
+        <Button type="button" onClick={on_submit} disabled={!can_submit || validating}>
+          {saving
+            ? intl.formatMessage({ id: 'onboarding.starting' })
+            : intl.formatMessage({ id: 'onboarding.start' })}
         </Button>
       </div>
     </div>

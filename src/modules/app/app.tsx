@@ -1,48 +1,34 @@
 import { useIntl } from 'react-intl'
-import { Button } from '@/components/ui/button'
-import { Dashboard, DashboardTabs } from '@/modules/dashboard'
+import { AccountPicker } from '@/modules/accounts/components/account_picker'
 import { Onboarding } from '@/modules/onboarding'
-import { Settings } from '@/modules/settings'
-import { SyncStatus } from '@/modules/sync'
+import { AppChromeHeader } from './components/app_chrome_header'
+import { AppShell } from './components/app_shell'
 import { connector, type ConnectorProps } from './app.connector'
 
-export function Wrapper({ settings, settings_loading, set_show_settings }: ConnectorProps) {
+export function Wrapper({ settings, settings_loading, accounts, adding_account }: ConnectorProps) {
   const intl = useIntl()
 
   if (settings_loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        {intl.formatMessage({ id: 'app.loading' })}
+      <div className="min-h-screen">
+        <AppChromeHeader />
+        <div className="flex items-center justify-center px-4 py-24 text-muted-foreground">
+          {intl.formatMessage({ id: 'app.loading' })}
+        </div>
       </div>
     )
   }
 
-  if (!settings) {
-    return <Onboarding />
+  if (settings) {
+    return <AppShell />
   }
 
-  return (
-    <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-4xl font-extrabold tracking-tight text-foreground">
-            iLovePR
-          </h1>
-          <p className="mt-1 text-muted-foreground">{intl.formatMessage({ id: 'app.tagline' })}</p>
-          <DashboardTabs />
-        </div>
-        <div className="flex flex-col items-start gap-3 sm:items-end">
-          <SyncStatus />
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="link" className="h-auto p-0" onClick={() => set_show_settings(true)}>
-              {intl.formatMessage({ id: 'app.settings' })}
-            </Button>
-          </div>
-        </div>
-      </header>
+  const show_picker = accounts.length > 0 && !adding_account
 
-      <Dashboard />
-      <Settings />
+  return (
+    <div className="min-h-screen">
+      <AppChromeHeader />
+      {show_picker ? <AccountPicker /> : <Onboarding />}
     </div>
   )
 }

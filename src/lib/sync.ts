@@ -13,6 +13,8 @@ function hours_since(iso: string | null): number | null {
 export async function sync_all_repos(options: {
   repositories: Repositories
   force?: boolean
+  /** When set, only these repos are synced (default: all configured repos). */
+  repos?: string[]
   on_progress?: SyncProgressCallback
 }): Promise<{ rate_limit: RateLimitInfo | null }> {
   const settings = await options.repositories.settings.get()
@@ -22,8 +24,12 @@ export async function sync_all_repos(options: {
 
   const client = new GitHubClient(settings.token)
   let last_rate_limit: RateLimitInfo | null = null
+  const repos =
+    options.repos && options.repos.length > 0
+      ? options.repos.filter((repo) => settings.repos.includes(repo))
+      : settings.repos
 
-  for (const full_name of settings.repos) {
+  for (const full_name of repos) {
     const result = await sync_repo(full_name, {
       repositories: options.repositories,
       client,
@@ -109,6 +115,17 @@ async function sync_repo(
     backfill_fetched: batch_fetched,
     last_error: null,
   })
+
+  if (!state.remote_oldest_created_at) {
+    try {
+      const oldest = await ctx.client.fetchOldestPullRequestCreatedAt(parsed.owner, parsed.name)
+      state = await repositories.sync_state.update(full_name, {
+        remote_oldest_created_at: oldest.created_at,
+      })
+    } catch {
+      // Progress % stays unavailable until a later sync succeeds at probing.
+    }
+  }
 
   ctx.on_progress?.({
     repo_full_name: full_name,

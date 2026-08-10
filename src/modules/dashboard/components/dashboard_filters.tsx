@@ -12,12 +12,10 @@ import {
 } from '@/components/ui/sheet'
 import { connector, type ConnectorProps } from './dashboard_filters.connector'
 import { MemberFilter } from './member_filter'
-import { RepoFilter } from './repo_filter'
 import { TestFilesFilter } from './test_files_filter'
 
-function active_filter_count({ members, repos, selected_repos, hide_test_files }: ConnectorProps) {
+function active_filter_count({ members, hide_test_files }: ConnectorProps) {
   let count = 0
-  if (repos.length > 0 && selected_repos.length < repos.length) count += 1
   if (members.length > 0) count += 1
   if (hide_test_files) count += 1
   return count
@@ -50,13 +48,6 @@ export function Wrapper(props: ConnectorProps) {
           </SheetHeader>
 
           <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-4">
-            <section className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground">
-                {intl.formatMessage({ id: 'dashboard.filters.repos' })}
-              </h3>
-              <RepoFilter />
-            </section>
-
             <section className="space-y-3">
               <h3 className="text-sm font-medium text-foreground">
                 {intl.formatMessage({ id: 'dashboard.filters.members' })}

@@ -3,6 +3,7 @@ import {
   DEFAULT_DASHBOARD_ID,
   DEFAULT_DASHBOARD_LAYOUT,
   default_dashboard_filters,
+  default_dashboard_id_for_repo,
   normalize_dashboard_layout,
   normalize_dashboards,
   normalize_settings_dashboards,
@@ -33,6 +34,7 @@ describe('normalize_dashboards', () => {
     const dashboards = normalize_dashboards(undefined)
     expect(dashboards).toHaveLength(1)
     expect(dashboards[0].id).toBe(DEFAULT_DASHBOARD_ID)
+    expect(dashboards[0].repo_full_name).toBe('')
     expect(dashboards[0].layout).toEqual(DEFAULT_DASHBOARD_LAYOUT)
     expect(dashboards[0]).toMatchObject(default_dashboard_filters())
   })
@@ -45,6 +47,7 @@ describe('normalize_dashboards', () => {
       {
         id: DEFAULT_DASHBOARD_ID,
         name: '',
+        repo_full_name: '',
         layout: [{ instance_id: '1', widget_id: 'cycle_time' }],
         ...default_dashboard_filters(),
       },
@@ -66,6 +69,7 @@ describe('normalize_dashboards', () => {
     expect(dashboards[0]).toMatchObject({
       id: 'a',
       name: 'A',
+      repo_full_name: '',
       ...default_dashboard_filters(),
     })
   })
@@ -74,10 +78,12 @@ describe('normalize_dashboards', () => {
 describe('normalize_settings_dashboards', () => {
   it('falls back active id to the first dashboard', () => {
     const result = normalize_settings_dashboards({
+      repos: ['acme/app'],
       dashboards: [
         {
           id: 'a',
           name: 'A',
+          repo_full_name: 'acme/app',
           layout: [{ instance_id: '1', widget_id: 'cycle_time' }],
           members: ['alice'],
           period_key: '7d',
@@ -88,8 +94,31 @@ describe('normalize_settings_dashboards', () => {
       ],
       active_dashboard_id: 'missing',
     })
+    expect(result.active_repo).toBe('acme/app')
     expect(result.active_dashboard_id).toBe('a')
+    expect(result.active_dashboard_by_repo['acme/app']).toBe('a')
     expect(result.dashboards[0].members).toEqual(['alice'])
     expect(result.dashboards[0].period_key).toBe('7d')
+  })
+
+  it('assigns missing repo_full_name and creates tabs per repo', () => {
+    const result = normalize_settings_dashboards({
+      repos: ['acme/a', 'acme/b'],
+      dashboards: [
+        {
+          id: 'legacy',
+          name: '',
+          layout: [],
+          ...default_dashboard_filters(),
+        } as never,
+      ],
+      active_dashboard_id: 'legacy',
+    })
+    expect(result.active_repo).toBe('acme/a')
+    expect(result.dashboards.find((tab) => tab.id === 'legacy')?.repo_full_name).toBe('acme/a')
+    expect(result.dashboards.some((tab) => tab.repo_full_name === 'acme/b')).toBe(true)
+    expect(result.dashboards.find((tab) => tab.repo_full_name === 'acme/b')?.id).toBe(
+      default_dashboard_id_for_repo('acme/b'),
+    )
   })
 })
