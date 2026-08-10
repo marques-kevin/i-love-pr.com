@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { DashboardTab } from '@/lib/types'
-import { DEFAULT_DASHBOARD_ID } from '@/lib/dashboard_layout'
 import { connector, type ConnectorProps } from './dashboard_tabs.connector'
 
 function dashboard_tab_label(
@@ -28,9 +27,6 @@ function dashboard_tab_label(
   format_message: ReturnType<typeof useIntl>['formatMessage'],
 ) {
   if (tab.name.trim()) return tab.name
-  if (tab.id === DEFAULT_DASHBOARD_ID) {
-    return format_message({ id: 'dashboard.default_name' })
-  }
   return format_message({ id: 'dashboard.default_name' })
 }
 
@@ -93,7 +89,7 @@ export function Wrapper({
   }
 
   return (
-    <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Tabs value={active_dashboard_id} onValueChange={set_active_dashboard_id}>
         <TabsList>
           {dashboards.map((tab) => {
@@ -150,6 +146,7 @@ export function Wrapper({
           })}
         </TabsList>
       </Tabs>
+
       <Button
         type="button"
         variant="outline"

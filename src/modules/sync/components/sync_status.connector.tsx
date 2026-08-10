@@ -8,6 +8,7 @@ export const map_state_to_props = (state: RootState) => ({
   rate_limit: state.sync.rate_limit,
   sync_states: state.sync.sync_states,
   error: state.sync.error,
+  active_repo: state.dashboard.active_repo,
 })
 
 export const map_dispatch_to_props = {

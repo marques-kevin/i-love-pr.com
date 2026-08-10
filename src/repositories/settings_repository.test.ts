@@ -35,6 +35,7 @@ describe('create_memory_repositories settings', () => {
     const next = await repositories.settings.create_dashboard('Reviewers')
     expect(next.dashboards).toHaveLength(2)
     expect(next.dashboards[1].name).toBe('Reviewers')
+    expect(next.dashboards[1].repo_full_name).toBe('a/b')
     expect(next.dashboards[1].layout).toEqual([])
     expect(next.dashboards[1].members).toEqual([])
     expect(next.dashboards[1].period_key).toBe('30d')

@@ -2,14 +2,42 @@ import { define_locale_messages } from '../define_locale_messages'
 
 export const fr_messages = define_locale_messages({
   'app.loading': 'Chargement…',
-  'app.tagline': 'Des analytics de PR qui restent sur votre machine',
   'app.settings': 'Paramètres',
+  'app.nav.repositories': 'Dépôts',
+  'app.nav.repositories_empty': 'Aucun dépôt',
+  'app.nav.sync_error': 'Erreur de sync',
+  'app.nav.add_repository': 'Ajouter un dépôt',
+  'app.nav.add_repository_title': 'Ajouter un dépôt',
+  'app.nav.add_repository_description':
+    'Choisissez des dépôts depuis votre compte GitHub, ou collez un dépôt public owner/repo.',
+  'app.nav.add_repository_cancel': 'Annuler',
+  'app.nav.add_repository_confirm': 'Ajouter',
+  'app.nav.add_repository_saving': 'Enregistrement…',
+  'app.nav.add_repository_failed': 'Échec de l’ajout du dépôt',
   'app.language': 'Langue',
   'app.locale.en': 'English',
   'app.locale.fr': 'Français',
 
+  'account.picker.title': 'Choisir un compte',
+  'account.picker.description': 'Sélectionnez un compte GitHub enregistré ou ajoutez-en un.',
+  'account.add': 'Ajouter un compte',
+  'account.logout': 'Se déconnecter',
+  'account.unknown': 'Compte',
+  'account.back_to_accounts': 'Retour aux comptes',
+
   'onboarding.tagline':
     'Analytics GitHub PR self-hosted. Votre token ne quitte jamais ce navigateur.',
+  'onboarding.hero.title': 'Des analytics de PR qui restent <accent>à vous</accent>.',
+  'onboarding.hero.description':
+    'Cycle time, charge de review et tendances de livraison pour vos repos GitHub — calculés dans ce navigateur. Pas de backend, rien à héberger, votre token ne quitte jamais la machine.',
+  'onboarding.hero.cta_start': 'Commencer',
+  'onboarding.hero.cta_github': 'GitHub',
+  'onboarding.hero.pill.local': 'Tourne en local',
+  'onboarding.hero.pill.nobackend': 'Sans backend',
+  'onboarding.hero.pill.token': 'Token local',
+  'onboarding.hero.pill.pwa': 'PWA installable',
+  'onboarding.hero.pill.opensource': 'Open source',
+  'onboarding.setup_title': 'Connectez votre GitHub',
   'onboarding.token_label': 'Personal Access Token GitHub',
   'onboarding.token_placeholder': 'ghp_… ou github_pat_…',
   'onboarding.token_help': 'PAT classique avec accès en lecture {repo} (ou {public_repo}).',
@@ -21,17 +49,9 @@ export const fr_messages = define_locale_messages({
   'onboarding.starting': 'Démarrage…',
   'onboarding.error.invalid_token': 'Token invalide',
   'onboarding.error.save_failed': 'Échec de l’enregistrement des paramètres',
-  'onboarding.steps_label': 'Étapes de configuration',
-  'onboarding.step.token': 'Token GitHub',
-  'onboarding.step.repos': 'Dépôts',
   'onboarding.step.token_title': 'Connectez votre token GitHub',
   'onboarding.step.token_description':
     'Créez un personal access token avec accès en lecture aux pull requests. Nous affichons uniquement les scopes accordés à votre token.',
-  'onboarding.step.repos_title': 'Choisissez les dépôts à suivre',
-  'onboarding.step.repos_description':
-    'Sélectionnez des dépôts de votre compte, ou ajoutez un dépôt public par son URL.',
-  'onboarding.next': 'Continuer',
-  'onboarding.back': 'Retour',
   'onboarding.add_public_repo_link': 'Ajouter un dépôt public ?',
   'onboarding.scopes.title': 'Scopes du token',
   'onboarding.scopes.classic_help':
@@ -74,7 +94,6 @@ export const fr_messages = define_locale_messages({
   'sync.never': 'Jamais synchronisé',
   'sync.last': 'Dernière sync {relative}',
   'sync.api': 'API {remaining}/{limit}',
-  'sync.more_history': 'Plus d’historique disponible',
   'sync.backfilling': 'Backfill…',
   'sync.sync_history': 'Synchroniser l’historique',
   'sync.sync_more': 'Synchroniser plus d’historique',
@@ -86,7 +105,9 @@ export const fr_messages = define_locale_messages({
   'sync.coverage.count':
     '{count, plural, one {# pull request synchronisée} other {# pull requests synchronisées}}',
   'sync.coverage.oldest': 'Plus ancienne',
+  'sync.coverage.oldest_remote': 'Plus ancienne sur GitHub',
   'sync.coverage.newest': 'Plus récente',
+  'sync.coverage.progress': '{percent} synchronisé',
   'sync.coverage.range_aria': 'Historique synchronisé du {oldest} au {newest}',
 
   'metrics.empty': 'Pas encore de données. Lancez une sync pour récupérer les pull requests.',
@@ -96,8 +117,7 @@ export const fr_messages = define_locale_messages({
   'dashboard.filters': 'Filtres',
   'dashboard.filters.title': 'Filtres',
   'dashboard.filters.description':
-    'Affinez les graphiques par dépôts, équipes et membres pour ce dashboard.',
-  'dashboard.filters.repos': 'Dépôts',
+    'Affinez les graphiques par équipes et membres pour ce dashboard.',
   'dashboard.filters.members': 'Membres & équipes',
   'dashboard.filters.test_files': 'Fichiers de tests',
   'dashboard.filters.hide_test_files': 'Exclure les fichiers de tests des métriques de taille',
@@ -320,11 +340,12 @@ export const fr_messages = define_locale_messages({
   'settings.title': 'Paramètres',
   'settings.description': 'Token, dépôts, cadence de sync et données locales.',
   'settings.language': 'Langue',
+  'settings.sound': 'Sons d’interaction',
+  'settings.sound_help': 'Jouer de discrets sons pour les clics, la sync et les confirmations.',
   'settings.save': 'Enregistrer',
   'settings.saving': 'Enregistrement…',
   'settings.save_failed': 'Échec de l’enregistrement',
   'settings.token': 'Token GitHub',
-  'settings.repos': 'Dépôts',
   'settings.sync_interval': 'Intervalle de sync (heures)',
   'settings.backfill_limit': 'Taille du lot de backfill',
   'settings.ignored_bots': 'Bots ignorés (un login par ligne)',
@@ -344,7 +365,7 @@ export const fr_messages = define_locale_messages({
     'Effacer toutes les données PR/reviews et relancer un backfill complet ?',
   'settings.reset_sync_done':
     'Données PR locales effacées. La sync fera un backfill au prochain refresh.',
-  'settings.clear_all': 'Effacer toutes les données locales',
+  'settings.clear_all': 'Effacer ce compte',
   'settings.clear_all_confirm':
-    'Effacer TOUTES les données locales, y compris le token et les paramètres ?',
+    'Supprimer le workspace local de ce compte GitHub et le retirer des comptes enregistrés ? Vous pourrez le rajouter plus tard avec un token.',
 })

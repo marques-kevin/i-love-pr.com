@@ -117,29 +117,43 @@ export function create_layout_item(widget_id: DashboardWidgetId): DashboardLayou
   }
 }
 
-export function create_default_dashboard(layout?: DashboardLayoutItem[] | null): DashboardTab {
+export function default_dashboard_id_for_repo(repo_full_name: string): string {
+  return repo_full_name ? `default:${repo_full_name}` : DEFAULT_DASHBOARD_ID
+}
+
+export function create_default_dashboard(
+  repo_full_name: string,
+  layout?: DashboardLayoutItem[] | null,
+): DashboardTab {
   return {
-    id: DEFAULT_DASHBOARD_ID,
+    id: default_dashboard_id_for_repo(repo_full_name),
     name: '',
+    repo_full_name,
     layout: normalize_dashboard_layout(layout),
     ...default_dashboard_filters(),
   }
 }
 
-export function create_dashboard_tab(name: string): DashboardTab {
+export function create_dashboard_tab(name: string, repo_full_name: string): DashboardTab {
   return {
     id: crypto.randomUUID(),
     name: name.trim(),
+    repo_full_name,
     layout: [],
     ...default_dashboard_filters(),
   }
 }
 
-function normalize_dashboard_tab(tab: DashboardTab): DashboardTab | null {
+function normalize_dashboard_tab(tab: DashboardTab, fallback_repo: string): DashboardTab | null {
   if (!tab?.id) return null
+  const repo_full_name =
+    typeof tab.repo_full_name === 'string' && tab.repo_full_name.trim()
+      ? tab.repo_full_name.trim()
+      : fallback_repo
   return {
     id: String(tab.id),
     name: typeof tab.name === 'string' ? tab.name.trim() : '',
+    repo_full_name,
     layout: normalize_dashboard_layout(tab.layout ?? []),
     ...normalize_dashboard_filters(tab),
   }
@@ -152,14 +166,15 @@ function normalize_dashboard_tab(tab: DashboardTab): DashboardTab | null {
 export function normalize_dashboards(
   dashboards: DashboardTab[] | null | undefined,
   legacy_layout?: DashboardLayoutItem[] | null,
+  fallback_repo = '',
 ): DashboardTab[] {
   if (Array.isArray(dashboards) && dashboards.length > 0) {
     const normalized = dashboards
-      .map(normalize_dashboard_tab)
+      .map((tab) => normalize_dashboard_tab(tab, fallback_repo))
       .filter((tab): tab is DashboardTab => tab != null)
     if (normalized.length > 0) return normalized
   }
-  return [create_default_dashboard(legacy_layout)]
+  return [create_default_dashboard(fallback_repo, legacy_layout)]
 }
 
 export function normalize_active_dashboard_id(
@@ -172,24 +187,104 @@ export function normalize_active_dashboard_id(
 
 export function get_active_dashboard(dashboards: DashboardTab[], active_id: string): DashboardTab {
   return (
-    dashboards.find((tab) => tab.id === active_id) ?? dashboards[0] ?? create_default_dashboard()
+    dashboards.find((tab) => tab.id === active_id) ?? dashboards[0] ?? create_default_dashboard('')
   )
+}
+
+export function dashboards_for_repo(
+  dashboards: DashboardTab[],
+  repo_full_name: string | null,
+): DashboardTab[] {
+  if (!repo_full_name) return []
+  return dashboards.filter((tab) => tab.repo_full_name === repo_full_name)
+}
+
+export function normalize_active_repo(
+  active_repo: string | null | undefined,
+  repos: string[],
+): string | null {
+  if (active_repo && repos.includes(active_repo)) return active_repo
+  return repos[0] ?? null
+}
+
+export function normalize_active_dashboard_by_repo(
+  value: Record<string, string> | null | undefined,
+  repos: string[],
+  dashboards: DashboardTab[],
+  active_dashboard_id: string,
+  active_repo: string | null,
+): Record<string, string> {
+  const next: Record<string, string> = {}
+  for (const repo of repos) {
+    const repo_tabs = dashboards_for_repo(dashboards, repo)
+    const preferred =
+      (value && typeof value[repo] === 'string' ? value[repo] : null) ??
+      (repo === active_repo ? active_dashboard_id : null)
+    next[repo] = normalize_active_dashboard_id(preferred, repo_tabs)
+  }
+  return next
+}
+
+/** Ensure every configured repo has at least one dashboard tab. */
+export function ensure_dashboards_for_repos(
+  dashboards: DashboardTab[],
+  repos: string[],
+): DashboardTab[] {
+  const next = [...dashboards]
+  for (const repo of repos) {
+    if (next.some((tab) => tab.repo_full_name === repo)) continue
+    next.push(create_default_dashboard(repo))
+  }
+  return next
 }
 
 /** Settings row may still carry legacy `dashboard_layout` from older IndexedDB writes. */
 export type SettingsDashboardsInput = {
+  repos?: string[] | null
+  active_repo?: string | null
   dashboards?: DashboardTab[] | null
   active_dashboard_id?: string | null
+  active_dashboard_by_repo?: Record<string, string> | null
   dashboard_layout?: DashboardLayoutItem[] | null
 }
 
 export function normalize_settings_dashboards(input: SettingsDashboardsInput): {
   dashboards: DashboardTab[]
   active_dashboard_id: string
+  active_repo: string | null
+  active_dashboard_by_repo: Record<string, string>
 } {
-  const dashboards = normalize_dashboards(input.dashboards, input.dashboard_layout)
+  const repos = Array.isArray(input.repos)
+    ? input.repos.filter((repo): repo is string => typeof repo === 'string' && repo.length > 0)
+    : []
+  const active_repo = normalize_active_repo(input.active_repo, repos)
+  const fallback_repo = active_repo ?? repos[0] ?? ''
+  let dashboards = normalize_dashboards(input.dashboards, input.dashboard_layout, fallback_repo)
+  dashboards = ensure_dashboards_for_repos(dashboards, repos)
+
+  const repo_tabs = dashboards_for_repo(dashboards, active_repo)
+  const active_dashboard_id = normalize_active_dashboard_id(
+    input.active_dashboard_id ??
+      (active_repo && input.active_dashboard_by_repo
+        ? input.active_dashboard_by_repo[active_repo]
+        : null),
+    repo_tabs.length > 0 ? repo_tabs : dashboards,
+  )
+  const active_dashboard_by_repo = normalize_active_dashboard_by_repo(
+    input.active_dashboard_by_repo,
+    repos,
+    dashboards,
+    active_dashboard_id,
+    active_repo,
+  )
+
   return {
     dashboards,
-    active_dashboard_id: normalize_active_dashboard_id(input.active_dashboard_id, dashboards),
+    active_dashboard_id:
+      active_repo && active_dashboard_by_repo[active_repo]
+        ? active_dashboard_by_repo[active_repo]
+        : active_dashboard_id,
+    active_repo,
+    active_dashboard_by_repo,
   }
 }

@@ -40,6 +40,15 @@ function empty_sync_state(repo_full_name: string): SyncState {
     last_error: null,
     total_fetched: 0,
     backfill_fetched: 0,
+    remote_oldest_created_at: null,
+  }
+}
+
+function normalize_sync_state(state: SyncState): SyncState {
+  return {
+    ...empty_sync_state(state.repo_full_name),
+    ...state,
+    remote_oldest_created_at: state.remote_oldest_created_at ?? null,
   }
 }
 
@@ -104,8 +113,13 @@ export function create_memory_repositories(seed?: {
     save: async (partial) => {
       const existing = bag.settings
       const dashboards_fields = normalize_settings_dashboards({
+        repos: partial.repos,
+        active_repo:
+          partial.active_repo !== undefined ? partial.active_repo : existing?.active_repo,
         dashboards: partial.dashboards ?? existing?.dashboards,
         active_dashboard_id: partial.active_dashboard_id ?? existing?.active_dashboard_id,
+        active_dashboard_by_repo:
+          partial.active_dashboard_by_repo ?? existing?.active_dashboard_by_repo,
       })
       bag.settings = {
         id: 'settings',
@@ -160,12 +174,18 @@ export function create_memory_repositories(seed?: {
     },
     create_dashboard: async (name: string) => {
       if (!bag.settings) throw new Error('Settings not initialized')
-      const tab = create_dashboard_tab(name)
+      const repo = bag.settings.active_repo
+      if (!repo) throw new Error('No active repo')
+      const tab = create_dashboard_tab(name, repo)
       if (!tab.name) throw new Error('Dashboard name is required')
       bag.settings = {
         ...bag.settings,
         dashboards: [...bag.settings.dashboards, tab],
         active_dashboard_id: tab.id,
+        active_dashboard_by_repo: {
+          ...bag.settings.active_dashboard_by_repo,
+          [repo]: tab.id,
+        },
       }
       return normalize_settings(structuredClone(bag.settings))
     },
@@ -186,29 +206,60 @@ export function create_memory_repositories(seed?: {
     },
     delete_dashboard: async (dashboard_id: string) => {
       if (!bag.settings) throw new Error('Settings not initialized')
-      if (bag.settings.dashboards.length <= 1) {
+      const tab = bag.settings.dashboards.find((item) => item.id === dashboard_id)
+      if (!tab) throw new Error('Dashboard not found')
+      const repo_tabs = bag.settings.dashboards.filter(
+        (item) => item.repo_full_name === tab.repo_full_name,
+      )
+      if (repo_tabs.length <= 1) {
         throw new Error('Cannot delete the last dashboard')
       }
-      if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {
-        throw new Error('Dashboard not found')
+      const dashboards = bag.settings.dashboards.filter((item) => item.id !== dashboard_id)
+      const remaining_repo_tabs = dashboards.filter(
+        (item) => item.repo_full_name === tab.repo_full_name,
+      )
+      const fallback_id = remaining_repo_tabs[0].id
+      const active_dashboard_by_repo = { ...bag.settings.active_dashboard_by_repo }
+      if (active_dashboard_by_repo[tab.repo_full_name] === dashboard_id) {
+        active_dashboard_by_repo[tab.repo_full_name] = fallback_id
       }
-      const dashboards = bag.settings.dashboards.filter((tab) => tab.id !== dashboard_id)
       bag.settings = {
         ...bag.settings,
         dashboards,
         active_dashboard_id:
           bag.settings.active_dashboard_id === dashboard_id
-            ? dashboards[0].id
+            ? fallback_id
             : bag.settings.active_dashboard_id,
+        active_dashboard_by_repo,
       }
       return normalize_settings(structuredClone(bag.settings))
     },
     set_active_dashboard: async (dashboard_id: string) => {
       if (!bag.settings) throw new Error('Settings not initialized')
-      if (!bag.settings.dashboards.some((tab) => tab.id === dashboard_id)) {
-        throw new Error('Dashboard not found')
+      const tab = bag.settings.dashboards.find((item) => item.id === dashboard_id)
+      if (!tab) throw new Error('Dashboard not found')
+      bag.settings = {
+        ...bag.settings,
+        active_dashboard_id: dashboard_id,
+        active_dashboard_by_repo: {
+          ...bag.settings.active_dashboard_by_repo,
+          [tab.repo_full_name]: dashboard_id,
+        },
       }
-      bag.settings = { ...bag.settings, active_dashboard_id: dashboard_id }
+      return normalize_settings(structuredClone(bag.settings))
+    },
+    set_active_repo: async (repo_full_name: string) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (!bag.settings.repos.includes(repo_full_name)) {
+        throw new Error('Repo not configured')
+      }
+      const dashboards_fields = normalize_settings_dashboards({
+        ...bag.settings,
+        active_repo: repo_full_name,
+        active_dashboard_id:
+          bag.settings.active_dashboard_by_repo[repo_full_name] ?? bag.settings.active_dashboard_id,
+      })
+      bag.settings = { ...bag.settings, ...dashboards_fields }
       return normalize_settings(structuredClone(bag.settings))
     },
     save_locale: async (locale) => {
@@ -328,26 +379,27 @@ export function create_memory_repositories(seed?: {
   const sync_state: SyncStateRepository = {
     get: async (repo_full_name) => {
       const state = bag.sync_states.get(repo_full_name)
-      return state ? structuredClone(state) : undefined
+      return state ? structuredClone(normalize_sync_state(state)) : undefined
     },
-    list: async () => [...bag.sync_states.values()].map((s) => structuredClone(s)),
+    list: async () =>
+      [...bag.sync_states.values()].map((s) => structuredClone(normalize_sync_state(s))),
     put: async (state) => {
-      bag.sync_states.set(state.repo_full_name, structuredClone(state))
+      bag.sync_states.set(state.repo_full_name, structuredClone(normalize_sync_state(state)))
     },
     update: async (repo_full_name, patch) => {
       const current = bag.sync_states.get(repo_full_name)
-      const next: SyncState = {
+      const next = normalize_sync_state({
         ...empty_sync_state(repo_full_name),
         ...current,
         ...patch,
         repo_full_name,
-      }
+      })
       bag.sync_states.set(repo_full_name, next)
       return structuredClone(next)
     },
     ensure: async (repo_full_name) => {
       const existing = bag.sync_states.get(repo_full_name)
-      if (existing) return structuredClone(existing)
+      if (existing) return structuredClone(normalize_sync_state(existing))
       const next = empty_sync_state(repo_full_name)
       bag.sync_states.set(repo_full_name, next)
       return structuredClone(next)

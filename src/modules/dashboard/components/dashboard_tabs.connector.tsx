@@ -6,16 +6,17 @@ import {
   set_active_dashboard,
 } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
-import { normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { dashboards_for_repo, normalize_settings_dashboards } from '@/lib/dashboard_layout'
 
 function map_state_to_props(state: RootState) {
   const settings = state.settings.settings
-  const { dashboards, active_dashboard_id } = settings
+  const normalized = settings
     ? normalize_settings_dashboards(settings)
     : normalize_settings_dashboards({})
+  const active_repo = state.dashboard.active_repo ?? normalized.active_repo
   return {
-    dashboards,
-    active_dashboard_id,
+    dashboards: dashboards_for_repo(normalized.dashboards, active_repo),
+    active_dashboard_id: normalized.active_dashboard_id,
   }
 }
 

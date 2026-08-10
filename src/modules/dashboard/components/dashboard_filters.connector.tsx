@@ -3,8 +3,6 @@ import type { RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
   members: state.dashboard.members,
-  repos: state.settings.settings?.repos ?? [],
-  selected_repos: state.dashboard.selected_repos,
   hide_test_files: state.dashboard.hide_test_files,
 })
 

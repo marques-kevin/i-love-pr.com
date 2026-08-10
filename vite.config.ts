@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
@@ -7,8 +8,14 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { get_umami_data_domains, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from './src/lib/umami.js'
 
 const root_dir = path.dirname(fileURLToPath(import.meta.url))
+const package_json = JSON.parse(readFileSync(path.join(root_dir, 'package.json'), 'utf8')) as {
+  version: string
+}
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(package_json.version),
+  },
   resolve: {
     alias: {
       '@': path.resolve(root_dir, './src'),
@@ -55,8 +62,8 @@ export default defineConfig({
         name: 'iLovePR',
         short_name: 'iLovePR',
         description: 'Self-hosted GitHub PR analytics for tech leads',
-        theme_color: '#0f766e',
-        background_color: '#f4f7f6',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         icons: [
