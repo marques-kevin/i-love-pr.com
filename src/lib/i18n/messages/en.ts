@@ -16,9 +16,56 @@ export const en_messages = {
   'onboarding.rate_limit': '{remaining}/{limit} GraphQL points remaining',
   'onboarding.start': 'Start analyzing',
   'onboarding.starting': 'Starting…',
-  'onboarding.error.no_repos': 'No repositories found for this token.',
   'onboarding.error.invalid_token': 'Invalid token',
   'onboarding.error.save_failed': 'Failed to save settings',
+  'onboarding.steps_label': 'Onboarding steps',
+  'onboarding.step.token': 'GitHub token',
+  'onboarding.step.repos': 'Repositories',
+  'onboarding.step.token_title': 'Connect your GitHub token',
+  'onboarding.step.token_description':
+    'Create a personal access token with read access to pull requests. We only show the scopes your token grants.',
+  'onboarding.step.repos_title': 'Choose repositories to track',
+  'onboarding.step.repos_description':
+    'Select repositories from your account, or add a public repository by URL.',
+  'onboarding.next': 'Continue',
+  'onboarding.back': 'Back',
+  'onboarding.add_public_repo_link': 'Want to add a public repository?',
+  'onboarding.scopes.title': 'Token scopes',
+  'onboarding.scopes.classic_help':
+    'Required scopes are highlighted. Grant at least one of them to continue.',
+  'onboarding.scopes.fine_grained_help':
+    'Fine-grained tokens cannot be inspected automatically. Ensure read access to pull requests on the repositories you want to track.',
+  'onboarding.scopes.required_badge': 'Required',
+  'onboarding.scopes.status.granted': 'Granted',
+  'onboarding.scopes.status.missing': 'Missing',
+  'onboarding.scopes.status.covered': 'Covered by repo',
+  'onboarding.scopes.missing_title': 'Missing required scope',
+  'onboarding.scopes.missing_description':
+    'Your token needs at least the public_repo or repo scope to read pull requests.',
+  'onboarding.scopes.permissive_title': 'Overly permissive token',
+  'onboarding.scopes.permissive_description':
+    'This token grants scopes that iLovePR does not need: {scopes}. Consider creating a more restrictive token.',
+  'onboarding.scopes.repo_tip':
+    'If you only track public repositories, prefer a token with public_repo instead of the broader repo scope.',
+  'onboarding.scope.public_repo': 'Read access to public repositories and their pull requests.',
+  'onboarding.scope.repo':
+    'Full access to private repositories (includes public_repo). Use only if you need private repos.',
+  'onboarding.scope.read_user': 'Read basic profile information (optional).',
+
+  'repo_picker.label': 'Repositories to track',
+  'repo_picker.loading': 'Loading repositories…',
+  'repo_picker.validate_first': 'Validate your token first',
+  'repo_picker.no_repos': 'No repositories found',
+  'repo_picker.select_placeholder': 'Select a repository…',
+  'repo_picker.search_placeholder': 'Search owner/repo…',
+  'repo_picker.search_empty': 'No repository found.',
+  'repo_picker.private_badge': 'private',
+  'repo_picker.manual_placeholder': 'Paste a public repo: owner/repo',
+  'repo_picker.add': 'Add',
+  'repo_picker.checking': 'Checking…',
+  'repo_picker.remove': 'Remove {repo}',
+  'repo_picker.error.format': 'Expected format: owner/repo',
+  'repo_picker.error.not_found': 'Repository not found or inaccessible',
 
   'sync.syncing': 'Syncing…',
   'sync.never': 'Never synced',
