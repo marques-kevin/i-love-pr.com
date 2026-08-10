@@ -266,6 +266,14 @@ export function create_memory_repositories(seed?: {
         .filter((pr) => set.has(pr.repo_full_name))
         .map((pr) => structuredClone(pr))
     },
+    get_created_at_bounds_by_repos: async (repos) => {
+      const set = new Set(repos)
+      const { compute_created_at_bounds } = await import('@/lib/pr_coverage')
+      const created_at_values = [...bag.pull_requests.values()]
+        .filter((pr) => set.has(pr.repo_full_name))
+        .map((pr) => pr.created_at)
+      return compute_created_at_bounds(created_at_values)
+    },
     count_by_repo: async (repo_full_name) =>
       [...bag.pull_requests.values()].filter((pr) => pr.repo_full_name === repo_full_name).length,
     put_many: async (prs) => {
