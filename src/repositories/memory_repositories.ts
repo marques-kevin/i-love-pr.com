@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
+import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import {
   create_dashboard_tab,
   normalize_dashboard_filters,
@@ -13,12 +14,14 @@ import type {
   AppSettings,
   DashboardLayoutItem,
   MemberTeam,
+  PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
 import type {
+  PrChangedFilesRepository,
   PrFactsRepository,
   PullRequestRepository,
   Repositories,
@@ -51,6 +54,7 @@ function normalize_settings(
     sync_interval_hours: settings.sync_interval_hours,
     backfill_limit: settings.backfill_limit,
     ignored_bots: settings.ignored_bots,
+    test_file_globs: settings.test_file_globs ?? [...DEFAULT_TEST_FILE_GLOBS],
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
     ...dashboards_fields,
@@ -65,6 +69,7 @@ type MemoryBag = {
   reviews: Map<string, ReviewRecord>
   sync_states: Map<string, SyncState>
   pr_facts: Map<string, PrFactRecord>
+  pr_changed_files: Map<string, PrChangedFileRecord>
 }
 
 export function create_memory_repositories(seed?: {
@@ -73,6 +78,7 @@ export function create_memory_repositories(seed?: {
   reviews?: ReviewRecord[]
   sync_states?: SyncState[]
   pr_facts?: PrFactRecord[]
+  pr_changed_files?: PrChangedFileRecord[]
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
@@ -82,6 +88,9 @@ export function create_memory_repositories(seed?: {
       (seed?.sync_states ?? []).map((s) => [s.repo_full_name, structuredClone(s)]),
     ),
     pr_facts: new Map((seed?.pr_facts ?? []).map((f) => [f.pr_id, structuredClone(f)])),
+    pr_changed_files: new Map(
+      (seed?.pr_changed_files ?? []).map((file) => [file.id, structuredClone(file)]),
+    ),
   }
 
   const save_teams = async (teams: MemberTeam[]) => {
@@ -106,6 +115,8 @@ export function create_memory_repositories(seed?: {
         backfill_limit:
           partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
         ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
+        test_file_globs: partial.test_file_globs ??
+          existing?.test_file_globs ?? [...DEFAULT_TEST_FILE_GLOBS],
         teams: partial.teams ?? existing?.teams ?? [],
         business_hours: normalizeBusinessHours(
           partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
@@ -248,11 +259,13 @@ export function create_memory_repositories(seed?: {
       bag.reviews.clear()
       bag.sync_states.clear()
       bag.pr_facts.clear()
+      bag.pr_changed_files.clear()
     },
     reset_sync_data: async () => {
       bag.pull_requests.clear()
       bag.reviews.clear()
       bag.pr_facts.clear()
+      bag.pr_changed_files.clear()
       for (const key of bag.sync_states.keys()) {
         bag.sync_states.set(key, empty_sync_state(key))
       }
@@ -367,5 +380,31 @@ export function create_memory_repositories(seed?: {
     },
   }
 
-  return { settings, pull_requests, reviews, sync_state, pr_facts }
+  const pr_changed_files: PrChangedFilesRepository = {
+    list_by_pr_ids: async (pr_ids) => {
+      const set = new Set(pr_ids)
+      return [...bag.pr_changed_files.values()]
+        .filter((file) => set.has(file.pr_id))
+        .map((file) => structuredClone(file))
+    },
+    replace_for_pr: async (pr_id, files) => {
+      for (const [id, file] of [...bag.pr_changed_files.entries()]) {
+        if (file.pr_id === pr_id) bag.pr_changed_files.delete(id)
+      }
+      for (const file of files) {
+        bag.pr_changed_files.set(file.id, structuredClone(file))
+      }
+    },
+    delete_by_pr_ids: async (pr_ids) => {
+      const set = new Set(pr_ids)
+      for (const [id, file] of [...bag.pr_changed_files.entries()]) {
+        if (set.has(file.pr_id)) bag.pr_changed_files.delete(id)
+      }
+    },
+    clear: async () => {
+      bag.pr_changed_files.clear()
+    },
+  }
+
+  return { settings, pull_requests, reviews, sync_state, pr_facts, pr_changed_files }
 }

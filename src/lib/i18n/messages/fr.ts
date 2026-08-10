@@ -44,6 +44,10 @@ export const fr_messages = define_locale_messages({
     'Affinez les graphiques par dépôts, équipes et membres pour ce dashboard.',
   'dashboard.filters.repos': 'Dépôts',
   'dashboard.filters.members': 'Membres & équipes',
+  'dashboard.filters.test_files': 'Fichiers de tests',
+  'dashboard.filters.hide_test_files': 'Exclure les fichiers de tests des métriques de taille',
+  'dashboard.filters.hide_test_files_help':
+    'Soustrait les lignes des fichiers correspondant aux motifs glob définis dans les paramètres.',
   'dashboard.customize': 'Personnaliser',
   'dashboard.done': 'Terminé',
   'dashboard.add_chart': 'Ajouter un graphique',
@@ -269,6 +273,9 @@ export const fr_messages = define_locale_messages({
   'settings.sync_interval': 'Intervalle de sync (heures)',
   'settings.backfill_limit': 'Taille du lot de backfill',
   'settings.ignored_bots': 'Bots ignorés (un login par ligne)',
+  'settings.test_file_globs': 'Motifs glob des fichiers de tests (un par ligne)',
+  'settings.test_file_globs_help':
+    'Utilisé lorsque le filtre « Exclure les fichiers de tests » est activé. Prend en charge les jokers * et **.',
   'settings.business_hours': 'Heures ouvrées uniquement',
   'settings.business_hours_help':
     'Ne compter les temps de cycle/review que pendant les fenêtres de travail.',

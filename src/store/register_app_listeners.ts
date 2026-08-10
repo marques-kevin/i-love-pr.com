@@ -4,6 +4,7 @@ import {
   hydrate_dashboard_filters,
   set_custom_from,
   set_custom_to,
+  set_hide_test_files,
   set_members,
   set_period_key,
   set_selected_repos,
@@ -131,6 +132,7 @@ export function register_app_listeners(
     set_period_key,
     set_custom_from,
     set_custom_to,
+    set_hide_test_files,
   ] as const
 
   for (const action_creator of persist_filter_actions) {
@@ -142,7 +144,8 @@ export function register_app_listeners(
           void api.dispatch(refresh_metrics())
           return
         }
-        const { members, period_key, custom_from, custom_to } = api.getState().dashboard
+        const { members, period_key, custom_from, custom_to, hide_test_files } =
+          api.getState().dashboard
         const { active_dashboard_id } = normalize_settings_dashboards(settings)
         await api.dispatch(
           save_dashboard_filters({
@@ -151,6 +154,7 @@ export function register_app_listeners(
             period_key,
             custom_from,
             custom_to,
+            hide_test_files,
           }),
         )
         void api.dispatch(refresh_metrics())

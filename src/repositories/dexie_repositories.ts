@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
+import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import type { AppSettings, DashboardLayoutItem, MemberTeam, SyncState } from '@/lib/types'
 import {
   create_dashboard_tab,
@@ -12,6 +13,7 @@ import {
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
   PullRequestRepository,
+  PrChangedFilesRepository,
   PrFactsRepository,
   Repositories,
   ReviewRepository,
@@ -44,6 +46,7 @@ function normalize_settings(
     sync_interval_hours: settings.sync_interval_hours,
     backfill_limit: settings.backfill_limit,
     ignored_bots: settings.ignored_bots,
+    test_file_globs: settings.test_file_globs ?? [...DEFAULT_TEST_FILE_GLOBS],
     teams: settings.teams ?? [],
     business_hours: normalizeBusinessHours(settings.business_hours),
     ...dashboards_fields,
@@ -74,6 +77,8 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       sync_interval_hours: partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
       backfill_limit: partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
       ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],
+      test_file_globs: partial.test_file_globs ??
+        existing?.test_file_globs ?? [...DEFAULT_TEST_FILE_GLOBS],
       teams: partial.teams ?? existing?.teams ?? [],
       business_hours: normalizeBusinessHours(
         partial.business_hours ?? existing?.business_hours ?? DEFAULT_BUSINESS_HOURS,
@@ -274,6 +279,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
           database.repos,
           database.settings,
           database.pr_facts,
+          database.pr_changed_files,
           database.chart_specs,
         ],
         async () => {
@@ -284,6 +290,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
             database.repos.clear(),
             database.settings.clear(),
             database.pr_facts.clear(),
+            database.pr_changed_files.clear(),
             database.chart_specs.clear(),
           ])
         },
@@ -292,11 +299,18 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
     reset_sync_data: async () => {
       await database.transaction(
         'rw',
-        [database.pull_requests, database.reviews, database.sync_state, database.pr_facts],
+        [
+          database.pull_requests,
+          database.reviews,
+          database.sync_state,
+          database.pr_facts,
+          database.pr_changed_files,
+        ],
         async () => {
           await database.pull_requests.clear()
           await database.reviews.clear()
           await database.pr_facts.clear()
+          await database.pr_changed_files.clear()
           const states = await database.sync_state.toArray()
           for (const state of states) {
             await database.sync_state.put({
@@ -429,6 +443,39 @@ export function create_dexie_pr_facts_repository(database: IlovePrDatabase): PrF
   }
 }
 
+export function create_dexie_pr_changed_files_repository(
+  database: IlovePrDatabase,
+): PrChangedFilesRepository {
+  return {
+    list_by_pr_ids: async (pr_ids) => {
+      if (pr_ids.length === 0) return []
+      let files = [] as Awaited<ReturnType<PrChangedFilesRepository['list_by_pr_ids']>>
+      const chunk_size = 100
+      for (let i = 0; i < pr_ids.length; i += chunk_size) {
+        const chunk = pr_ids.slice(i, i + chunk_size)
+        const part = await database.pr_changed_files.where('pr_id').anyOf(chunk).toArray()
+        files = files.concat(part)
+      }
+      return files
+    },
+    replace_for_pr: async (pr_id, files) => {
+      await database.transaction('rw', database.pr_changed_files, async () => {
+        await database.pr_changed_files.where('pr_id').equals(pr_id).delete()
+        if (files.length > 0) {
+          await database.pr_changed_files.bulkPut(files)
+        }
+      })
+    },
+    delete_by_pr_ids: async (pr_ids) => {
+      if (pr_ids.length === 0) return
+      await database.pr_changed_files.where('pr_id').anyOf(pr_ids).delete()
+    },
+    clear: async () => {
+      await database.pr_changed_files.clear()
+    },
+  }
+}
+
 export function create_dexie_repositories(database: IlovePrDatabase): Repositories {
   return {
     settings: create_dexie_settings_repository(database),
@@ -436,5 +483,6 @@ export function create_dexie_repositories(database: IlovePrDatabase): Repositori
     reviews: create_dexie_review_repository(database),
     sync_state: create_dexie_sync_state_repository(database),
     pr_facts: create_dexie_pr_facts_repository(database),
+    pr_changed_files: create_dexie_pr_changed_files_repository(database),
   }
 }

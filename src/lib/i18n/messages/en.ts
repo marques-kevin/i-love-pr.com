@@ -41,6 +41,10 @@ export const en_messages = {
     'Narrow charts by repositories, teams, and members for this dashboard.',
   'dashboard.filters.repos': 'Repositories',
   'dashboard.filters.members': 'Members & teams',
+  'dashboard.filters.test_files': 'Test files',
+  'dashboard.filters.hide_test_files': 'Exclude test files from PR size metrics',
+  'dashboard.filters.hide_test_files_help':
+    'Subtract lines from files matching your test-file glob patterns in settings.',
   'dashboard.customize': 'Customize',
   'dashboard.done': 'Done',
   'dashboard.add_chart': 'Add chart',
@@ -260,6 +264,9 @@ export const en_messages = {
   'settings.sync_interval': 'Sync interval (hours)',
   'settings.backfill_limit': 'Backfill batch size',
   'settings.ignored_bots': 'Ignored bot logins (one per line)',
+  'settings.test_file_globs': 'Test file glob patterns (one per line)',
+  'settings.test_file_globs_help':
+    'Used when the “Exclude test files” dashboard filter is on. Supports * and ** wildcards.',
   'settings.business_hours': 'Business hours only',
   'settings.business_hours_help': 'Count cycle/review times only during configured work windows.',
   'settings.timezone': 'Time zone',

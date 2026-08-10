@@ -68,6 +68,13 @@ interface GraphQLPullRequest {
   timelineItems: {
     nodes: ({ __typename?: string; createdAt: string } | Record<string, never>)[]
   }
+  files: {
+    nodes: {
+      path: string
+      additions: number
+      deletions: number
+    }[]
+  }
 }
 
 const PULL_REQUESTS_QUERY = `
@@ -128,6 +135,13 @@ const PULL_REQUESTS_QUERY = `
               ... on ReviewRequestedEvent {
                 createdAt
               }
+            }
+          }
+          files(first: 100) {
+            nodes {
+              path
+              additions
+              deletions
             }
           }
         }
@@ -499,7 +513,15 @@ function normalizePullRequest(
       submitted_at: r.submittedAt!,
     }))
 
-  return { pull_request, reviews }
+  const changed_files = node.files.nodes.map((file) => ({
+    id: `${pull_request.id}:${file.path}`,
+    pr_id: pull_request.id,
+    path: file.path,
+    additions: file.additions,
+    deletions: file.deletions,
+  }))
+
+  return { pull_request, reviews, changed_files }
 }
 
 export function parseRepoFullName(fullName: string): { owner: string; name: string } | null {

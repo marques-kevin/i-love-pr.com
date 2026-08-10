@@ -44,6 +44,7 @@ export const save_settings = create_app_async_thunk<
     sync_interval_hours?: number
     backfill_limit?: number
     ignored_bots?: string[]
+    test_file_globs?: string[]
     business_hours?: BusinessHoursConfig
     locale?: AppSettings['locale']
   }
@@ -55,6 +56,7 @@ export const save_settings = create_app_async_thunk<
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
     ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
+    test_file_globs: input.test_file_globs,
     business_hours: input.business_hours,
     locale: input.locale,
   }
@@ -101,6 +103,7 @@ export const save_dashboard_filters = create_app_async_thunk<
     period_key: AppSettings['dashboards'][number]['period_key']
     custom_from: string
     custom_to: string
+    hide_test_files: boolean
   }
 >('settings/save_dashboard_filters', async (input, { extra }) => {
   return extra.repositories.settings.save_dashboard_filters(input)

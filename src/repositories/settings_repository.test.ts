@@ -52,9 +52,11 @@ describe('create_memory_repositories settings', () => {
       period_key: '7d',
       custom_from: '',
       custom_to: '',
+      hide_test_files: true,
     })
     expect(next.dashboards[1].members).toEqual(['alice'])
     expect(next.dashboards[1].period_key).toBe('7d')
+    expect(next.dashboards[1].hide_test_files).toBe(true)
     expect(next.dashboards[0].members).toEqual([])
     expect(next.dashboards[0].period_key).toBe('30d')
   })

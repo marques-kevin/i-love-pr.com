@@ -27,6 +27,7 @@ import {
 } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
 import { estimateStorage, formatBytes } from '@/lib/storage'
+import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import { LocaleSwitcher } from '@/modules/i18n'
 import { connector, type ConnectorProps } from './settings.connector'
 
@@ -71,6 +72,9 @@ export function Wrapper({
   const [ignored_bots, set_ignored_bots] = useState(
     (settings?.ignored_bots ?? DEFAULT_IGNORED_BOTS).join('\n'),
   )
+  const [test_file_globs, set_test_file_globs] = useState(
+    (settings?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS).join('\n'),
+  )
   const [business_hours, set_business_hours] = useState<BusinessHoursConfig>(
     normalizeBusinessHours(settings?.business_hours),
   )
@@ -93,6 +97,7 @@ export function Wrapper({
     set_sync_interval_hours(settings.sync_interval_hours)
     set_backfill_limit(settings.backfill_limit ?? DEFAULT_BACKFILL_LIMIT)
     set_ignored_bots(settings.ignored_bots.join('\n'))
+    set_test_file_globs(settings.test_file_globs.join('\n'))
     set_business_hours(normalizeBusinessHours(settings.business_hours))
     set_message(null)
     void estimateStorage().then(set_storage_info)
@@ -116,6 +121,10 @@ export function Wrapper({
         sync_interval_hours,
         backfill_limit,
         ignored_bots: ignored_bots
+          .split(/[\n,]/)
+          .map((s) => s.trim())
+          .filter(Boolean),
+        test_file_globs: test_file_globs
           .split(/[\n,]/)
           .map((s) => s.trim())
           .filter(Boolean),
@@ -259,6 +268,30 @@ export function Wrapper({
               variant="link"
               className="h-auto p-0"
               onClick={() => set_ignored_bots(DEFAULT_IGNORED_BOTS.join('\n'))}
+            >
+              Reset to defaults
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="test-file-globs">
+              {intl.formatMessage({ id: 'settings.test_file_globs' })}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {intl.formatMessage({ id: 'settings.test_file_globs_help' })}
+            </p>
+            <Textarea
+              id="test-file-globs"
+              rows={5}
+              value={test_file_globs}
+              onChange={(e) => set_test_file_globs(e.target.value)}
+              className="font-mono text-sm"
+            />
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={() => set_test_file_globs(DEFAULT_TEST_FILE_GLOBS.join('\n'))}
             >
               Reset to defaults
             </Button>

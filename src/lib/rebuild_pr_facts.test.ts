@@ -52,6 +52,7 @@ const sample_settings: AppSettings = {
   sync_interval_hours: 24,
   backfill_limit: 200,
   ignored_bots: [],
+  test_file_globs: ['**/*.test.ts'],
   teams: [],
   business_hours: {
     enabled: false,
@@ -69,6 +70,7 @@ const sample_settings: AppSettings = {
       period_key: '30d',
       custom_from: '',
       custom_to: '',
+      hide_test_files: false,
     },
   ],
   active_dashboard_id: 'default',

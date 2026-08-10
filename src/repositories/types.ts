@@ -2,6 +2,7 @@ import type {
   AppSettings,
   MemberTeam,
   NormalizedPullRequest,
+  PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
   ReviewRecord,
@@ -67,12 +68,20 @@ export interface PrFactsRepository {
   clear: () => Promise<void>
 }
 
+export interface PrChangedFilesRepository {
+  list_by_pr_ids: (pr_ids: string[]) => Promise<PrChangedFileRecord[]>
+  replace_for_pr: (pr_id: string, files: PrChangedFileRecord[]) => Promise<void>
+  delete_by_pr_ids: (pr_ids: string[]) => Promise<void>
+  clear: () => Promise<void>
+}
+
 export interface Repositories {
   settings: SettingsRepository
   pull_requests: PullRequestRepository
   reviews: ReviewRepository
   sync_state: SyncStateRepository
   pr_facts: PrFactsRepository
+  pr_changed_files: PrChangedFilesRepository
 }
 
 /** Persist a synced page of raw PRs + reviews, then rebuild derived facts. */
@@ -84,6 +93,7 @@ export async function persist_normalized_page(
   for (const item of items) {
     await repositories.pull_requests.put_many([item.pull_request])
     await repositories.reviews.replace_for_pr(item.pull_request.id, item.reviews)
+    await repositories.pr_changed_files.replace_for_pr(item.pull_request.id, item.changed_files)
   }
   const { rebuild_pr_facts_for_prs } = await import('@/lib/rebuild_pr_facts')
   await rebuild_pr_facts_for_prs(

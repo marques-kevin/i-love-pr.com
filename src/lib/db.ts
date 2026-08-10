@@ -1,10 +1,12 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
 import { normalize_active_dashboard_id, normalize_dashboards } from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
+import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
 import type {
   AppSettings,
   DashboardLayoutItem,
   DashboardTab,
+  PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
   RepoRecord,
@@ -56,6 +58,11 @@ function migrate_settings_row(row: LegacyRow): AppSettings {
       : Array.isArray(row.ignoredBots)
         ? (row.ignoredBots as string[])
         : [],
+    test_file_globs: Array.isArray(row.test_file_globs)
+      ? (row.test_file_globs as string[])
+      : Array.isArray(row.testFileGlobs)
+        ? (row.testFileGlobs as string[])
+        : [...DEFAULT_TEST_FILE_GLOBS],
     teams,
     business_hours: {
       enabled: Boolean(business.enabled ?? false),
@@ -189,6 +196,7 @@ export class IlovePrDatabase extends Dexie {
   reviews!: EntityTable<ReviewRecord, 'id'>
   sync_state!: EntityTable<SyncState, 'repo_full_name'>
   pr_facts!: EntityTable<PrFactRecord, 'pr_id'>
+  pr_changed_files!: EntityTable<PrChangedFileRecord, 'id'>
   chart_specs!: EntityTable<LegacyChartSpecRow, 'id'>
 
   constructor() {
@@ -272,6 +280,26 @@ export class IlovePrDatabase extends Dexie {
       })
       .upgrade(async (tx) => {
         await migrate_to_snake_case(tx)
+      })
+    this.version(7)
+      .stores({
+        settings: 'id',
+        repos: 'full_name, owner',
+        pull_requests:
+          'id, repo_full_name, number, author, state, created_at, updated_at, merged_at, [repo_full_name+updated_at]',
+        reviews:
+          'id, pr_id, repo_full_name, pr_number, author, submitted_at, [repo_full_name+author]',
+        sync_state: 'repo_full_name, last_synced_at, mode',
+        pr_facts: 'pr_id, repo_full_name, author, is_bot, merged_at, state, created_at',
+        pr_changed_files: 'id, pr_id, path',
+        chart_specs: 'id',
+      })
+      .upgrade(async (tx) => {
+        const settings_rows = as_rows(await tx.table('settings').toArray())
+        for (const row of settings_rows) {
+          const migrated = migrate_settings_row(row)
+          await tx.table('settings').put(migrated)
+        }
       })
   }
 }
