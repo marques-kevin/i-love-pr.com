@@ -167,7 +167,6 @@ const VALIDATE_TOKEN_QUERY = `
       login
       name
       avatarUrl
-      email
     }
   }
 `
@@ -297,23 +296,27 @@ export class GitHubClient {
         login: string
         name: string | null
         avatarUrl: string | null
-        email: string | null
       }
     }>(VALIDATE_TOKEN_QUERY)
     return {
       login: data.viewer.login,
       name: data.viewer.name,
-      email: data.viewer.email,
+      email: null,
       avatar_url: data.viewer.avatarUrl,
       rateLimit: to_rate_limit_info(data.rateLimit),
     }
   }
 
   /** Inspect OAuth scopes granted to a classic personal access token. */
-  async inspectTokenScopes(): Promise<{ scopes: string[]; token_type: GitHubTokenType }> {
+  async inspectTokenScopes(): Promise<{
+    scopes: string[]
+    token_type: GitHubTokenType
+    login: string | null
+    rate_limit: RateLimitInfo | null
+  }> {
     const token_type = detect_token_type(this.token)
     if (token_type === 'fine_grained') {
-      return { scopes: [], token_type }
+      return { scopes: [], token_type, login: null, rate_limit: null }
     }
 
     const response = await fetch(`${REST_API_URL}/user`, {
@@ -335,13 +338,16 @@ export class GitHubClient {
       )
     }
 
+    const body: ExternalValue = await response.json()
+    const login = is_external_object(body) && is_string_value(body.login) ? body.login : null
+
     const scopes_header = response.headers.get('x-oauth-scopes') ?? ''
     const scopes = scopes_header
       .split(',')
       .map((scope) => scope.trim())
       .filter(Boolean)
 
-    return { scopes, token_type }
+    return { scopes, token_type, login, rate_limit: header_rate_limit }
   }
 
   /** List repositories accessible with the current token (paginated, capped). */
