@@ -1,3 +1,6 @@
+import type { JsonValue } from '@/lib/json_value'
+import { has_browser_navigator } from '@/lib/boundary_parse'
+
 export type AppLocale = 'en' | 'fr'
 
 export const APP_LOCALES: AppLocale[] = ['en', 'fr']
@@ -5,12 +8,12 @@ export const APP_LOCALES: AppLocale[] = ['en', 'fr']
 /** Fallback when the browser language is missing or unsupported. */
 export const DEFAULT_LOCALE: AppLocale = 'en'
 
-export function normalize_locale(value: unknown): AppLocale {
+export function normalize_locale(value: JsonValue | null | undefined): AppLocale {
   return value === 'fr' ? 'fr' : 'en'
 }
 
 /** Explicit user preference only — `null` means follow the browser on boot. */
-export function normalize_stored_locale(value: unknown): AppLocale | null {
+export function normalize_stored_locale(value: JsonValue | null | undefined): AppLocale | null {
   if (value === 'fr' || value === 'en') return value
   return null
 }
@@ -20,7 +23,7 @@ export function normalize_stored_locale(value: unknown): AppLocale | null {
  * Unsupported languages fall back to English.
  */
 export function detect_locale(): AppLocale {
-  if (typeof navigator === 'undefined') return DEFAULT_LOCALE
+  if (!has_browser_navigator()) return DEFAULT_LOCALE
 
   const candidates = [
     ...(Array.isArray(navigator.languages) ? navigator.languages : []),

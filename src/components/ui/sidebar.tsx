@@ -27,6 +27,45 @@ const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
+function resolve_boolean_set_state(
+  value: boolean | ((previous: boolean) => boolean),
+  previous: boolean,
+): boolean {
+  if (value === false) return false
+  if (value === true) return true
+  return value(previous)
+}
+
+function sidebar_tooltip_content(
+  tooltip: string | React.ComponentProps<typeof TooltipContent>,
+): React.ComponentProps<typeof TooltipContent> {
+  if (tooltip instanceof Object) return tooltip
+  return { children: tooltip }
+}
+
+function sidebar_wrapper_style(style: React.CSSProperties | undefined): React.CSSProperties {
+  // SAFETY: CSS custom properties for sidebar layout are not part of the standard CSSProperties map.
+  return {
+    '--sidebar-width': SIDEBAR_WIDTH,
+    '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+    ...style,
+  } as React.CSSProperties
+}
+
+function sidebar_mobile_style(): React.CSSProperties {
+  // SAFETY: CSS custom properties for sidebar layout are not part of the standard CSSProperties map.
+  return {
+    '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
+  } as React.CSSProperties
+}
+
+function sidebar_skeleton_style(width: string): React.CSSProperties {
+  // SAFETY: CSS custom properties for skeleton width are not part of the standard CSSProperties map.
+  return {
+    '--skeleton-width': width,
+  } as React.CSSProperties
+}
+
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
   open: boolean
@@ -70,7 +109,7 @@ function SidebarProvider({
   const open = openProp ?? _open
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === 'function' ? value(open) : value
+      const openState = resolve_boolean_set_state(value, open)
       if (setOpenProp) {
         setOpenProp(openState)
       } else {
@@ -122,13 +161,7 @@ function SidebarProvider({
     <SidebarContext.Provider value={contextValue}>
       <div
         data-slot="sidebar-wrapper"
-        style={
-          {
-            '--sidebar-width': SIDEBAR_WIDTH,
-            '--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-            ...style,
-          } as React.CSSProperties
-        }
+        style={sidebar_wrapper_style(style)}
         className={cn(
           'group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar',
           className,
@@ -180,11 +213,7 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
+          style={sidebar_mobile_style()}
           side={side}
         >
           <SheetHeader className="sr-only">
@@ -498,11 +527,7 @@ function SidebarMenuButton({
     return button
   }
 
-  if (typeof tooltip === 'string') {
-    tooltip = {
-      children: tooltip,
-    }
-  }
+  const tooltip_props = sidebar_tooltip_content(tooltip)
 
   return (
     <Tooltip>
@@ -511,7 +536,7 @@ function SidebarMenuButton({
         side="right"
         align="center"
         hidden={state !== 'collapsed' || isMobile}
-        {...tooltip}
+        {...tooltip_props}
       />
     </Tooltip>
   )
@@ -580,11 +605,7 @@ function SidebarMenuSkeleton({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={
-          {
-            '--skeleton-width': width,
-          } as React.CSSProperties
-        }
+        style={sidebar_skeleton_style(width)}
       />
     </div>
   )

@@ -1,4 +1,4 @@
-import type { ListenerMiddlewareInstance, TypedStartListening } from '@reduxjs/toolkit'
+import type { ListenerMiddlewareInstance } from '@reduxjs/toolkit'
 import { global_app_initialized } from '@/modules/app/redux/app_events'
 import {
   hydrate_dashboard_filters,
@@ -39,8 +39,6 @@ import type { AppDispatch } from './create_store'
 import type { RootState } from './root_reducer'
 import type { ThunkExtra } from './thunk_extra'
 
-type AppStartListening = TypedStartListening<RootState, AppDispatch, ThunkExtra>
-
 function active_repo_list(state: RootState): string[] {
   const { active_repo } = state.dashboard
   return active_repo ? [active_repo] : []
@@ -74,16 +72,14 @@ function hydrate_filters_from_active_dashboard(api: {
 export function register_app_listeners(
   middleware: ListenerMiddlewareInstance<RootState, AppDispatch, ThunkExtra>,
 ) {
-  const start_listening = middleware.startListening as AppStartListening
-
-  start_listening({
+  middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
       await api.dispatch(load_settings())
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: load_settings.fulfilled,
     effect: async (action, api) => {
       const settings = action.payload
@@ -104,7 +100,7 @@ export function register_app_listeners(
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: save_settings.fulfilled,
     effect: async (action, api) => {
       play_sound('success')
@@ -123,7 +119,7 @@ export function register_app_listeners(
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: set_active_repo.fulfilled,
     effect: async (action, api) => {
       api.dispatch(hydrate_active_repo(action.payload.active_repo))
@@ -133,14 +129,14 @@ export function register_app_listeners(
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: run_sync.pending,
     effect: async (action) => {
       if (action.meta.arg.force) play_sound('loading')
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: run_sync.fulfilled,
     effect: async (action, api) => {
       if (action.meta.arg.force) play_sound('success')
@@ -149,7 +145,7 @@ export function register_app_listeners(
     },
   })
 
-  start_listening({
+  middleware.startListening({
     actionCreator: run_sync.rejected,
     effect: async (action, api) => {
       if (action.meta.arg.force) play_sound('error')
@@ -164,7 +160,7 @@ export function register_app_listeners(
     create_dashboard.fulfilled,
     delete_dashboard.fulfilled,
   ] as const) {
-    start_listening({
+    middleware.startListening({
       actionCreator: action_creator,
       effect: async (_action, api) => {
         hydrate_filters_from_active_dashboard(api)
@@ -172,7 +168,7 @@ export function register_app_listeners(
     })
   }
 
-  start_listening({
+  middleware.startListening({
     actionCreator: hydrate_dashboard_filters,
     effect: async (_action, api) => {
       void api.dispatch(refresh_metrics())
@@ -188,7 +184,7 @@ export function register_app_listeners(
   ] as const
 
   for (const action_creator of persist_filter_actions) {
-    start_listening({
+    middleware.startListening({
       actionCreator: action_creator,
       effect: async (_action, api) => {
         const settings = api.getState().settings.settings

@@ -86,12 +86,20 @@ export function widget_description_key(widget_id: DashboardWidgetId): MessageKey
   return WIDGET_DESCRIPTION_KEYS[widget_id]
 }
 
+export function onboarding_scope_message_key(scope: string): MessageKey {
+  if (scope === 'public_repo') return 'onboarding.scope.public_repo'
+  if (scope === 'repo') return 'onboarding.scope.repo'
+  return 'onboarding.scope.read_user'
+}
+
 /** Keys covered by typed dynamic helpers — treated as used by the unused-key checker. */
 export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   ...Object.values(LOCALE_MESSAGE_KEYS),
   ...Object.values(PERIOD_MESSAGE_KEYS),
   ...Object.values(WIDGET_LABEL_KEYS),
   ...Object.values(WIDGET_DESCRIPTION_KEYS),
+  'onboarding.step.token_title',
+  'onboarding.step.token_description',
   'onboarding.scope.public_repo',
   'onboarding.scope.repo',
   'onboarding.scope.read_user',

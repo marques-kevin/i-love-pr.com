@@ -1,11 +1,28 @@
 import Dexie, { type EntityTable, type Transaction } from 'dexie'
-import { normalize_settings_dashboards } from './dashboard_layout'
+import {
+  external_object_array,
+  is_boolean_value,
+  is_json_object,
+  is_number_value,
+  json_nullable_string_field,
+  json_number_array,
+  json_string_array,
+  json_string_field,
+  optional_json_string,
+  parse_json_array,
+  parse_string_record,
+  pick_json_object,
+} from './boundary_parse'
+import {
+  normalize_settings_dashboards,
+  parse_dashboard_layout_from_json,
+  parse_dashboard_tabs_from_json,
+} from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
 import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
+import type { JsonObject, JsonValue } from './json_value'
 import type {
   AppSettings,
-  DashboardLayoutItem,
-  DashboardTab,
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
@@ -19,181 +36,260 @@ export const DEFAULT_BACKFILL_LIMIT = 200
 /** Legacy empty table kept so Dexie schema stays valid for existing DBs. */
 type LegacyChartSpecRow = { id: string }
 
-type LegacyRow = Record<string, unknown>
-
-function as_rows(value: unknown): LegacyRow[] {
-  return Array.isArray(value) ? (value as LegacyRow[]) : []
+function parse_pr_state(value: JsonValue | undefined): PullRequestRecord['state'] {
+  if (value === 'OPEN' || value === 'CLOSED' || value === 'MERGED') return value
+  return 'OPEN'
 }
 
-function migrate_settings_row(row: LegacyRow): AppSettings {
-  const teams = as_rows(row.teams).map((team) => ({
-    id: String(team.id ?? ''),
-    name: String(team.name ?? ''),
-    members: Array.isArray(team.members) ? (team.members as string[]) : [],
-    created_at: String(team.created_at ?? team.createdAt ?? new Date().toISOString()),
-  }))
-  const business =
-    row.business_hours && typeof row.business_hours === 'object'
-      ? (row.business_hours as LegacyRow)
-      : row.businessHours && typeof row.businessHours === 'object'
-        ? (row.businessHours as LegacyRow)
-        : {}
+function parse_review_state(value: JsonValue | undefined): ReviewRecord['state'] {
+  if (
+    value === 'APPROVED' ||
+    value === 'CHANGES_REQUESTED' ||
+    value === 'COMMENTED' ||
+    value === 'DISMISSED' ||
+    value === 'PENDING'
+  ) {
+    return value
+  }
+  return 'COMMENTED'
+}
 
-  const legacy_layout = Array.isArray(row.dashboard_layout)
-    ? (row.dashboard_layout as DashboardLayoutItem[])
-    : undefined
-  const repos = Array.isArray(row.repos) ? (row.repos as string[]) : []
+function parse_sync_mode(value: JsonValue | undefined): SyncState['mode'] {
+  if (value === 'idle' || value === 'backfill' || value === 'incremental' || value === 'paused') {
+    return value
+  }
+  return 'idle'
+}
+
+function migrate_settings_row(row: JsonObject): AppSettings {
+  const teams = parse_json_array(row.teams)
+    .filter(is_json_object)
+    .map((team) => ({
+      id: json_string_field(team, 'id', 'id'),
+      name: json_string_field(team, 'name', 'name'),
+      members: json_string_array(team.members),
+      created_at: json_string_field(team, 'created_at', 'createdAt', new Date().toISOString()),
+    }))
+  const business = pick_json_object(row.business_hours ?? row.businessHours)
+  const legacy_layout = parse_dashboard_layout_from_json(row.dashboard_layout)
+  const repos = json_string_array(row.repos)
   const dashboards_fields = normalize_settings_dashboards({
     repos,
-    active_repo: typeof row.active_repo === 'string' ? row.active_repo : null,
-    dashboards: Array.isArray(row.dashboards) ? (row.dashboards as DashboardTab[]) : undefined,
+    active_repo: optional_json_string(row.active_repo),
+    dashboards: parse_dashboard_tabs_from_json(row.dashboards),
     active_dashboard_id:
-      typeof row.active_dashboard_id === 'string' ? row.active_dashboard_id : undefined,
-    active_dashboard_by_repo:
-      row.active_dashboard_by_repo && typeof row.active_dashboard_by_repo === 'object'
-        ? (row.active_dashboard_by_repo as Record<string, string>)
-        : undefined,
+      optional_json_string(row.active_dashboard_id) ?? optional_json_string(row.activeDashboardId),
+    active_dashboard_by_repo: parse_string_record(
+      row.active_dashboard_by_repo ?? row.activeDashboardByRepo,
+    ),
     dashboard_layout: legacy_layout,
   })
 
   return {
     id: 'settings',
-    token: String(row.token ?? ''),
+    token: json_string_field(row, 'token', 'token'),
     repos,
     sync_interval_hours: Number(row.sync_interval_hours ?? row.syncIntervalHours ?? 24),
     backfill_limit: Number(row.backfill_limit ?? row.backfillLimit ?? DEFAULT_BACKFILL_LIMIT),
-    ignored_bots: Array.isArray(row.ignored_bots)
-      ? (row.ignored_bots as string[])
-      : Array.isArray(row.ignoredBots)
-        ? (row.ignoredBots as string[])
-        : [],
-    test_file_globs: Array.isArray(row.test_file_globs)
-      ? (row.test_file_globs as string[])
-      : Array.isArray(row.testFileGlobs)
-        ? (row.testFileGlobs as string[])
-        : [...DEFAULT_TEST_FILE_GLOBS],
+    ignored_bots: json_string_array(row.ignored_bots ?? row.ignoredBots),
+    test_file_globs:
+      json_string_array(row.test_file_globs).length > 0
+        ? json_string_array(row.test_file_globs)
+        : json_string_array(row.testFileGlobs).length > 0
+          ? json_string_array(row.testFileGlobs)
+          : [...DEFAULT_TEST_FILE_GLOBS],
     teams,
     business_hours: {
-      enabled: Boolean(business.enabled ?? false),
-      time_zone: String(business.time_zone ?? business.timeZone ?? 'UTC'),
-      workdays: Array.isArray(business.workdays)
-        ? (business.workdays as number[])
-        : [1, 2, 3, 4, 5],
-      start_minutes: Number(business.start_minutes ?? business.startMinutes ?? 9 * 60),
-      end_minutes: Number(business.end_minutes ?? business.endMinutes ?? 18 * 60),
+      enabled: is_boolean_value(business.enabled) ? business.enabled : false,
+      time_zone: json_string_field(business, 'time_zone', 'timeZone', 'UTC'),
+      workdays:
+        json_number_array(business.workdays).length > 0
+          ? json_number_array(business.workdays)
+          : [1, 2, 3, 4, 5],
+      start_minutes: is_number_value(business.start_minutes)
+        ? business.start_minutes
+        : is_number_value(business.startMinutes)
+          ? business.startMinutes
+          : 9 * 60,
+      end_minutes: is_number_value(business.end_minutes)
+        ? business.end_minutes
+        : is_number_value(business.endMinutes)
+          ? business.endMinutes
+          : 18 * 60,
     },
     ...dashboards_fields,
-    locale: normalize_stored_locale(row.locale),
-    onboarded_at: String(row.onboarded_at ?? row.onboardedAt ?? new Date().toISOString()),
+    locale: normalize_stored_locale(row.locale ?? null),
+    onboarded_at: json_string_field(row, 'onboarded_at', 'onboardedAt', new Date().toISOString()),
   }
 }
 
-function migrate_repo_row(row: LegacyRow): RepoRecord | null {
-  const full_name = String(row.full_name ?? row.fullName ?? '')
+function migrate_repo_row(row: JsonObject): RepoRecord | null {
+  const full_name = json_string_field(row, 'full_name', 'fullName')
   if (!full_name) return null
   return {
     full_name,
-    owner: String(row.owner ?? full_name.split('/')[0] ?? ''),
-    name: String(row.name ?? full_name.split('/')[1] ?? ''),
-    added_at: String(row.added_at ?? row.addedAt ?? new Date().toISOString()),
+    owner: json_string_field(row, 'owner', 'owner', full_name.split('/')[0] ?? ''),
+    name: json_string_field(row, 'name', 'name', full_name.split('/')[1] ?? ''),
+    added_at: json_string_field(row, 'added_at', 'addedAt', new Date().toISOString()),
   }
 }
 
-function migrate_sync_state_row(row: LegacyRow): SyncState | null {
-  const repo_full_name = String(row.repo_full_name ?? row.repoFullName ?? '')
+function migrate_sync_state_row(row: JsonObject): SyncState | null {
+  const repo_full_name = json_string_field(row, 'repo_full_name', 'repoFullName')
   if (!repo_full_name) return null
   return {
     repo_full_name,
-    cursor_updated_at: (row.cursor_updated_at ?? row.cursorUpdatedAt ?? null) as string | null,
-    page_cursor: (row.page_cursor ?? row.pageCursor ?? null) as string | null,
-    mode: (row.mode as SyncState['mode']) ?? 'idle',
-    last_synced_at: (row.last_synced_at ?? row.lastSyncedAt ?? null) as string | null,
-    last_error: (row.last_error ?? row.lastError ?? null) as string | null,
+    cursor_updated_at: json_nullable_string_field(row, 'cursor_updated_at', 'cursorUpdatedAt'),
+    page_cursor: json_nullable_string_field(row, 'page_cursor', 'pageCursor'),
+    mode: parse_sync_mode(row.mode),
+    last_synced_at: json_nullable_string_field(row, 'last_synced_at', 'lastSyncedAt'),
+    last_error: json_nullable_string_field(row, 'last_error', 'lastError'),
     total_fetched: Number(row.total_fetched ?? row.totalFetched ?? 0),
     backfill_fetched: Number(row.backfill_fetched ?? row.backfillFetched ?? 0),
-    remote_oldest_created_at: (row.remote_oldest_created_at ??
-      row.remoteOldestCreatedAt ??
-      null) as string | null,
+    remote_oldest_created_at: json_nullable_string_field(
+      row,
+      'remote_oldest_created_at',
+      'remoteOldestCreatedAt',
+    ),
   }
 }
 
-function migrate_pull_request_row(row: LegacyRow): PullRequestRecord | null {
-  const id = String(row.id ?? '')
+function migrate_pull_request_row(row: JsonObject): PullRequestRecord | null {
+  const id = json_string_field(row, 'id', 'id')
   if (!id) return null
   return {
     id,
-    repo_full_name: String(row.repo_full_name ?? row.repoFullName ?? ''),
+    repo_full_name: json_string_field(row, 'repo_full_name', 'repoFullName'),
     number: Number(row.number ?? 0),
-    title: String(row.title ?? ''),
-    author: String(row.author ?? ''),
-    state: (row.state as PullRequestRecord['state']) ?? 'OPEN',
-    created_at: String(row.created_at ?? row.createdAt ?? ''),
-    updated_at: String(row.updated_at ?? row.updatedAt ?? ''),
-    closed_at: (row.closed_at ?? row.closedAt ?? null) as string | null,
-    merged_at: (row.merged_at ?? row.mergedAt ?? null) as string | null,
-    ready_for_review_at: (row.ready_for_review_at ?? row.readyForReviewAt ?? null) as string | null,
-    first_review_requested_at: (row.first_review_requested_at ??
-      row.firstReviewRequestedAt ??
-      null) as string | null,
+    title: json_string_field(row, 'title', 'title'),
+    author: json_string_field(row, 'author', 'author'),
+    state: parse_pr_state(row.state),
+    created_at: json_string_field(row, 'created_at', 'createdAt'),
+    updated_at: json_string_field(row, 'updated_at', 'updatedAt'),
+    closed_at: json_nullable_string_field(row, 'closed_at', 'closedAt'),
+    merged_at: json_nullable_string_field(row, 'merged_at', 'mergedAt'),
+    ready_for_review_at: json_nullable_string_field(row, 'ready_for_review_at', 'readyForReviewAt'),
+    first_review_requested_at: json_nullable_string_field(
+      row,
+      'first_review_requested_at',
+      'firstReviewRequestedAt',
+    ),
     additions: Number(row.additions ?? 0),
     deletions: Number(row.deletions ?? 0),
     changed_files: Number(row.changed_files ?? row.changedFiles ?? 0),
     commits_count: Number(row.commits_count ?? row.commitsCount ?? 0),
     comments_count: Number(row.comments_count ?? row.commentsCount ?? 0),
-    labels: Array.isArray(row.labels) ? (row.labels as string[]) : [],
+    labels: json_string_array(row.labels),
   }
 }
 
-function migrate_review_row(row: LegacyRow): ReviewRecord | null {
-  const id = String(row.id ?? '')
+function json_nullable_number_field(row: JsonObject, snake: string, camel: string): number | null {
+  const raw = row[snake] ?? row[camel]
+  return is_number_value(raw) ? raw : null
+}
+
+function migrate_pr_fact_row(row: JsonObject): PrFactRecord | null {
+  const pr_id = json_string_field(row, 'pr_id', 'prId')
+  if (!pr_id) return null
+  const cycle = pick_json_object(row.cycle)
+  return {
+    _version: Number(row._version ?? 0),
+    pr_id,
+    repo_full_name: json_string_field(row, 'repo_full_name', 'repoFullName'),
+    author: json_string_field(row, 'author', 'author'),
+    state: parse_pr_state(row.state),
+    created_at: json_string_field(row, 'created_at', 'createdAt'),
+    merged_at: json_nullable_string_field(row, 'merged_at', 'mergedAt'),
+    pr_number: Number(row.pr_number ?? row.prNumber ?? 0),
+    title: json_string_field(row, 'title', 'title'),
+    request_review_at: json_string_field(row, 'request_review_at', 'requestReviewAt'),
+    first_approved_at: json_nullable_string_field(row, 'first_approved_at', 'firstApprovedAt'),
+    is_bot: row.is_bot === true || row.isBot === true,
+    lines_added: Number(row.lines_added ?? row.linesAdded ?? 0),
+    lines_deleted: Number(row.lines_deleted ?? row.linesDeleted ?? 0),
+    lines_changed: Number(row.lines_changed ?? row.linesChanged ?? 0),
+    review_rounds: Number(row.review_rounds ?? row.reviewRounds ?? 0),
+    cycle: {
+      time_from_creation_to_asked_for_review: json_nullable_number_field(
+        cycle,
+        'time_from_creation_to_asked_for_review',
+        'timeFromCreationToAskedForReview',
+      ),
+      time_from_creation_to_merged: json_nullable_number_field(
+        cycle,
+        'time_from_creation_to_merged',
+        'timeFromCreationToMerged',
+      ),
+      time_from_creation_to_approved: json_nullable_number_field(
+        cycle,
+        'time_from_creation_to_approved',
+        'timeFromCreationToApproved',
+      ),
+      time_from_asked_for_review_to_approved: json_nullable_number_field(
+        cycle,
+        'time_from_asked_for_review_to_approved',
+        'timeFromAskedForReviewToApproved',
+      ),
+      time_from_asked_for_review_to_first_review: json_nullable_number_field(
+        cycle,
+        'time_from_asked_for_review_to_first_review',
+        'timeFromAskedForReviewToFirstReview',
+      ),
+    },
+  }
+}
+
+function migrate_review_row(row: JsonObject): ReviewRecord | null {
+  const id = json_string_field(row, 'id', 'id')
   if (!id) return null
   return {
     id,
-    pr_id: String(row.pr_id ?? row.prId ?? ''),
-    repo_full_name: String(row.repo_full_name ?? row.repoFullName ?? ''),
+    pr_id: json_string_field(row, 'pr_id', 'prId'),
+    repo_full_name: json_string_field(row, 'repo_full_name', 'repoFullName'),
     pr_number: Number(row.pr_number ?? row.prNumber ?? 0),
-    author: String(row.author ?? ''),
-    state: (row.state as ReviewRecord['state']) ?? 'COMMENTED',
-    submitted_at: String(row.submitted_at ?? row.submittedAt ?? ''),
+    author: json_string_field(row, 'author', 'author'),
+    state: parse_review_state(row.state),
+    submitted_at: json_string_field(row, 'submitted_at', 'submittedAt'),
   }
 }
 
 async function migrate_to_snake_case(tx: Transaction): Promise<void> {
-  const settings_rows = as_rows(await tx.table('settings').toArray())
+  const settings_rows = external_object_array(await tx.table('settings').toArray())
   await tx.table('settings').clear()
   for (const row of settings_rows) {
     await tx.table('settings').put(migrate_settings_row(row))
   }
 
-  const repo_rows = as_rows(await tx.table('repos').toArray())
+  const repo_rows = external_object_array(await tx.table('repos').toArray())
   await tx.table('repos').clear()
   for (const row of repo_rows) {
     const next = migrate_repo_row(row)
     if (next) await tx.table('repos').put(next)
   }
 
-  const review_rows = as_rows(await tx.table('reviews').toArray())
+  const review_rows = external_object_array(await tx.table('reviews').toArray())
   await tx.table('reviews').clear()
   for (const row of review_rows) {
     const next = migrate_review_row(row)
     if (next) await tx.table('reviews').put(next)
   }
 
-  const pull_rows = as_rows(await tx.table('pullRequests').toArray())
+  const pull_rows = external_object_array(await tx.table('pullRequests').toArray())
   for (const row of pull_rows) {
     const next = migrate_pull_request_row(row)
     if (next) await tx.table('pull_requests').put(next)
   }
 
-  const sync_rows = as_rows(await tx.table('syncState').toArray())
+  const sync_rows = external_object_array(await tx.table('syncState').toArray())
   for (const row of sync_rows) {
     const next = migrate_sync_state_row(row)
     if (next) await tx.table('sync_state').put(next)
   }
 
-  const fact_rows = as_rows(await tx.table('prFacts').toArray())
+  const fact_rows = external_object_array(await tx.table('prFacts').toArray())
   for (const row of fact_rows) {
-    if (row.pr_id) await tx.table('pr_facts').put(row)
+    const next = migrate_pr_fact_row(row)
+    if (next) await tx.table('pr_facts').put(next)
   }
 }
 
@@ -305,7 +401,7 @@ export class IlovePrDatabase extends Dexie {
         chart_specs: 'id',
       })
       .upgrade(async (tx) => {
-        const settings_rows = as_rows(await tx.table('settings').toArray())
+        const settings_rows = external_object_array(await tx.table('settings').toArray())
         for (const row of settings_rows) {
           const migrated = migrate_settings_row(row)
           await tx.table('settings').put(migrated)

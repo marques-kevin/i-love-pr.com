@@ -9,9 +9,9 @@ import { en_messages } from '../src/lib/i18n/messages/en.ts'
 import { fr_messages } from '../src/lib/i18n/messages/fr.ts'
 import type { MessageKey } from '../src/lib/i18n/messages/en.ts'
 
-const catalogs: Record<Exclude<AppLocale, 'en'>, Record<MessageKey, string>> = {
+const catalogs = {
   fr: fr_messages,
-}
+} satisfies Record<Exclude<AppLocale, 'en'>, Record<MessageKey, string>>
 
 function sorted_keys(messages: Record<string, string>): string[] {
   return Object.keys(messages).sort((a, b) => a.localeCompare(b))
