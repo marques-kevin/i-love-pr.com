@@ -7,14 +7,30 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { get_umami_data_domains, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from './src/lib/umami.js'
 
-const root_dir = path.dirname(fileURLToPath(import.meta.url))
-const package_json = JSON.parse(readFileSync(path.join(root_dir, 'package.json'), 'utf8')) as {
-  version: string
+const OBJECT_TAG = '[object Object]'
+const STRING_TAG = '[object String]'
+
+function read_package_version(raw: string): string {
+  const parsed = JSON.parse(raw)
+  if (
+    parsed !== null &&
+    !Array.isArray(parsed) &&
+    Object.prototype.toString.call(parsed) === OBJECT_TAG &&
+    Object.prototype.toString.call(parsed.version) === STRING_TAG
+  ) {
+    return parsed.version
+  }
+  return '0.0.0'
 }
+
+const root_dir = path.dirname(fileURLToPath(import.meta.url))
+const package_version = read_package_version(
+  readFileSync(path.join(root_dir, 'package.json'), 'utf8'),
+)
 
 export default defineConfig({
   define: {
-    __APP_VERSION__: JSON.stringify(package_json.version),
+    __APP_VERSION__: JSON.stringify(package_version),
   },
   resolve: {
     alias: {

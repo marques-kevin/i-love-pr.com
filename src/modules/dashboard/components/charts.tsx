@@ -11,6 +11,8 @@ import {
   ZAxis,
 } from 'recharts'
 import { useIntl } from 'react-intl'
+import { is_external_object, is_number_value, is_string_value } from '@/lib/boundary_parse'
+import type { ExternalValue } from '@/lib/json_value'
 import {
   type ChartConfig,
   ChartContainer,
@@ -307,21 +309,20 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
           cursor={{ strokeDasharray: '3 3' }}
           content={({ active, payload }) => {
             if (!active || !payload?.[0]) return null
-            const p = payload[0].payload as MetricsSnapshot['sizeReviewScatter'][number] & {
-              timeToApproveHours: number
-            }
+            const point = parse_scatter_tooltip_point(payload[0].payload ?? null)
+            if (!point) return null
             return (
               <div className="rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
                 <p className="font-medium">
-                  #{p.number} · {p.lines} lines
+                  #{point.number} · {point.lines} lines
                 </p>
                 <p className="text-muted-foreground">
-                  Request → approve: {p.timeToApproveHours.toFixed(1)}h
-                  {p.timeToFirstReviewHours > 0 && (
-                    <> · First review: {p.timeToFirstReviewHours.toFixed(1)}h</>
+                  Request → approve: {point.timeToApproveHours.toFixed(1)}h
+                  {point.timeToFirstReviewHours > 0 && (
+                    <> · First review: {point.timeToFirstReviewHours.toFixed(1)}h</>
                   )}
                 </p>
-                <p className="truncate text-muted-foreground">{p.title}</p>
+                <p className="truncate text-muted-foreground">{point.title}</p>
               </div>
             )
           }}
@@ -696,4 +697,32 @@ export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSiz
       </BarChart>
     </ChartContainer>
   )
+}
+
+type ScatterTooltipPoint = MetricsSnapshot['sizeReviewScatter'][number] & {
+  timeToApproveHours: number
+  label: string
+}
+
+function parse_scatter_tooltip_point(
+  raw: ExternalValue | null | undefined,
+): ScatterTooltipPoint | null {
+  if (raw === null || raw === undefined || !is_external_object(raw)) return null
+  const lines = raw.lines
+  const timeToApproveHours = raw.timeToApproveHours
+  const number = raw.number
+  const timeToFirstReviewHours = raw.timeToFirstReviewHours
+  if (!is_number_value(lines) || !is_number_value(timeToApproveHours) || !is_number_value(number)) {
+    return null
+  }
+  return {
+    lines,
+    timeToApproveHours,
+    number,
+    timeToFirstReviewHours: is_number_value(timeToFirstReviewHours) ? timeToFirstReviewHours : 0,
+    cycleTimeHours: is_number_value(raw.cycleTimeHours) ? raw.cycleTimeHours : null,
+    title: is_string_value(raw.title) ? raw.title : '',
+    repoFullName: is_string_value(raw.repoFullName) ? raw.repoFullName : '',
+    label: is_string_value(raw.label) ? raw.label : `#${number}`,
+  }
 }

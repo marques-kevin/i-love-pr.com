@@ -21,6 +21,10 @@ const IGNORE_DIR_NAMES = new Set(['messages', 'node_modules', 'dist', 'coverage'
 
 const LITERAL_ID_RE = /\bid\s*[:=]\s*(?:['"]([^'"]+)['"]|`([^`$]+)`)/g
 
+function is_message_key(key: string): key is MessageKey {
+  return key in en_messages
+}
+
 /** Catches `id: cond ? 'a' : 'b'` style message ids. */
 const TERNARY_ID_RE = /\bid\s*[:=]\s*[^?{\n]+\?\s*['"]([^'"]+)['"]\s*:\s*['"]([^'"]+)['"]/g
 
@@ -68,7 +72,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const all_keys = Object.keys(en_messages) as MessageKey[]
+  const all_keys = Object.keys(en_messages).filter(is_message_key)
   const unused = all_keys.filter((key) => !used.has(key)).sort((a, b) => a.localeCompare(b))
 
   if (unused.length > 0) {

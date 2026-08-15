@@ -26,7 +26,7 @@ import { SizeVsReviewChart } from './size_vs_review_chart'
 import { SummaryStats } from './summary_stats'
 import { ThroughputChart } from './throughput_chart'
 
-const WIDGET_COMPONENTS: Record<DashboardWidgetId, () => ReactNode> = {
+const WIDGET_COMPONENTS = {
   summary_stats: () => <SummaryStats />,
   cycle_time: () => <CycleTimeChart />,
   throughput: () => <ThroughputChart />,
@@ -52,7 +52,7 @@ const WIDGET_COMPONENTS: Record<DashboardWidgetId, () => ReactNode> = {
   review_state_mix: () => <ReviewStateMix />,
   additions_deletions: () => <AdditionsDeletions />,
   rounds_vs_size: () => <RoundsVsSize />,
-}
+} satisfies Record<DashboardWidgetId, () => ReactNode>
 
 export function DashboardWidget({ widget_id }: { widget_id: DashboardWidgetId }) {
   const render = WIDGET_COMPONENTS[widget_id]

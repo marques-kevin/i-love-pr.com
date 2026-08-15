@@ -1,4 +1,12 @@
 import type { DashboardLayoutItem, DashboardTab, DashboardWidgetId, PeriodKey } from '@/lib/types'
+import type { JsonArray, JsonValue } from '@/lib/json_value'
+import {
+  is_json_object,
+  is_string_value,
+  json_string_array,
+  json_string_field,
+  optional_json_string,
+} from '@/lib/boundary_parse'
 
 const VALID_WIDGET_IDS = new Set<DashboardWidgetId>([
   'summary_stats',
@@ -63,9 +71,11 @@ export function default_dashboard_filters(): DashboardTabFilters {
   }
 }
 
-export function normalize_period_key(value: unknown): PeriodKey {
-  if (typeof value === 'string' && VALID_PERIOD_KEYS.has(value as PeriodKey)) {
-    return value as PeriodKey
+export function normalize_period_key(value: JsonValue | null | undefined): PeriodKey {
+  if (is_string_value(value ?? null)) {
+    for (const key of VALID_PERIOD_KEYS) {
+      if (key === value) return key
+    }
   }
   return '30d'
 }
@@ -77,15 +87,12 @@ export function normalize_dashboard_filters(
   if (!value) return defaults
   return {
     members: Array.isArray(value.members)
-      ? value.members.filter(
-          (member): member is string => typeof member === 'string' && member.length > 0,
-        )
+      ? value.members.filter((member) => member.length > 0)
       : defaults.members,
-    period_key: normalize_period_key(value.period_key),
-    custom_from: typeof value.custom_from === 'string' ? value.custom_from : defaults.custom_from,
-    custom_to: typeof value.custom_to === 'string' ? value.custom_to : defaults.custom_to,
-    hide_test_files:
-      typeof value.hide_test_files === 'boolean' ? value.hide_test_files : defaults.hide_test_files,
+    period_key: normalize_period_key(value.period_key ?? null),
+    custom_from: value.custom_from ?? defaults.custom_from,
+    custom_to: value.custom_to ?? defaults.custom_to,
+    hide_test_files: value.hide_test_files ?? defaults.hide_test_files,
   }
 }
 
@@ -144,15 +151,75 @@ export function create_dashboard_tab(name: string, repo_full_name: string): Dash
   }
 }
 
+function parse_widget_id(value: JsonValue | undefined): DashboardWidgetId | null {
+  if (!is_string_value(value ?? null)) return null
+  for (const widget_id of VALID_WIDGET_IDS) {
+    if (widget_id === value) return widget_id
+  }
+  return null
+}
+
+function parse_layout_items_from_json(value: JsonArray): DashboardLayoutItem[] {
+  const items: DashboardLayoutItem[] = []
+  for (const item of value) {
+    if (!is_json_object(item)) continue
+    const instance_id = json_string_field(item, 'instance_id', 'instanceId')
+    const widget_id = parse_widget_id(item.widget_id ?? item.widgetId)
+    if (!instance_id || !widget_id) continue
+    items.push({ instance_id, widget_id })
+  }
+  return items
+}
+
+export function parse_dashboard_layout_from_json(
+  value: JsonValue | undefined,
+): DashboardLayoutItem[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  return normalize_dashboard_layout(parse_layout_items_from_json(value))
+}
+
+export function parse_dashboard_tabs_from_json(
+  value: JsonValue | undefined,
+): DashboardTab[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const tabs: DashboardTab[] = []
+  for (const item of value) {
+    if (!is_json_object(item)) continue
+    const id = item.id
+    if (!is_string_value(id) || id.length === 0) continue
+    const layout_raw = item.layout
+    const layout = Array.isArray(layout_raw)
+      ? normalize_dashboard_layout(parse_layout_items_from_json(layout_raw))
+      : normalize_dashboard_layout([])
+    tabs.push({
+      id,
+      name: is_string_value(item.name) ? item.name.trim() : '',
+      repo_full_name: json_string_field(item, 'repo_full_name', 'repoFullName'),
+      layout,
+      ...normalize_dashboard_filters({
+        members: Array.isArray(item.members) ? json_string_array(item.members) : undefined,
+        period_key: normalize_period_key(item.period_key ?? null),
+        custom_from: optional_json_string(item.custom_from),
+        custom_to: optional_json_string(item.custom_to),
+        hide_test_files:
+          item.hide_test_files === true || item.hide_test_files === false
+            ? item.hide_test_files
+            : undefined,
+      }),
+    })
+  }
+  return tabs.length > 0 ? tabs : undefined
+}
+
 function normalize_dashboard_tab(tab: DashboardTab, fallback_repo: string): DashboardTab | null {
   if (!tab?.id) return null
   const repo_full_name =
-    typeof tab.repo_full_name === 'string' && tab.repo_full_name.trim()
+    is_string_value(tab.repo_full_name) && tab.repo_full_name.trim()
       ? tab.repo_full_name.trim()
       : fallback_repo
   return {
     id: String(tab.id),
-    name: typeof tab.name === 'string' ? tab.name.trim() : '',
+    name: is_string_value(tab.name) ? tab.name.trim() : '',
     repo_full_name,
     layout: normalize_dashboard_layout(tab.layout ?? []),
     ...normalize_dashboard_filters(tab),
@@ -213,16 +280,15 @@ export function normalize_active_dashboard_by_repo(
   dashboards: DashboardTab[],
   active_dashboard_id: string,
   active_repo: string | null,
-): Record<string, string> {
-  const next: Record<string, string> = {}
-  for (const repo of repos) {
+) {
+  const entries = repos.map((repo) => {
     const repo_tabs = dashboards_for_repo(dashboards, repo)
     const preferred =
-      (value && typeof value[repo] === 'string' ? value[repo] : null) ??
+      (value && is_string_value(value[repo]) ? value[repo] : null) ??
       (repo === active_repo ? active_dashboard_id : null)
-    next[repo] = normalize_active_dashboard_id(preferred, repo_tabs)
-  }
-  return next
+    return [repo, normalize_active_dashboard_id(preferred, repo_tabs)] as const
+  })
+  return Object.fromEntries(entries)
 }
 
 /** Ensure every configured repo has at least one dashboard tab. */
@@ -248,14 +314,9 @@ export type SettingsDashboardsInput = {
   dashboard_layout?: DashboardLayoutItem[] | null
 }
 
-export function normalize_settings_dashboards(input: SettingsDashboardsInput): {
-  dashboards: DashboardTab[]
-  active_dashboard_id: string
-  active_repo: string | null
-  active_dashboard_by_repo: Record<string, string>
-} {
+export function normalize_settings_dashboards(input: SettingsDashboardsInput) {
   const repos = Array.isArray(input.repos)
-    ? input.repos.filter((repo): repo is string => typeof repo === 'string' && repo.length > 0)
+    ? input.repos.filter((repo) => is_string_value(repo) && repo.length > 0)
     : []
   const active_repo = normalize_active_repo(input.active_repo, repos)
   const fallback_repo = active_repo ?? repos[0] ?? ''

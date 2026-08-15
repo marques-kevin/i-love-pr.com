@@ -36,10 +36,11 @@ export const DASHBOARD_WIDGET_CATALOG: DashboardWidgetMeta[] = [
   { widget_id: 'open_prs', span: 'full' },
 ]
 
-export const DASHBOARD_WIDGET_BY_ID: Record<DashboardWidgetId, DashboardWidgetMeta> =
-  Object.fromEntries(DASHBOARD_WIDGET_CATALOG.map((w) => [w.widget_id, w])) as Record<
-    DashboardWidgetId,
-    DashboardWidgetMeta
-  >
+export function get_dashboard_widget_meta(widget_id: DashboardWidgetId): DashboardWidgetMeta {
+  for (const widget of DASHBOARD_WIDGET_CATALOG) {
+    if (widget.widget_id === widget_id) return widget
+  }
+  return { widget_id, span: 'half' }
+}
 
 export { create_layout_item }

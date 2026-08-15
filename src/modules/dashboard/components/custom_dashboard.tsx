@@ -13,7 +13,7 @@ import {
 import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
 import { create_layout_item } from '@/lib/dashboard_layout'
 import { widget_description_key, widget_label_key } from '@/lib/i18n'
-import { DASHBOARD_WIDGET_BY_ID, DASHBOARD_WIDGET_CATALOG } from '../lib/widget_catalog'
+import { DASHBOARD_WIDGET_CATALOG, get_dashboard_widget_meta } from '../lib/widget_catalog'
 import { connector, type ConnectorProps } from './custom_dashboard.connector'
 import { DashboardWidget } from './dashboard_widget'
 
@@ -109,7 +109,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           {layout.map((item, index) => {
-            const meta = DASHBOARD_WIDGET_BY_ID[item.widget_id]
+            const meta = get_dashboard_widget_meta(item.widget_id)
             const label = intl.formatMessage({ id: widget_label_key(item.widget_id) })
             const span_class = meta.span === 'full' ? 'lg:col-span-2' : ''
             return (

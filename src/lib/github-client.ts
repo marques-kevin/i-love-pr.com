@@ -1,4 +1,6 @@
 import { detect_token_type, type GitHubTokenType } from './github_token_scopes'
+import { graphql_variable_object, is_external_object, is_string_value } from './boundary_parse'
+import type { ExternalObject, ExternalValue, GraphQLVariableObject } from './json_value'
 import type { NormalizedPullRequest, PrState, RateLimitInfo, ReviewState } from './types'
 
 const REST_API_URL = 'https://api.github.com'
@@ -482,7 +484,7 @@ export class GitHubClient {
 
   private async graphql<T>(
     query: string,
-    variables: Record<string, unknown> = {},
+    variables: GraphQLVariableObject = graphql_variable_object(),
     attempt = 0,
   ): Promise<T> {
     await this.maybeThrottle()
@@ -533,7 +535,11 @@ export class GitHubClient {
       )
     }
 
-    const payload = (await response.json()) as GraphQLResponse<T & { rateLimit?: GraphQLRateLimit }>
+    const raw: ExternalValue = await response.json()
+    if (!is_external_object(raw)) {
+      throw new GitHubApiError('Invalid GraphQL response', 500, this.lastRateLimit)
+    }
+    const payload = parse_graphql_payload<T>(raw)
 
     if (payload.data && 'rateLimit' in payload.data && payload.data.rateLimit) {
       this.lastRateLimit = to_rate_limit_info(payload.data.rateLimit)
@@ -579,7 +585,7 @@ function normalizePullRequest(
   const author = node.author?.login ?? 'unknown'
   const timeline = node.timelineItems.nodes.filter(
     (n): n is { __typename?: string; createdAt: string } =>
-      'createdAt' in n && typeof n.createdAt === 'string',
+      'createdAt' in n && is_string_value(n.createdAt),
   )
 
   const readyEvent = timeline.find((n) => n.__typename === 'ReadyForReviewEvent')
@@ -638,4 +644,36 @@ export function parseRepoFullName(fullName: string): { owner: string; name: stri
   const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(trimmed)
   if (!match) return null
   return { owner: match[1], name: match[2] }
+}
+
+function parse_graphql_payload<T>(
+  raw: ExternalObject,
+): GraphQLResponse<T & { rateLimit?: GraphQLRateLimit }> {
+  const data_raw = raw.data
+  const errors_raw = raw.errors
+  return {
+    data:
+      data_raw !== undefined && is_external_object(data_raw)
+        ? parse_graphql_data<T>(data_raw)
+        : undefined,
+    errors: Array.isArray(errors_raw) ? parse_graphql_errors(errors_raw) : undefined,
+  }
+}
+
+function parse_graphql_data<T>(data: ExternalObject): T & { rateLimit?: GraphQLRateLimit } {
+  // SAFETY: GraphQL `data` is decoded once at the HTTP boundary; callers validate query-specific fields.
+  return data as T & { rateLimit?: GraphQLRateLimit }
+}
+
+function parse_graphql_errors(errors: ExternalValue[]): { message: string; type?: string }[] {
+  const parsed: { message: string; type?: string }[] = []
+  for (const error of errors) {
+    if (!is_external_object(error)) continue
+    const message = error.message
+    parsed.push({
+      message: is_string_value(message) ? message : 'GraphQL error',
+      type: is_string_value(error.type) ? error.type : undefined,
+    })
+  }
+  return parsed
 }

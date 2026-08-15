@@ -7,6 +7,8 @@ import {
   normalize_dashboard_layout,
   normalize_dashboards,
   normalize_settings_dashboards,
+  parse_dashboard_layout_from_json,
+  parse_dashboard_tabs_from_json,
 } from '@/lib/dashboard_layout'
 
 describe('normalize_dashboard_layout', () => {
@@ -21,9 +23,9 @@ describe('normalize_dashboard_layout', () => {
 
   it('drops unknown widget ids', () => {
     expect(
-      normalize_dashboard_layout([
+      parse_dashboard_layout_from_json([
         { instance_id: 'a', widget_id: 'cycle_time' },
-        { instance_id: 'b', widget_id: 'not_a_widget' as 'cycle_time' },
+        { instance_id: 'b', widget_id: 'not_a_widget' },
       ]),
     ).toEqual([{ instance_id: 'a', widget_id: 'cycle_time' }])
   })
@@ -63,8 +65,14 @@ describe('normalize_dashboards', () => {
       {
         id: 'a',
         name: 'A',
+        repo_full_name: '',
         layout: [],
-      } as never,
+        members: [],
+        period_key: '30d',
+        custom_from: '',
+        custom_to: '',
+        hide_test_files: false,
+      },
     ])
     expect(dashboards[0]).toMatchObject({
       id: 'a',
@@ -102,16 +110,21 @@ describe('normalize_settings_dashboards', () => {
   })
 
   it('assigns missing repo_full_name and creates tabs per repo', () => {
+    const legacy_tabs = parse_dashboard_tabs_from_json([
+      {
+        id: 'legacy',
+        name: '',
+        layout: [],
+        members: [],
+        period_key: '30d',
+        custom_from: '',
+        custom_to: '',
+        hide_test_files: false,
+      },
+    ])
     const result = normalize_settings_dashboards({
       repos: ['acme/a', 'acme/b'],
-      dashboards: [
-        {
-          id: 'legacy',
-          name: '',
-          layout: [],
-          ...default_dashboard_filters(),
-        } as never,
-      ],
+      dashboards: legacy_tabs,
       active_dashboard_id: 'legacy',
     })
     expect(result.active_repo).toBe('acme/a')

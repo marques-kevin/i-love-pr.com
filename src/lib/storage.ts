@@ -1,5 +1,7 @@
+import { has_browser_navigator } from '@/lib/boundary_parse'
+
 export async function requestPersistentStorage(): Promise<boolean> {
-  if (typeof navigator === 'undefined' || !navigator.storage?.persist) return false
+  if (!has_browser_navigator() || !navigator.storage?.persist) return false
   try {
     const already = await navigator.storage.persisted()
     if (already) return true
@@ -14,7 +16,7 @@ export async function estimateStorage(): Promise<{
   quota: number
   usagePercent: number
 } | null> {
-  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return null
+  if (!has_browser_navigator() || !navigator.storage?.estimate) return null
   try {
     const estimate = await navigator.storage.estimate()
     const usage = estimate.usage ?? 0

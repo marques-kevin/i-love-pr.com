@@ -49,6 +49,12 @@ export const DISPLAYED_SCOPES = [
   { scope: 'read:user', required: false },
 ] as const
 
+const OVERLY_PERMISSIVE_SCOPE_SET = new Set<string>(OVERLY_PERMISSIVE_SCOPES)
+
+function is_overly_permissive_scope(scope: string): boolean {
+  return OVERLY_PERMISSIVE_SCOPE_SET.has(scope)
+}
+
 export function detect_token_type(token: string): GitHubTokenType {
   const trimmed = token.trim()
   if (trimmed.startsWith('github_pat_')) return 'fine_grained'
@@ -90,9 +96,7 @@ export function analyze_token_scopes(
   const explicitly_granted_repo = granted_scopes.includes('repo')
   const explicitly_granted_public_repo = granted_scopes.includes('public_repo')
 
-  const overly_permissive_scopes = granted_scopes.filter((scope) =>
-    (OVERLY_PERMISSIVE_SCOPES as readonly string[]).includes(scope),
-  )
+  const overly_permissive_scopes = granted_scopes.filter(is_overly_permissive_scope)
 
   const scopes: ScopeInfo[] = DISPLAYED_SCOPES.map(({ scope, required }) => {
     const granted = expanded.has(scope)
@@ -106,7 +110,7 @@ export function analyze_token_scopes(
       scope,
       status,
       required,
-      overly_permissive: (OVERLY_PERMISSIVE_SCOPES as readonly string[]).includes(scope),
+      overly_permissive: is_overly_permissive_scope(scope),
     }
   })
 

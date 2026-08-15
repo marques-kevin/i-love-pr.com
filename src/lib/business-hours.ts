@@ -9,10 +9,11 @@ export interface BusinessHoursConfig {
   end_minutes: number
 }
 
+import { has_intl } from '@/lib/boundary_parse'
+
 export const DEFAULT_BUSINESS_HOURS: BusinessHoursConfig = {
   enabled: false,
-  time_zone:
-    typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC',
+  time_zone: has_intl() ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC',
   workdays: [1, 2, 3, 4, 5],
   start_minutes: 9 * 60,
   end_minutes: 18 * 60,
@@ -50,7 +51,7 @@ interface ZonedParts {
   weekday: number
 }
 
-const WEEKDAY_MAP: Record<string, number> = {
+const WEEKDAY_MAP = {
   Sun: 0,
   Mon: 1,
   Tue: 2,
@@ -58,6 +59,13 @@ const WEEKDAY_MAP: Record<string, number> = {
   Thu: 4,
   Fri: 5,
   Sat: 6,
+} satisfies Record<string, number>
+
+function parse_weekday_token(token: string): number {
+  for (const [label, day] of Object.entries(WEEKDAY_MAP)) {
+    if (label === token) return day
+  }
+  return 0
 }
 
 const formatter_cache = new Map<string, Intl.DateTimeFormat>()
@@ -111,7 +119,7 @@ function get_zoned_parts(date: Date, time_zone: string): ZonedParts {
         second = Number(part.value)
         break
       case 'weekday':
-        weekday = WEEKDAY_MAP[part.value] ?? 0
+        weekday = parse_weekday_token(part.value)
         break
     }
   }
@@ -145,12 +153,7 @@ function zoned_time_to_utc(
   return utc
 }
 
-function add_calendar_days(
-  year: number,
-  month: number,
-  day: number,
-  delta: number,
-): { year: number; month: number; day: number } {
+function add_calendar_days(year: number, month: number, day: number, delta: number) {
   const d = new Date(Date.UTC(year, month - 1, day + delta))
   return {
     year: d.getUTCFullYear(),

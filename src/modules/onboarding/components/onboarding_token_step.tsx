@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { TokenScopeAnalysis } from '@/lib/github_token_scopes'
 import type { RateLimitInfo } from '@/lib/types'
+import { onboarding_scope_message_key } from '@/lib/i18n'
 
 interface OnboardingTokenStepProps {
   token: string
@@ -150,10 +151,7 @@ export function OnboardingTokenStep({
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {intl.formatMessage({
-                        id: `onboarding.scope.${scope_info.scope.replace(':', '_')}` as
-                          | 'onboarding.scope.public_repo'
-                          | 'onboarding.scope.repo'
-                          | 'onboarding.scope.read_user',
+                        id: onboarding_scope_message_key(scope_info.scope),
                       })}
                     </p>
                   </div>

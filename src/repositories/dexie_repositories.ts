@@ -2,13 +2,21 @@ import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
-import type { AppSettings, DashboardLayoutItem, MemberTeam, SyncState } from '@/lib/types'
+import type {
+  AppSettings,
+  DashboardLayoutItem,
+  MemberTeam,
+  PrChangedFileRecord,
+  ReviewRecord,
+  SyncState,
+} from '@/lib/types'
 import {
   create_dashboard_tab,
   normalize_dashboard_filters,
   normalize_dashboard_layout,
   normalize_settings_dashboards,
   type DashboardTabFilters,
+  type SettingsDashboardsInput,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
 import type {
@@ -44,9 +52,7 @@ function normalize_sync_state(state: SyncState): SyncState {
   }
 }
 
-function normalize_settings(
-  settings: AppSettings & { dashboard_layout?: DashboardLayoutItem[] | null },
-): AppSettings {
+function normalize_settings(settings: AppSettings & Partial<SettingsDashboardsInput>): AppSettings {
   const dashboards_fields = normalize_settings_dashboards(settings)
   return {
     id: settings.id,
@@ -68,9 +74,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
   const get = async (): Promise<AppSettings | undefined> => {
     const settings = await database.settings.get('settings')
     if (!settings) return undefined
-    return normalize_settings(
-      settings as AppSettings & { dashboard_layout?: DashboardLayoutItem[] },
-    )
+    return normalize_settings(settings)
   }
 
   const save = async (partial: SaveSettingsInput): Promise<AppSettings> => {
@@ -413,7 +417,7 @@ export function create_dexie_pull_request_repository(
 export function create_dexie_review_repository(database: IlovePrDatabase): ReviewRepository {
   return {
     list_by_pr_ids: async (pr_ids) => {
-      let reviews = [] as Awaited<ReturnType<ReviewRepository['list_by_pr_ids']>>
+      let reviews: ReviewRecord[] = []
       const chunk_size = 100
       for (let i = 0; i < pr_ids.length; i += chunk_size) {
         const chunk = pr_ids.slice(i, i + chunk_size)
@@ -517,7 +521,7 @@ export function create_dexie_pr_changed_files_repository(
   return {
     list_by_pr_ids: async (pr_ids) => {
       if (pr_ids.length === 0) return []
-      let files = [] as Awaited<ReturnType<PrChangedFilesRepository['list_by_pr_ids']>>
+      let files: PrChangedFileRecord[] = []
       const chunk_size = 100
       for (let i = 0; i < pr_ids.length; i += chunk_size) {
         const chunk = pr_ids.slice(i, i + chunk_size)
