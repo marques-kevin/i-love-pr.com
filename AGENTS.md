@@ -78,6 +78,7 @@ See also `APPROVAL_POLICY.md` for approval criteria and `.cursor/rules/pr_review
 
 ## GitHub
 
+- **Never push directly to `main`** — always work on a feature branch and open a pull request
 - **Board tickets** (GitHub Projects / issues) and **pull requests** (titles + descriptions) must be written in **English**
 - **Commits** use [Conventional Commits](https://www.conventionalcommits.org/) so they map to SemVer:
   - `feat:` → minor
