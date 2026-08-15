@@ -339,8 +339,7 @@ export class GitHubClient {
     }
 
     const body: ExternalValue = await response.json()
-    const login =
-      is_external_object(body) && is_string_value(body.login) ? body.login : null
+    const login = is_external_object(body) && is_string_value(body.login) ? body.login : null
 
     const scopes_header = response.headers.get('x-oauth-scopes') ?? ''
     const scopes = scopes_header
