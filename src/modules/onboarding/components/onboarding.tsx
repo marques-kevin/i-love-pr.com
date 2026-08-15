@@ -55,16 +55,29 @@ export function Wrapper({
     set_login(null)
     set_scope_analysis(null)
     clear_available_repos()
+
+    const trimmed = token.trim()
+    const client = new GitHubClient(trimmed)
+
     try {
-      const trimmed = token.trim()
-      const client = new GitHubClient(trimmed)
-      const [result, scope_result] = await Promise.all([
-        client.validateToken(),
-        client.inspectTokenScopes(),
-      ])
-      set_login(result.login)
-      set_rate_limit(result.rateLimit)
+      const scope_result = await client.inspectTokenScopes()
       set_scope_analysis(analyze_token_scopes(scope_result.scopes, scope_result.token_type))
+
+      if (scope_result.login) {
+        set_login(scope_result.login)
+        set_rate_limit(scope_result.rate_limit)
+      }
+
+      try {
+        const result = await client.validateToken()
+        set_login(result.login)
+        set_rate_limit(result.rateLimit)
+      } catch {
+        if (!scope_result.login) {
+          throw new Error(intl.formatMessage({ id: 'onboarding.error.invalid_token' }))
+        }
+      }
+
       play_sound('success')
     } catch (e) {
       play_sound('error')
