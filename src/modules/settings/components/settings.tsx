@@ -47,6 +47,7 @@ const COMMON_TIMEZONES = [
 export function Wrapper({
   settings,
   open,
+  active_repo,
   set_show_settings,
   save_settings,
   reset_sync_data,
@@ -55,6 +56,10 @@ export function Wrapper({
   set_bootstrapped,
   refresh_metrics,
   run_sync,
+  download_repo_snapshot_file,
+  create_repo_share_link,
+  import_repo_snapshot_from_link,
+  set_active_repo,
 }: ConnectorProps) {
   const intl = useIntl()
   const [token, set_token] = useState(settings?.token ?? '')
@@ -81,6 +86,9 @@ export function Wrapper({
   const [message, set_message] = useState<string | null>(null)
   const [busy, set_busy] = useState(false)
   const [sound_enabled, set_sound_enabled_state] = useState(is_sound_enabled)
+  const [share_link, set_share_link] = useState<string | null>(null)
+  const [import_link, set_import_link] = useState('')
+  const [share_busy, set_share_busy] = useState(false)
 
   const time_zone_options = Array.from(
     new Set([business_hours.time_zone, DEFAULT_BUSINESS_HOURS.time_zone, ...COMMON_TIMEZONES]),
@@ -95,6 +103,22 @@ export function Wrapper({
     set_test_file_globs(settings.test_file_globs.join('\n'))
     set_business_hours(normalizeBusinessHours(settings.business_hours))
     set_message(null)
+    set_share_link(null)
+    set_import_link('')
+    const params = new URLSearchParams(window.location.search)
+    const import_param = params.get('import') ?? params.get('share')
+    if (import_param) {
+      set_import_link(
+        import_param.includes('://')
+          ? import_param
+          : `${window.location.origin}/?import=${import_param}`,
+      )
+      params.delete('import')
+      params.delete('share')
+      const next_search = params.toString()
+      const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
+      window.history.replaceState({}, '', next_url)
+    }
     void estimateStorage().then(set_storage_info)
   }, [open, settings])
 
@@ -157,6 +181,70 @@ export function Wrapper({
       void load_settings()
     } finally {
       set_busy(false)
+    }
+  }
+
+  async function handle_download_snapshot() {
+    if (!active_repo) return
+    set_share_busy(true)
+    set_message(null)
+    try {
+      await download_repo_snapshot_file({ repo_full_name: active_repo })
+      set_message(intl.formatMessage({ id: 'settings.share.download_done' }))
+    } catch (err) {
+      set_message(
+        err instanceof Error ? err.message : intl.formatMessage({ id: 'settings.share.failed' }),
+      )
+    } finally {
+      set_share_busy(false)
+    }
+  }
+
+  async function handle_create_share_link() {
+    if (!active_repo) return
+    set_share_busy(true)
+    set_message(null)
+    try {
+      const result = await create_repo_share_link({ repo_full_name: active_repo }).unwrap()
+      set_share_link(result.share_url)
+      await navigator.clipboard.writeText(result.share_url)
+      set_message(
+        intl.formatMessage({ id: 'settings.share.link_ready' }, { count: result.pr_count }),
+      )
+    } catch (err) {
+      set_message(
+        err instanceof Error ? err.message : intl.formatMessage({ id: 'settings.share.failed' }),
+      )
+    } finally {
+      set_share_busy(false)
+    }
+  }
+
+  async function handle_import_snapshot() {
+    const link = import_link.trim()
+    if (!link) return
+    set_share_busy(true)
+    set_message(null)
+    try {
+      const result = await import_repo_snapshot_from_link({ share_link: link }).unwrap()
+      await set_active_repo(result.repo_full_name)
+      set_import_link('')
+      set_message(
+        intl.formatMessage(
+          { id: 'settings.share.import_done' },
+          { repo: result.repo_full_name, count: result.pr_count },
+        ),
+      )
+      void refresh_metrics()
+      void run_sync({ force: false })
+    } catch (err) {
+      set_message(
+        err instanceof Error
+          ? err.message
+          : intl.formatMessage({ id: 'settings.share.import_failed' }),
+      )
+    } finally {
+      set_share_busy(false)
     }
   }
 
@@ -387,6 +475,82 @@ export function Wrapper({
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-border p-4">
+            <div>
+              <p className="font-medium text-foreground">
+                {intl.formatMessage({ id: 'settings.share.title' })}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {intl.formatMessage({ id: 'settings.share.description' })}
+              </p>
+            </div>
+
+            {active_repo ? (
+              <p className="text-sm">
+                {intl.formatMessage({ id: 'settings.share.active_repo' }, { repo: active_repo })}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {intl.formatMessage({ id: 'settings.share.no_active_repo' })}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={share_busy || !active_repo}
+                onClick={() => void handle_download_snapshot()}
+              >
+                {intl.formatMessage({ id: 'settings.share.download' })}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={share_busy || !active_repo}
+                onClick={() => void handle_create_share_link()}
+              >
+                {share_busy
+                  ? intl.formatMessage({ id: 'settings.share.working' })
+                  : intl.formatMessage({ id: 'settings.share.create_link' })}
+              </Button>
+            </div>
+
+            {share_link && (
+              <div className="space-y-1">
+                <Label htmlFor="settings-share-link">
+                  {intl.formatMessage({ id: 'settings.share.link_label' })}
+                </Label>
+                <Input
+                  id="settings-share-link"
+                  readOnly
+                  value={share_link}
+                  className="font-mono text-xs"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="settings-import-link">
+                {intl.formatMessage({ id: 'settings.share.import_label' })}
+              </Label>
+              <Input
+                id="settings-import-link"
+                value={import_link}
+                onChange={(e) => set_import_link(e.target.value)}
+                placeholder={intl.formatMessage({ id: 'settings.share.import_placeholder' })}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={share_busy || import_link.trim().length === 0}
+                onClick={() => void handle_import_snapshot()}
+              >
+                {intl.formatMessage({ id: 'settings.share.import' })}
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">

@@ -1,7 +1,19 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import {
+  download_repo_snapshot,
+  export_repo_snapshot,
+  import_repo_snapshot,
+  parse_share_id_from_url,
+} from '@/lib/repo_snapshot'
 import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
+import {
+  build_share_page_url,
+  fetch_share_snapshot,
+  request_share_upload_urls,
+  upload_share_snapshot,
+} from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
@@ -204,6 +216,41 @@ export const clear_all_data = create_app_async_thunk<void, void>(
     await extra.session.wipe_active_account()
   },
 )
+
+export const download_repo_snapshot_file = create_app_async_thunk<void, { repo_full_name: string }>(
+  'settings/download_repo_snapshot_file',
+  async ({ repo_full_name }, { extra }) => {
+    const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
+    download_repo_snapshot(snapshot)
+  },
+)
+
+export const create_repo_share_link = create_app_async_thunk<
+  { share_url: string; pr_count: number },
+  { repo_full_name: string }
+>('settings/create_repo_share_link', async ({ repo_full_name }, { extra }) => {
+  const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
+  const urls = await request_share_upload_urls()
+  await upload_share_snapshot(urls.upload_url, snapshot)
+  return {
+    share_url: build_share_page_url(urls.share_id),
+    pr_count: snapshot.pull_requests.length,
+  }
+})
+
+export const import_repo_snapshot_from_link = create_app_async_thunk<
+  { repo_full_name: string; pr_count: number },
+  { share_link: string }
+>('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra }) => {
+  const share_id = parse_share_id_from_url(share_link)
+  if (!share_id) {
+    throw new Error('Invalid share link')
+  }
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const download_url = `${origin}/api/share/${share_id}`
+  const snapshot = await fetch_share_snapshot(download_url)
+  return import_repo_snapshot(extra.repositories, snapshot)
+})
 
 export type LoadAvailableReposArg = {
   token?: string
