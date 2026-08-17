@@ -73,7 +73,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'logo.svg', 'icons.svg'],
       manifest: {
         name: 'iLovePR',
         short_name: 'iLovePR',
