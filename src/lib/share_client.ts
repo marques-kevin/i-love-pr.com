@@ -5,7 +5,7 @@ import {
   is_string_value,
   json_string_field,
 } from '@/lib/boundary_parse'
-import type { ExternalValue, JsonValue } from '@/lib/json_value'
+import type { ExternalValue, JsonObject, JsonValue } from '@/lib/json_value'
 import { parse_repo_snapshot, type RepoSnapshotV1 } from '@/lib/repo_snapshot'
 
 export type ShareUploadUrls = {
