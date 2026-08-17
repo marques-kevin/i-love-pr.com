@@ -1,7 +1,8 @@
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import { GitHubMark } from '@/components/github_mark'
-import { APP_GITHUB_URL, APP_NAME } from '@/lib/app_meta'
+import { APP_GITHUB_URL } from '@/lib/app_meta'
+import { IlovePrLogo } from '@/components/ilove_pr_logo'
 import type { MessageKey } from '@/lib/i18n/messages/en'
 
 const FEATURE_PILL_KEYS = [
@@ -18,9 +19,7 @@ export function OnboardingHero({ on_get_started }: { on_get_started: () => void 
   return (
     <section className="relative overflow-hidden px-6 pt-14 pb-16 sm:pt-20 sm:pb-20">
       <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-        <p className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both font-display text-sm font-semibold tracking-wide text-primary duration-500">
-          {APP_NAME}
-        </p>
+        <IlovePrLogo className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both h-16 w-auto duration-500 sm:h-20" />
 
         <h1 className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both mt-5 max-w-2xl font-display text-4xl font-extrabold tracking-tight text-balance text-foreground duration-700 delay-75 sm:text-5xl sm:leading-[1.1]">
           {intl.formatMessage(
