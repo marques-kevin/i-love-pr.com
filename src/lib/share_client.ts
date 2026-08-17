@@ -30,11 +30,6 @@ function share_api_url(path: string): string {
   return `${read_share_api_base()}${path}`
 }
 
-function decode_response_json(decoded: unknown): JsonValue {
-  // SAFETY: fetch JSON is normalized into a JsonValue tree before field validation.
-  return decode_external_value(decoded as ExternalValue)
-}
-
 function decode_external_value(value: ExternalValue): JsonValue {
   if (value === null) return null
   if (is_string_value(value) || is_number_value(value) || is_boolean_value(value)) {
@@ -43,7 +38,13 @@ function decode_external_value(value: ExternalValue): JsonValue {
   if (Array.isArray(value)) {
     return value.map((item) => decode_external_value(item))
   }
-  if (is_json_object(value)) return value
+  if (is_json_object(value)) {
+    const decoded: JsonObject = {}
+    for (const [key, entry] of Object.entries(value)) {
+      decoded[key] = decode_external_value(entry)
+    }
+    return decoded
+  }
   throw new Error('Share API returned an invalid payload')
 }
 
@@ -71,7 +72,9 @@ export async function request_share_upload_urls(): Promise<ShareUploadUrls> {
     const detail = await response.text().catch(() => '')
     throw new Error(detail || `Share API failed (${response.status})`)
   }
-  const payload = parse_share_upload_urls(decode_response_json(await response.json()))
+  // SAFETY: response.json is normalized through ExternalValue before field validation.
+  const decoded = (await response.json()) as ExternalValue
+  const payload = parse_share_upload_urls(decode_external_value(decoded))
   return payload
 }
 

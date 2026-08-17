@@ -67,7 +67,11 @@ function decode_external_value(value: ExternalValue): JsonValue {
     return decode_external_array(value)
   }
   if (is_json_object(value)) {
-    return decode_json_object(value)
+    const decoded: JsonObject = {}
+    for (const [key, entry] of Object.entries(value)) {
+      decoded[key] = decode_external_value(entry)
+    }
+    return decoded
   }
   throw new RepoSnapshotError('Snapshot is not valid JSON')
 }
@@ -78,14 +82,6 @@ function decode_external_array(values: ExternalValue[]): JsonArray {
     rows.push(decode_external_value(value))
   }
   return rows
-}
-
-function decode_json_object(row: JsonObject): JsonObject {
-  const decoded: JsonObject = {}
-  for (const [key, value] of Object.entries(row)) {
-    decoded[key] = decode_external_value(value as ExternalValue)
-  }
-  return decoded
 }
 
 function repo_record_from_full_name(repo_full_name: string): RepoRecord {
