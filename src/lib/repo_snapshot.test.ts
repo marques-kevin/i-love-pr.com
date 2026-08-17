@@ -11,6 +11,7 @@ import {
   RepoSnapshotError,
   serialize_repo_snapshot,
   validate_repo_snapshot,
+  type RepoSnapshotV1,
 } from '@/lib/repo_snapshot'
 import type { AppSettings, PullRequestRecord } from '@/lib/types'
 import { create_memory_repositories } from '@/repositories'
@@ -111,7 +112,7 @@ describe('repo_snapshot', () => {
   })
 
   it('parses serialized snapshots', () => {
-    const snapshot = {
+    const snapshot: RepoSnapshotV1 = {
       schema_version: 1,
       exported_at: '2026-01-01T00:00:00.000Z',
       repo_full_name: 'acme/widgets',
@@ -127,7 +128,7 @@ describe('repo_snapshot', () => {
         business_hours: DEFAULT_BUSINESS_HOURS,
       },
     }
-    const parsed = parse_repo_snapshot(serialize_repo_snapshot(snapshot as never))
+    const parsed = parse_repo_snapshot(serialize_repo_snapshot(snapshot))
     expect(parsed.repo_full_name).toBe('acme/widgets')
   })
 

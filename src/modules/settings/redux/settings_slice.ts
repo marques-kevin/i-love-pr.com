@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
 import {
@@ -246,7 +247,7 @@ export const import_repo_snapshot_from_link = create_app_async_thunk<
   if (!share_id) {
     throw new Error('Invalid share link')
   }
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = has_browser_navigator() ? window.location.origin : ''
   const download_url = `${origin}/api/share/${share_id}`
   const snapshot = await fetch_share_snapshot(download_url)
   return import_repo_snapshot(extra.repositories, snapshot)

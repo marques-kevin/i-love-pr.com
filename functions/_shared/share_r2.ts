@@ -1,5 +1,8 @@
 import { AwsClient } from 'aws4fetch'
 
+type JsonPrimitive = string | number | boolean | null
+type JsonValue = JsonPrimitive | { [key: string]: JsonValue } | JsonValue[]
+
 const UPLOAD_EXPIRES_SECONDS = 60 * 60
 const DOWNLOAD_EXPIRES_SECONDS = 60 * 60 * 24 * 7
 
@@ -88,7 +91,7 @@ export async function get_share_object(
   return env.SHARE_BUCKET.get(object_key(share_id))
 }
 
-export function json_response(body: unknown, init?: ResponseInit): Response {
+export function json_response(body: Record<string, JsonValue>, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
