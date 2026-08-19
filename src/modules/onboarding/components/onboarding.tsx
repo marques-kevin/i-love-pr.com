@@ -109,50 +109,49 @@ export function Wrapper({
 
   return (
     <div>
+      <div className="mx-auto flex max-w-6xl items-center justify-end px-4 pt-4 sm:px-6">
+        <LocaleSwitcher />
+      </div>
+
       <OnboardingHero on_get_started={scroll_to_setup} />
 
-      <section
-        ref={setup_ref}
-        id="setup"
-        className="scroll-mt-16 border-t border-border/60 bg-background/40"
-      >
-        <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-          <div className="mb-8 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-                {intl.formatMessage({ id: 'onboarding.setup_title' })}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {intl.formatMessage({ id: 'onboarding.tagline' })}
-              </p>
-              {adding_account && accounts.length > 0 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 px-0"
-                  onClick={() => void cancel_add_account()}
-                >
-                  {intl.formatMessage({ id: 'account.back_to_accounts' })}
-                </Button>
-              ) : null}
-            </div>
-            <LocaleSwitcher />
+      <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
+        <div className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mb-10">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">
+              {intl.formatMessage({ id: 'onboarding.setup_title' })}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {intl.formatMessage({ id: 'onboarding.tagline' })}
+            </p>
+            {adding_account && accounts.length > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-3 px-0"
+                onClick={() => void cancel_add_account()}
+              >
+                {intl.formatMessage({ id: 'account.back_to_accounts' })}
+              </Button>
+            ) : null}
           </div>
 
-          <OnboardingTokenStep
-            token={token}
-            on_token_change={handle_token_change}
-            login={login}
-            rate_limit={rate_limit}
-            scope_analysis={scope_analysis}
-            validating={validating}
-            saving={saving}
-            error={error}
-            on_validate={() => void validate_token()}
-            on_submit={() => void handle_submit()}
-            can_submit={can_submit}
-          />
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm sm:p-8">
+            <OnboardingTokenStep
+              token={token}
+              on_token_change={handle_token_change}
+              login={login}
+              rate_limit={rate_limit}
+              scope_analysis={scope_analysis}
+              validating={validating}
+              saving={saving}
+              error={error}
+              on_validate={() => void validate_token()}
+              on_submit={() => void handle_submit()}
+              can_submit={can_submit}
+            />
+          </div>
         </div>
       </section>
     </div>

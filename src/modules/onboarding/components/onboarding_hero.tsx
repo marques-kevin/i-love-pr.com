@@ -1,79 +1,107 @@
+import { useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
-import { GitHubMark } from '@/components/github_mark'
+import { CloudIcon } from '@/components/ui/cloud'
+import { Download01Icon } from '@/components/ui/download-01'
+import { GithubIcon } from '@/components/ui/github'
+import { Key01Icon } from '@/components/ui/key-01'
+import { LockIcon } from '@/components/ui/lock'
 import { APP_GITHUB_URL } from '@/lib/app_meta'
-import { IlovePrLogo } from '@/components/ilove_pr_logo'
+import type { AnimatedIconHandle } from '@/lib/use-icon-animation'
 import type { MessageKey } from '@/lib/i18n/messages/en'
+import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
+import { OnboardingIconGrid } from './onboarding_icon_grid'
 
-const FEATURE_PILL_KEYS = [
-  'onboarding.hero.pill.local',
-  'onboarding.hero.pill.nobackend',
-  'onboarding.hero.pill.token',
-  'onboarding.hero.pill.pwa',
-  'onboarding.hero.pill.opensource',
-] as const satisfies readonly MessageKey[]
+const FEATURE_PILLS = [
+  { key: 'onboarding.hero.pill.local', icon: LockIcon },
+  { key: 'onboarding.hero.pill.nobackend', icon: CloudIcon },
+  { key: 'onboarding.hero.pill.token', icon: Key01Icon },
+  { key: 'onboarding.hero.pill.pwa', icon: Download01Icon },
+  { key: 'onboarding.hero.pill.opensource', icon: GithubIcon },
+] as const satisfies readonly { key: MessageKey; icon: OnboardingAnimatedIcon }[]
 
 export function OnboardingHero({ on_get_started }: { on_get_started: () => void }) {
   const intl = useIntl()
+  const github_icon_ref = useRef<AnimatedIconHandle>(null)
 
   return (
-    <section className="relative overflow-hidden px-6 pt-14 pb-16 sm:pt-20 sm:pb-20">
-      <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-        <IlovePrLogo className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both h-16 w-auto duration-500 sm:h-20" />
+    <section className="relative overflow-x-hidden px-4 pt-8 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
+        <div className="min-w-0">
+          <h1 className="font-display text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl sm:leading-[0.95] lg:text-7xl">
+            {intl.formatMessage(
+              { id: 'onboarding.hero.title' },
+              {
+                accent: (chunks) => (
+                  <>
+                    <br />
+                    <em className="font-accent text-[1.05em] font-normal text-primary italic">
+                      {chunks}
+                    </em>
+                  </>
+                ),
+              },
+            )}
+          </h1>
 
-        <h1 className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both mt-5 max-w-2xl font-display text-4xl font-extrabold tracking-tight text-balance text-foreground duration-700 delay-75 sm:text-5xl sm:leading-[1.1]">
-          {intl.formatMessage(
-            { id: 'onboarding.hero.title' },
-            {
-              accent: (chunks) => (
-                <em className="font-accent text-[1.05em] font-normal text-primary italic">
-                  {chunks}
-                </em>
-              ),
-            },
-          )}
-        </h1>
+          <p className="mt-6 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
+            {intl.formatMessage({ id: 'onboarding.hero.description' })}
+          </p>
 
-        <p className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both mt-5 max-w-xl text-base leading-relaxed text-muted-foreground duration-700 delay-150 sm:text-lg">
-          {intl.formatMessage({ id: 'onboarding.hero.description' })}
-        </p>
-
-        <div className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both mt-8 flex flex-wrap items-center justify-center gap-3 delay-200 duration-700">
-          <Button
-            type="button"
-            size="lg"
-            className="h-10 rounded-xl px-5 shadow-sm"
-            onClick={on_get_started}
-          >
-            {intl.formatMessage({ id: 'onboarding.hero.cta_start' })}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-10 rounded-xl px-5 shadow-sm"
-            asChild
-          >
-            <a href={APP_GITHUB_URL} target="_blank" rel="noreferrer">
-              <GitHubMark className="size-4" />
-              {intl.formatMessage({ id: 'onboarding.hero.cta_github' })}
-            </a>
-          </Button>
-        </div>
-
-        <div className="animate-in fade-in fill-mode-both relative mt-14 w-full max-w-2xl delay-300 duration-1000">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:w-16" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:w-16" />
-          <ul className="flex flex-wrap items-center justify-center gap-2">
-            {FEATURE_PILL_KEYS.map((key) => (
-              <li
-                key={key}
-                className="rounded-full border border-border/80 bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              size="lg"
+              className="h-11 rounded-xl px-5 shadow-sm"
+              onClick={on_get_started}
+            >
+              {intl.formatMessage({ id: 'onboarding.hero.cta_start' })}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-11 rounded-xl px-5 shadow-sm"
+              asChild
+            >
+              <a
+                href={APP_GITHUB_URL}
+                target="_blank"
+                rel="noreferrer"
+                onPointerEnter={() => {
+                  github_icon_ref.current?.startAnimation()
+                }}
               >
-                {intl.formatMessage({ id: key })}
+                <GithubIcon
+                  ref={github_icon_ref}
+                  size={16}
+                  className="inline-flex"
+                  aria-hidden={true}
+                />
+                {intl.formatMessage({ id: 'onboarding.hero.cta_github' })}
+              </a>
+            </Button>
+          </div>
+
+          <ul className="mt-10 flex flex-wrap items-center gap-2">
+            {FEATURE_PILLS.map((pill) => (
+              <li key={pill.key}>
+                <OnboardingHoverIcon
+                  icon={pill.icon}
+                  size={16}
+                  className="items-center gap-1.5 rounded-full border border-border/80 bg-background/80 px-3 py-2 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
+                >
+                  {intl.formatMessage({ id: pill.key })}
+                </OnboardingHoverIcon>
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="min-w-0">
+          <div className="rounded-3xl border border-border/80 bg-muted/30 p-2 shadow-sm sm:p-3">
+            <OnboardingIconGrid />
+          </div>
         </div>
       </div>
     </section>

@@ -1,13 +1,16 @@
 import { FormattedMessage, useIntl } from 'react-intl'
-import { AlertTriangleIcon, CheckIcon, CircleIcon } from 'lucide-react'
+import { AlertCircleIcon } from '@/components/ui/alert-circle'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MinusSignCircleIcon } from '@/components/ui/minus-sign-circle'
+import { Tick02Icon } from '@/components/ui/tick-02'
 import type { TokenScopeAnalysis } from '@/lib/github_token_scopes'
 import type { RateLimitInfo } from '@/lib/types'
 import { onboarding_scope_message_key } from '@/lib/i18n'
+import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
 
 interface OnboardingTokenStepProps {
   token: string
@@ -23,6 +26,9 @@ interface OnboardingTokenStepProps {
   can_submit: boolean
 }
 
+const ALERT_WITH_ICON =
+  'grid-cols-[auto_1fr] gap-x-2 [&>div:first-child]:row-span-2 [&>div:first-child]:translate-y-0.5'
+
 function scope_status_label(
   intl: ReturnType<typeof useIntl>,
   status: TokenScopeAnalysis['scopes'][number]['status'],
@@ -35,6 +41,20 @@ function scope_status_label(
     case 'not_applicable':
       return intl.formatMessage({ id: 'onboarding.scopes.status.covered' })
   }
+}
+
+function ScopeStatusIcon({ status }: { status: TokenScopeAnalysis['scopes'][number]['status'] }) {
+  const icon: OnboardingAnimatedIcon = status === 'missing' ? MinusSignCircleIcon : Tick02Icon
+  const icon_className = status === 'granted' ? 'text-primary' : 'text-muted-foreground'
+
+  return (
+    <OnboardingHoverIcon
+      icon={icon}
+      size={16}
+      className="shrink-0"
+      icon_className={icon_className}
+    />
+  )
 }
 
 export function OnboardingTokenStep({
@@ -53,12 +73,12 @@ export function OnboardingTokenStep({
   const intl = useIntl()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-lg font-semibold">
+        <h2 className="font-display text-xl font-semibold tracking-tight">
           {intl.formatMessage({ id: 'onboarding.step.token_title' })}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {intl.formatMessage({ id: 'onboarding.step.token_description' })}
         </p>
       </div>
@@ -73,12 +93,12 @@ export function OnboardingTokenStep({
             value={token}
             onChange={(e) => on_token_change(e.target.value)}
             placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
-            className="h-10 flex-1"
+            className="h-11 flex-1 rounded-xl"
           />
           <Button
             type="button"
             variant="secondary"
-            className="h-10"
+            className="h-11 rounded-xl px-4"
             onClick={on_validate}
             disabled={!token.trim() || validating}
           >
@@ -114,7 +134,7 @@ export function OnboardingTokenStep({
       </div>
 
       {scope_analysis && login && (
-        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+        <div className="space-y-3 rounded-2xl border bg-muted/30 p-4 sm:p-5">
           <div>
             <h3 className="text-sm font-medium">
               {intl.formatMessage({ id: 'onboarding.scopes.title' })}
@@ -131,17 +151,11 @@ export function OnboardingTokenStep({
               {scope_analysis.scopes.map((scope_info) => (
                 <li
                   key={scope_info.scope}
-                  className="flex items-start justify-between gap-3 rounded-md bg-background px-3 py-2"
+                  className="flex items-start justify-between gap-3 rounded-xl bg-background px-3 py-2.5"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      {scope_info.status === 'granted' ? (
-                        <CheckIcon className="size-4 shrink-0 text-primary" />
-                      ) : scope_info.status === 'not_applicable' ? (
-                        <CheckIcon className="size-4 shrink-0 text-muted-foreground" />
-                      ) : (
-                        <CircleIcon className="size-4 shrink-0 text-muted-foreground" />
-                      )}
+                      <ScopeStatusIcon status={scope_info.status} />
                       <code className="text-sm">{scope_info.scope}</code>
                       {scope_info.required && (
                         <Badge variant="outline" className="text-[10px]">
@@ -164,8 +178,8 @@ export function OnboardingTokenStep({
           )}
 
           {!scope_analysis.has_required_access && scope_analysis.token_type !== 'fine_grained' && (
-            <Alert variant="destructive">
-              <AlertTriangleIcon className="size-4" />
+            <Alert variant="destructive" className={ALERT_WITH_ICON}>
+              <AlertCircleIcon size={16} />
               <AlertTitle>
                 {intl.formatMessage({ id: 'onboarding.scopes.missing_title' })}
               </AlertTitle>
@@ -176,8 +190,8 @@ export function OnboardingTokenStep({
           )}
 
           {scope_analysis.overly_permissive_scopes.length > 0 && (
-            <Alert>
-              <AlertTriangleIcon className="size-4" />
+            <Alert className={ALERT_WITH_ICON}>
+              <AlertCircleIcon size={16} />
               <AlertTitle>
                 {intl.formatMessage({ id: 'onboarding.scopes.permissive_title' })}
               </AlertTitle>
@@ -207,7 +221,12 @@ export function OnboardingTokenStep({
       )}
 
       <div className="flex justify-end">
-        <Button type="button" onClick={on_submit} disabled={!can_submit || validating}>
+        <Button
+          type="button"
+          className="h-11 rounded-xl px-5"
+          onClick={on_submit}
+          disabled={!can_submit || validating}
+        >
           {saving
             ? intl.formatMessage({ id: 'onboarding.starting' })
             : intl.formatMessage({ id: 'onboarding.start' })}
