@@ -355,6 +355,23 @@ export const en_messages = {
   'settings.clear_all': 'Erase this account',
   'settings.clear_all_confirm':
     'Delete this GitHub account’s local workspace and remove it from saved accounts? You can add it again later with a token.',
+  'settings.share.title': 'Share repository',
+  'settings.share.description':
+    'Export synced PR data as JSON (no GitHub token). Upload to Cloudflare R2 via a presigned URL so teammates can import dashboards without syncing from GitHub.',
+  'settings.share.active_repo': 'Active repository: {repo}',
+  'settings.share.no_active_repo': 'Select a repository in the sidebar to share it.',
+  'settings.share.download': 'Download snapshot',
+  'settings.share.create_link': 'Create share link',
+  'settings.share.working': 'Sharing…',
+  'settings.share.link_label': 'Share link (copied to clipboard)',
+  'settings.share.import_label': 'Import from share link',
+  'settings.share.import_placeholder': 'https://…/?import=…',
+  'settings.share.import': 'Import snapshot',
+  'settings.share.download_done': 'Snapshot downloaded.',
+  'settings.share.link_ready': 'Share link copied ({count} PRs).',
+  'settings.share.import_done': 'Imported {count} PRs into {repo}.',
+  'settings.share.failed': 'Share failed',
+  'settings.share.import_failed': 'Import failed',
 } as const
 
 export type MessageKey = keyof typeof en_messages

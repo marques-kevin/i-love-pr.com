@@ -368,4 +368,21 @@ export const fr_messages = define_locale_messages({
   'settings.clear_all': 'Effacer ce compte',
   'settings.clear_all_confirm':
     'Supprimer le workspace local de ce compte GitHub et le retirer des comptes enregistrés ? Vous pourrez le rajouter plus tard avec un token.',
+  'settings.share.title': 'Partager un dépôt',
+  'settings.share.description':
+    'Exporter les données PR synchronisées en JSON (sans token GitHub). Envoi sur Cloudflare R2 via URL présignée pour que l’équipe importe les dashboards sans sync GitHub.',
+  'settings.share.active_repo': 'Dépôt actif : {repo}',
+  'settings.share.no_active_repo': 'Sélectionnez un dépôt dans la barre latérale pour le partager.',
+  'settings.share.download': 'Télécharger le snapshot',
+  'settings.share.create_link': 'Créer un lien de partage',
+  'settings.share.working': 'Partage…',
+  'settings.share.link_label': 'Lien de partage (copié dans le presse-papiers)',
+  'settings.share.import_label': 'Importer depuis un lien',
+  'settings.share.import_placeholder': 'https://…/?import=…',
+  'settings.share.import': 'Importer le snapshot',
+  'settings.share.download_done': 'Snapshot téléchargé.',
+  'settings.share.link_ready': 'Lien de partage copié ({count} PR).',
+  'settings.share.import_done': '{count} PR importées dans {repo}.',
+  'settings.share.failed': 'Échec du partage',
+  'settings.share.import_failed': 'Échec de l’import',
 })

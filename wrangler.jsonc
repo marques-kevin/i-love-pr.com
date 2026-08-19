@@ -4,4 +4,12 @@
   "compatibility_date": "2026-08-09",
   // Used by Cloudflare Pages (Git-connected builds).
   "pages_build_output_dir": "./dist",
+  "r2_buckets": [
+    {
+      "binding": "SHARE_BUCKET",
+      "bucket_name": "ilovepr-shares",
+    },
+  ],
+  // SHARE_UPLOAD_SECRET is a Cloudflare Pages/Worker secret (not committed).
+  // Uploads fail closed (403) when it is unset. Tech Lead sets the value.
 }

@@ -57,6 +57,20 @@ Build settings in the Cloudflare dashboard:
 - **Build output directory:** `dist` (also set in `wrangler.jsonc`)
 - **Node version:** `24` (`NODE_VERSION=24` or `.nvmrc`)
 
+#### Repository sharing (R2)
+
+Sharing synced PR snapshots is gated on Cloudflare. Tech Lead provisions the bucket and secrets — do not create buckets or put real secrets in git.
+
+Required Cloudflare Pages / Worker settings:
+
+- **R2 bucket** `ilovepr-shares`, bound as `SHARE_BUCKET` (see `wrangler.jsonc`)
+- **Secret** `SHARE_UPLOAD_SECRET` — runtime secret checked by both upload paths (`POST /api/share/upload-url` and `PUT /api/share/upload/:id`). If this var is missing or blank, uploads **fail closed** (403).
+- **Build var** `VITE_SHARE_UPLOAD_SECRET` — same value as `SHARE_UPLOAD_SECRET`, so the SPA can send header `x-share-upload-secret`. Optional: `Authorization: Bearer <secret>` is also accepted.
+
+Uploads are capped at **50 MiB**. Declared `content_length` is required to mint an upload URL, but that is not the enforcement: every PUT is proxied through `PUT /api/share/upload/:id`, which checks `SHARE_UPLOAD_SECRET` and the **actual body size**. Direct R2 presigned PUTs are not used (they would bypass the worker cap). Downloads may still use a presigned GET when R2 API credentials are set.
+
+Optional R2 API credentials for true presigned URLs: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ACCOUNT_ID`, `R2_BUCKET_NAME`. Without them, upload/download is proxied through Pages Functions.
+
 ## Privacy
 
 - The PAT never leaves the browser except for direct calls to `api.github.com`
