@@ -109,36 +109,21 @@ export function Wrapper({
 
   return (
     <div>
-      <OnboardingHero on_get_started={scroll_to_setup} />
+      <OnboardingHero on_get_started={scroll_to_setup} toolbar={<LocaleSwitcher />} />
 
-      <section
-        ref={setup_ref}
-        id="setup"
-        className="scroll-mt-16 border-t border-border/60 bg-background/40"
-      >
-        <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-          <div className="mb-8 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-                {intl.formatMessage({ id: 'onboarding.setup_title' })}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {intl.formatMessage({ id: 'onboarding.tagline' })}
-              </p>
-              {adding_account && accounts.length > 0 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2 px-0"
-                  onClick={() => void cancel_add_account()}
-                >
-                  {intl.formatMessage({ id: 'account.back_to_accounts' })}
-                </Button>
-              ) : null}
-            </div>
-            <LocaleSwitcher />
-          </div>
+      <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+          {adding_account && accounts.length > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mb-8 px-0"
+              onClick={() => void cancel_add_account()}
+            >
+              {intl.formatMessage({ id: 'account.back_to_accounts' })}
+            </Button>
+          ) : null}
 
           <OnboardingTokenStep
             token={token}
