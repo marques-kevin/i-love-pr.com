@@ -60,7 +60,7 @@ export function OnboardingHero({ on_get_started }: OnboardingHeroProps) {
               href={APP_GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className={`m-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-background ${landing_hairline}`}
+              className={`m-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-[12px] bg-background ${landing_hairline}`}
               aria-label={intl.formatMessage({ id: 'onboarding.hero.cta_github' })}
             >
               <OnboardingHoverIcon icon={GithubIcon} size={16} icon_className="text-foreground" />

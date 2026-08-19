@@ -104,7 +104,7 @@ export function OnboardingTokenStep({
           />
           <button
             type="button"
-            className={`m-1.5 h-9 shrink-0 rounded-xl bg-background px-4 text-sm font-medium text-foreground disabled:opacity-50 ${landing_hairline}`}
+            className={`m-1.5 h-9 shrink-0 rounded-[12px] bg-background px-4 text-sm font-medium text-foreground disabled:opacity-50 ${landing_hairline}`}
             onClick={on_validate}
             disabled={!token.trim() || validating}
           >

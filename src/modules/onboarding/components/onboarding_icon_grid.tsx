@@ -64,7 +64,7 @@ export function OnboardingIconGrid() {
             <OnboardingHoverIcon
               icon={item.icon}
               size={32}
-              className={`flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl bg-muted px-2 py-3 text-foreground motion-safe:transition-[translate,background-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:bg-background ${landing_hairline}`}
+              className={`flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[1rem] bg-muted px-2 py-3 text-foreground motion-safe:transition-[translate,background-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:bg-background ${landing_hairline}`}
               icon_className="shrink-0"
             >
               <span className="max-w-full truncate text-center font-mono text-[10px] text-muted-foreground sm:text-[11px]">
