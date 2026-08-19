@@ -109,11 +109,7 @@ export function Wrapper({
 
   return (
     <div>
-      <div className="mx-auto flex max-w-6xl items-center justify-end px-4 pt-4 sm:px-6">
-        <LocaleSwitcher />
-      </div>
-
-      <OnboardingHero on_get_started={scroll_to_setup} />
+      <OnboardingHero on_get_started={scroll_to_setup} toolbar={<LocaleSwitcher />} />
 
       <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
         <div className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">

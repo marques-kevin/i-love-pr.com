@@ -26,14 +26,22 @@ export function OnboardingHoverIcon({
 }) {
   const icon_ref = useRef<AnimatedIconHandle>(null)
 
+  function play_animation() {
+    icon_ref.current?.startAnimation()
+  }
+
   return (
     <div
-      className={cn('inline-flex', className)}
-      onPointerEnter={() => {
-        icon_ref.current?.startAnimation()
-      }}
+      className={cn('inline-flex cursor-pointer', className)}
+      onMouseEnter={play_animation}
+      onPointerEnter={play_animation}
     >
-      <Icon ref={icon_ref} size={size} className={icon_className} aria-hidden />
+      <Icon
+        ref={icon_ref}
+        size={size}
+        className={cn('pointer-events-none', icon_className)}
+        aria-hidden={true}
+      />
       {children}
     </div>
   )

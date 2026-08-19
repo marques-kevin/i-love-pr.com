@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import { CloudIcon } from '@/components/ui/cloud'
@@ -20,12 +20,19 @@ const FEATURE_PILLS = [
   { key: 'onboarding.hero.pill.opensource', icon: GithubIcon },
 ] as const satisfies readonly { key: MessageKey; icon: OnboardingAnimatedIcon }[]
 
-export function OnboardingHero({ on_get_started }: { on_get_started: () => void }) {
+export function OnboardingHero({
+  on_get_started,
+  toolbar,
+}: {
+  on_get_started: () => void
+  toolbar?: ReactNode
+}) {
   const intl = useIntl()
   const github_icon_ref = useRef<AnimatedIconHandle>(null)
 
   return (
-    <section className="relative overflow-x-hidden px-4 pt-8 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
+    <section className="relative flex min-h-[calc(100svh-3rem)] flex-col justify-center overflow-x-hidden px-4 pt-16 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
+      {toolbar ? <div className="absolute top-4 right-4 z-10 sm:right-6">{toolbar}</div> : null}
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
         <div className="min-w-0">
           <h1 className="font-display text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl sm:leading-[0.95] lg:text-7xl">
@@ -68,6 +75,9 @@ export function OnboardingHero({ on_get_started }: { on_get_started: () => void 
                 href={APP_GITHUB_URL}
                 target="_blank"
                 rel="noreferrer"
+                onMouseEnter={() => {
+                  github_icon_ref.current?.startAnimation()
+                }}
                 onPointerEnter={() => {
                   github_icon_ref.current?.startAnimation()
                 }}

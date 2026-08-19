@@ -30,7 +30,7 @@ export function OnboardingIconGrid() {
         <li key={item.key} className="min-w-0">
           <OnboardingHoverIcon
             icon={item.icon}
-            size={32}
+            size={36}
             className="flex h-24 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-border/80 bg-background px-2 py-3 text-foreground shadow-sm transition-colors hover:bg-muted/60 motion-safe:transition-transform motion-safe:hover:-translate-y-0.5 sm:h-28 lg:aspect-square lg:h-auto"
             icon_className="shrink-0"
           >
