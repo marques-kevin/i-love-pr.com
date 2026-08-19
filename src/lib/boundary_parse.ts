@@ -37,10 +37,12 @@ export function is_number_value(value: ExternalValue | JsonValue): value is numb
 }
 
 export function has_browser_navigator(): boolean {
+  // SAFETY: Workers lib has no DOM Navigator; optional presence is checked without assuming the DOM type.
   return (globalThis as { navigator?: unknown }).navigator !== undefined
 }
 
 export function has_browser_local_storage(): boolean {
+  // SAFETY: Workers lib has no DOM Storage; optional presence is checked without assuming the DOM type.
   return (globalThis as { localStorage?: unknown }).localStorage !== undefined
 }
 
