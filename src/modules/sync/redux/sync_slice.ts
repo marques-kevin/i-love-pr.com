@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { sync_all_repos } from '@/lib/sync'
+import { track_umami_event } from '@/lib/umami'
 import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
 import type { RateLimitInfo, SyncProgress, SyncState } from '@/lib/types'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
@@ -41,11 +42,11 @@ export const refresh_pr_coverage = create_app_async_thunk<
 })
 
 export const run_sync = create_app_async_thunk<
-  { rate_limit: RateLimitInfo | null },
+  { rate_limit: RateLimitInfo | null; sync_completed: boolean },
   { force?: boolean; repos?: string[] }
 >('sync/run', async ({ force = false, repos }, { extra, dispatch, getState }) => {
   if (sync_lock) {
-    return { rate_limit: null }
+    return { rate_limit: null, sync_completed: false }
   }
   sync_lock = true
   try {
@@ -68,6 +69,9 @@ export const run_sync = create_app_async_thunk<
       },
     })
     await dispatch(refresh_sync_states())
+    if (result.sync_completed) {
+      track_umami_event('sync_completed')
+    }
     return result
   } finally {
     sync_lock = false

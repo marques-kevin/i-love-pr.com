@@ -16,7 +16,7 @@ export async function sync_all_repos(options: {
   /** When set, only these repos are synced (default: all configured repos). */
   repos?: string[]
   on_progress?: SyncProgressCallback
-}): Promise<{ rate_limit: RateLimitInfo | null }> {
+}): Promise<{ rate_limit: RateLimitInfo | null; sync_completed: boolean }> {
   const settings = await options.repositories.settings.get()
   if (!settings?.token) {
     throw new Error('Missing GitHub token')
@@ -24,6 +24,7 @@ export async function sync_all_repos(options: {
 
   const client = new GitHubClient(settings.token)
   let last_rate_limit: RateLimitInfo | null = null
+  let sync_completed = false
   const repos =
     options.repos && options.repos.length > 0
       ? options.repos.filter((repo) => settings.repos.includes(repo))
@@ -38,9 +39,12 @@ export async function sync_all_repos(options: {
       on_progress: options.on_progress,
     })
     last_rate_limit = result.rate_limit ?? last_rate_limit
+    if (result.sync_completed) {
+      sync_completed = true
+    }
   }
 
-  return { rate_limit: last_rate_limit ?? client.getRateLimit() }
+  return { rate_limit: last_rate_limit ?? client.getRateLimit(), sync_completed }
 }
 
 async function sync_repo(
@@ -52,7 +56,7 @@ async function sync_repo(
     force: boolean
     on_progress?: SyncProgressCallback
   },
-): Promise<{ rate_limit: RateLimitInfo | null }> {
+): Promise<{ rate_limit: RateLimitInfo | null; sync_completed: boolean }> {
   const { repositories } = ctx
   const parsed = parseRepoFullName(full_name)
   if (!parsed) {
@@ -60,7 +64,7 @@ async function sync_repo(
       last_error: `Invalid repo format: ${full_name}`,
       mode: 'idle',
     })
-    return { rate_limit: ctx.client.getRateLimit() }
+    return { rate_limit: ctx.client.getRateLimit(), sync_completed: false }
   }
 
   let state =
@@ -95,7 +99,7 @@ async function sync_repo(
       message: `Cache fresh (< ${interval}h). Skipping ${full_name}.`,
       rate_limit: ctx.client.getRateLimit(),
     })
-    return { rate_limit: ctx.client.getRateLimit() }
+    return { rate_limit: ctx.client.getRateLimit(), sync_completed: false }
   }
 
   const stop_before =
@@ -233,7 +237,7 @@ async function sync_repo(
           message: `Paused ${full_name}: ${batch_fetched}/${batch_size} this batch (rate limit). Retry later.`,
           rate_limit: page.rateLimit,
         })
-        return { rate_limit: page.rateLimit }
+        return { rate_limit: page.rateLimit, sync_completed: false }
       }
     }
 
@@ -262,7 +266,7 @@ async function sync_repo(
       rate_limit: ctx.client.getRateLimit(),
     })
 
-    return { rate_limit: ctx.client.getRateLimit() }
+    return { rate_limit: ctx.client.getRateLimit(), sync_completed: true }
   } catch (error) {
     const message =
       error instanceof GitHubApiError
@@ -291,6 +295,6 @@ async function sync_repo(
       rate_limit,
     })
 
-    return { rate_limit }
+    return { rate_limit, sync_completed: false }
   }
 }

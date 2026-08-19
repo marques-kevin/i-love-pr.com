@@ -17,6 +17,7 @@ import {
   upload_share_snapshot,
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
+import { track_umami_event } from '@/lib/umami'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
@@ -112,6 +113,17 @@ export const save_settings = create_app_async_thunk<
     await rebuild_all_pr_facts(extra.repositories)
   }
 
+  if (previous?.token !== next.token && next.token) {
+    track_umami_event('token_saved')
+  }
+
+  const previous_repos = previous?.repos ?? []
+  for (const repo of next.repos) {
+    if (!previous_repos.includes(repo)) {
+      track_umami_event('repository_added')
+    }
+  }
+
   return next
 })
 
@@ -132,6 +144,7 @@ export const complete_onboarding = create_app_async_thunk<void, { token: string 
       repos: [],
       ignored_bots: DEFAULT_IGNORED_BOTS,
     })
+    track_umami_event('token_saved')
   },
 )
 
