@@ -10,6 +10,7 @@ import {
   read_share_upload_secret,
   SHARE_UPLOAD_SECRET_ENV,
   SHARE_UPLOAD_SECRET_HEADER,
+  share_worker_put_url,
 } from '@/lib/share_upload_auth'
 
 describe('authorize_share_upload', () => {
@@ -119,7 +120,13 @@ describe('share upload helpers', () => {
     expect(SHARE_UPLOAD_SECRET_HEADER).toBe('x-share-upload-secret')
   })
 
-  it('detects worker-proxied upload URLs', () => {
+  it('always uses the worker PUT URL so size is checked on PUT', () => {
+    expect(share_worker_put_url('https://i-love-pr.com', 'abc123')).toBe(
+      'https://i-love-pr.com/api/share/upload/abc123',
+    )
+    expect(
+      is_worker_share_upload_url(share_worker_put_url('https://i-love-pr.com/', 'abc123')),
+    ).toBe(true)
     expect(is_worker_share_upload_url('https://i-love-pr.com/api/share/upload/abc')).toBe(true)
     expect(
       is_worker_share_upload_url('https://account.r2.cloudflarestorage.com/bucket/shares/abc.json'),

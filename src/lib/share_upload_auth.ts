@@ -96,6 +96,10 @@ export function is_worker_share_upload_url(upload_url: string): boolean {
   return upload_url.includes('/api/share/upload/')
 }
 
+export function share_worker_put_url(origin: string, share_id: string): string {
+  return `${origin.replace(/\/$/, '')}/api/share/upload/${share_id}`
+}
+
 export function read_client_upload_secret(configured: string | undefined): string {
   if (configured === undefined || configured.trim() === '') {
     throw new Error('Share upload secret is not configured')

@@ -5,6 +5,7 @@ import {
   parse_declared_upload_byte_length,
   read_share_upload_secret,
   SHARE_UPLOAD_SECRET_HEADER,
+  share_worker_put_url,
   type ShareUploadAuthResult,
   type ShareUploadSizeResult,
 } from '../../src/lib/share_upload_auth'
@@ -12,7 +13,6 @@ import {
 type JsonPrimitive = string | number | boolean | null
 type JsonValue = JsonPrimitive | { [key: string]: JsonValue } | JsonValue[]
 
-const UPLOAD_EXPIRES_SECONDS = 60 * 60
 const DOWNLOAD_EXPIRES_SECONDS = 60 * 60 * 24 * 7
 
 export type ShareWorkerEnv = {
@@ -60,35 +60,10 @@ export function read_put_upload_size(request: Request): ShareUploadSizeResult {
   return parse_content_length_header(request.headers.get('content-length'))
 }
 
-export async function create_presigned_put_url(
-  env: ShareWorkerEnv,
-  share_id: string,
-  origin: string,
-  content_length: number,
-): Promise<string> {
-  if (!has_presign_credentials(env)) {
-    return `${origin}/api/share/upload/${share_id}`
-  }
-
-  const client = new AwsClient({
-    accessKeyId: env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: env.R2_SECRET_ACCESS_KEY!,
-  })
-  const url = new URL(
-    `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_NAME}/${object_key(share_id)}`,
-  )
-  url.searchParams.set('X-Amz-Expires', String(UPLOAD_EXPIRES_SECONDS))
-  const signed = await client.sign(
-    new Request(url.toString(), {
-      method: 'PUT',
-      headers: {
-        'content-length': String(content_length),
-        'content-type': 'application/json',
-      },
-    }),
-    { aws: { signQuery: true } },
-  )
-  return signed.url
+export function create_upload_put_url(share_id: string, origin: string): string {
+  // Uploads always go through the worker PUT so secret + actual body size are
+  // checked on PUT. A direct R2 presigned PUT would bypass that cap.
+  return share_worker_put_url(origin, share_id)
 }
 
 export async function create_presigned_get_url(

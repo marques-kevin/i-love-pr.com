@@ -39,6 +39,7 @@ export const onRequestPut: PagesFunction<ShareWorkerEnv> = async (context: Pages
   }
 
   const body = await context.request.arrayBuffer()
+  // Authoritative cap: actual PUT body, not mint-time content_length or R2 metadata.
   const actual_size = assert_share_upload_byte_length(body.byteLength)
   if (!actual_size.ok) {
     return share_error_response(context.request, actual_size.status, actual_size.error)

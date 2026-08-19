@@ -7,11 +7,7 @@ import {
 } from '@/lib/boundary_parse'
 import type { ExternalValue, JsonObject, JsonValue } from '@/lib/json_value'
 import { parse_repo_snapshot, type RepoSnapshotV1 } from '@/lib/repo_snapshot'
-import {
-  is_worker_share_upload_url,
-  read_client_upload_secret,
-  SHARE_UPLOAD_SECRET_HEADER,
-} from '@/lib/share_upload_auth'
+import { read_client_upload_secret, SHARE_UPLOAD_SECRET_HEADER } from '@/lib/share_upload_auth'
 
 export type ShareUploadUrls = {
   share_id: string
@@ -103,9 +99,7 @@ export async function request_share_upload_urls(content_length: number): Promise
 export async function upload_share_snapshot(upload_url: string, body: string): Promise<void> {
   const headers = new Headers()
   headers.set('content-type', 'application/json')
-  if (is_worker_share_upload_url(upload_url)) {
-    headers.set(SHARE_UPLOAD_SECRET_HEADER, client_upload_secret())
-  }
+  headers.set(SHARE_UPLOAD_SECRET_HEADER, client_upload_secret())
   const response = await fetch(upload_url, {
     method: 'PUT',
     headers,
