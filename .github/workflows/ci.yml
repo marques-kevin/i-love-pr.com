@@ -64,6 +64,29 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+  functions:
+    name: Functions
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Restore node_modules
+        uses: actions/cache/restore@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('.nvmrc', 'package-lock.json') }}
+          fail-on-cache-miss: true
+
+      - name: Bundle Pages Functions
+        run: npm run functions:build
+
   lint:
     name: Lint
     needs: install

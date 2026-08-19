@@ -14,7 +14,7 @@ Inspect the PR diff against `AGENTS.md`:
 - **Redux**: `connect` pattern with one connector per component; no Redux hooks; no `useEffect` in `src/modules/app/**`; `create_app_async_thunk`; repositories injected via thunk extra argument
 - **Data access**: IndexedDB only through `src/repositories/*`; no direct Dexie imports in slices
 - **Testing**: Vitest node environment; unit-test logic and repositories only; never test React components
-- **Tooling**: code must pass `npm run check` (typecheck, lint, format, test, i18n)
+- **Tooling**: code must pass `npm run check` (typecheck, lint, format, test, i18n, functions:build)
 
 Flag any violation as a review finding. Do not approve until violations are fixed or explicitly justified.
 
@@ -33,7 +33,7 @@ Prefer minimal, focused diffs. Do not refactor unrelated code.
 
 Approve only when:
 
-- CI passes (typecheck, lint, format, test, i18n)
+- CI passes (typecheck, lint, format, test, i18n, functions)
 - Changes align with `AGENTS.md`
 - No unresolved review findings from Bugbot or Security Agents (when enabled)
 - PR title and description are in English; commits follow Conventional Commits

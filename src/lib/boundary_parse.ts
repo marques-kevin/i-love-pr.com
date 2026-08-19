@@ -37,11 +37,11 @@ export function is_number_value(value: ExternalValue | JsonValue): value is numb
 }
 
 export function has_browser_navigator(): boolean {
-  return globalThis.navigator !== undefined
+  return (globalThis as { navigator?: unknown }).navigator !== undefined
 }
 
 export function has_browser_local_storage(): boolean {
-  return globalThis.localStorage !== undefined
+  return (globalThis as { localStorage?: unknown }).localStorage !== undefined
 }
 
 export function has_intl(): boolean {

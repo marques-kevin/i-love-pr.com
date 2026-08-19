@@ -57,9 +57,10 @@ src/
 
 - Lint: **oxlint** (`npm run lint`)
 - Format: **Prettier** (`npm run format` / `npm run format:check`)
-- Types: `npm run typecheck`
+- Types: `npm run typecheck` (`tsc -b --noEmit && tsc -p functions --noEmit`)
 - Tests: `npm run test`
-- Full gate: `npm run check` (typecheck + lint + format:check + test + i18n)
+- Functions bundle: `npm run functions:build` (`wrangler pages functions build`, no deploy)
+- Full gate: `npm run check` (typecheck + lint + format:check + test + i18n + functions:build)
 - **Git hooks** (Husky, installed via `npm install` → `prepare`):
   - `pre-commit` — Prettier on staged files via lint-staged
   - `pre-push` — full `npm run check`
