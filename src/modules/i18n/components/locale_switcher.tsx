@@ -18,6 +18,7 @@ export function Wrapper({ locale, on_change_locale }: ConnectorProps) {
           type="button"
           size="sm"
           variant={locale === code ? 'default' : 'outline'}
+          className="h-8 rounded-full px-2.5 shadow-none"
           onClick={() => on_change_locale(code)}
         >
           {intl.formatMessage({ id: locale_message_key(code) })}

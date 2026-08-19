@@ -24,6 +24,7 @@ export const en_messages = {
   'account.back_to_accounts': 'Back to accounts',
 
   'onboarding.tagline': 'Self-hosted GitHub PR analytics. Your token never leaves this browser.',
+  'onboarding.footer': 'iLovePR · your token never leaves this browser',
   'onboarding.hero.headline_lead': 'PR analytics.',
   'onboarding.hero.headline_mid': 'That stay',
   'onboarding.hero.headline_accent': 'yours.',
@@ -34,6 +35,7 @@ export const en_messages = {
   'onboarding.hero.cta_github': 'GitHub',
   'onboarding.hero.grid_title': 'What you get.',
   'onboarding.hero.grid.count': '{count} icons',
+  'onboarding.hero.grid.hint': 'Hover to preview. Connect a token to analyze your pull requests.',
   'onboarding.hero.pill.local': 'Runs locally',
   'onboarding.hero.pill.nobackend': 'No backend',
   'onboarding.hero.pill.token': 'Token stays here',

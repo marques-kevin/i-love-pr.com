@@ -27,6 +27,7 @@ export const fr_messages = define_locale_messages({
 
   'onboarding.tagline':
     'Analytics GitHub PR self-hosted. Votre token ne quitte jamais ce navigateur.',
+  'onboarding.footer': 'iLovePR · votre token ne quitte jamais ce navigateur',
   'onboarding.hero.headline_lead': 'Des analytics de PR.',
   'onboarding.hero.headline_mid': 'Qui restent',
   'onboarding.hero.headline_accent': 'à vous.',
@@ -37,6 +38,8 @@ export const fr_messages = define_locale_messages({
   'onboarding.hero.cta_github': 'GitHub',
   'onboarding.hero.grid_title': 'Ce que vous voyez.',
   'onboarding.hero.grid.count': '{count} icônes',
+  'onboarding.hero.grid.hint':
+    'Survolez pour prévisualiser. Connectez un token pour analyser vos pull requests.',
   'onboarding.hero.pill.local': 'Tourne en local',
   'onboarding.hero.pill.nobackend': 'Sans backend',
   'onboarding.hero.pill.token': 'Token local',

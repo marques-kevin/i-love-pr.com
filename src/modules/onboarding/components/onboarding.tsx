@@ -110,8 +110,8 @@ export function Wrapper({
     <div>
       <OnboardingHero on_get_started={scroll_to_setup} />
 
-      <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
-        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+      <section ref={setup_ref} id="setup" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
           {adding_account && accounts.length > 0 ? (
             <Button
               type="button"
@@ -139,6 +139,12 @@ export function Wrapper({
           />
         </div>
       </section>
+
+      <footer className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+        <p className="text-xs text-muted-foreground">
+          {intl.formatMessage({ id: 'onboarding.footer' })}
+        </p>
+      </footer>
     </div>
   )
 }
