@@ -112,42 +112,32 @@ export function Wrapper({
       <OnboardingHero on_get_started={scroll_to_setup} toolbar={<LocaleSwitcher />} />
 
       <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
-        <div className="mx-auto max-w-xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="mb-10">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">
-              {intl.formatMessage({ id: 'onboarding.setup_title' })}
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {intl.formatMessage({ id: 'onboarding.tagline' })}
-            </p>
-            {adding_account && accounts.length > 0 ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-3 px-0"
-                onClick={() => void cancel_add_account()}
-              >
-                {intl.formatMessage({ id: 'account.back_to_accounts' })}
-              </Button>
-            ) : null}
-          </div>
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+          {adding_account && accounts.length > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mb-8 px-0"
+              onClick={() => void cancel_add_account()}
+            >
+              {intl.formatMessage({ id: 'account.back_to_accounts' })}
+            </Button>
+          ) : null}
 
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm sm:p-8">
-            <OnboardingTokenStep
-              token={token}
-              on_token_change={handle_token_change}
-              login={login}
-              rate_limit={rate_limit}
-              scope_analysis={scope_analysis}
-              validating={validating}
-              saving={saving}
-              error={error}
-              on_validate={() => void validate_token()}
-              on_submit={() => void handle_submit()}
-              can_submit={can_submit}
-            />
-          </div>
+          <OnboardingTokenStep
+            token={token}
+            on_token_change={handle_token_change}
+            login={login}
+            rate_limit={rate_limit}
+            scope_analysis={scope_analysis}
+            validating={validating}
+            saving={saving}
+            error={error}
+            on_validate={() => void validate_token()}
+            on_submit={() => void handle_submit()}
+            can_submit={can_submit}
+          />
         </div>
       </section>
     </div>

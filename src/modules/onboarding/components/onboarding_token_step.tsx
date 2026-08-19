@@ -74,18 +74,23 @@ export function OnboardingTokenStep({
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="font-display text-xl font-semibold tracking-tight">
-          {intl.formatMessage({ id: 'onboarding.step.token_title' })}
+      <div className="text-center">
+        <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+          {intl.formatMessage({ id: 'onboarding.token_kicker' })}
+        </p>
+        <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-pretty sm:text-4xl">
+          {intl.formatMessage({ id: 'onboarding.setup_title' })}
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {intl.formatMessage({ id: 'onboarding.step.token_description' })}
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {intl.formatMessage({ id: 'onboarding.tagline' })}
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="token">{intl.formatMessage({ id: 'onboarding.token_label' })}</Label>
-        <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="space-y-3">
+        <Label htmlFor="token" className="sr-only">
+          {intl.formatMessage({ id: 'onboarding.token_label' })}
+        </Label>
+        <div className="flex items-center rounded-full border border-border bg-muted/40 p-1.5 pl-4 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
           <Input
             id="token"
             type="password"
@@ -93,12 +98,12 @@ export function OnboardingTokenStep({
             value={token}
             onChange={(e) => on_token_change(e.target.value)}
             placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
-            className="h-11 flex-1 rounded-xl"
+            className="h-11 min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
           />
           <Button
             type="button"
             variant="secondary"
-            className="h-11 rounded-xl px-4"
+            className="h-11 shrink-0 rounded-full px-6"
             onClick={on_validate}
             disabled={!token.trim() || validating}
           >
@@ -134,7 +139,7 @@ export function OnboardingTokenStep({
       </div>
 
       {scope_analysis && login && (
-        <div className="space-y-3 rounded-2xl border bg-muted/30 p-4 sm:p-5">
+        <div className="space-y-3 rounded-2xl bg-muted/40 p-4 sm:p-5">
           <div>
             <h3 className="text-sm font-medium">
               {intl.formatMessage({ id: 'onboarding.scopes.title' })}
@@ -220,10 +225,10 @@ export function OnboardingTokenStep({
         </Alert>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-center sm:justify-end">
         <Button
           type="button"
-          className="h-11 rounded-xl px-5"
+          className="h-11 rounded-full px-8"
           onClick={on_submit}
           disabled={!can_submit || validating}
         >

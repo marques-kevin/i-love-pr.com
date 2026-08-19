@@ -27,11 +27,16 @@ export const fr_messages = define_locale_messages({
 
   'onboarding.tagline':
     'Analytics GitHub PR self-hosted. Votre token ne quitte jamais ce navigateur.',
-  'onboarding.hero.title': 'Des analytics de PR qui restent <accent>à vous</accent>.',
+  'onboarding.hero.headline_lead': 'Des analytics de PR.',
+  'onboarding.hero.headline_mid': 'Qui restent',
+  'onboarding.hero.headline_accent': 'à vous.',
   'onboarding.hero.description':
     'Cycle time, charge de review et tendances de livraison pour vos repos GitHub — calculés dans ce navigateur. Pas de backend, rien à héberger, votre token ne quitte jamais la machine.',
+  'onboarding.hero.cta_kicker': 'Par ici',
   'onboarding.hero.cta_start': 'Commencer',
   'onboarding.hero.cta_github': 'GitHub',
+  'onboarding.hero.grid_title': 'Ce que vous voyez.',
+  'onboarding.hero.grid.count': '{count} icônes',
   'onboarding.hero.pill.local': 'Tourne en local',
   'onboarding.hero.pill.nobackend': 'Sans backend',
   'onboarding.hero.pill.token': 'Token local',
@@ -46,6 +51,7 @@ export const fr_messages = define_locale_messages({
   'onboarding.hero.grid.history': 'Historique',
   'onboarding.hero.grid.insights': 'Insights',
   'onboarding.setup_title': 'Connectez votre GitHub',
+  'onboarding.token_kicker': 'Token GitHub',
   'onboarding.token_label': 'Personal Access Token GitHub',
   'onboarding.token_placeholder': 'ghp_… ou github_pat_…',
   'onboarding.token_help': 'PAT classique avec accès en lecture {repo} (ou {public_repo}).',
