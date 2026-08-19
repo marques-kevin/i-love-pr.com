@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b --noEmit && tsc -p functions --noEmit",
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -20,7 +20,8 @@
     "i18n:check-parity": "tsx scripts/i18n_check_parity.ts",
     "i18n:check-unused": "tsx scripts/i18n_check_unused.ts",
     "i18n:check": "npm run i18n:check-parity && npm run i18n:check-unused",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run i18n:check",
+    "functions:build": "wrangler pages functions build --outdir dist/functions",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run i18n:check && npm run functions:build",
     "preview": "vite preview",
     "prepare": "husky"
   },

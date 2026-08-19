@@ -3,7 +3,7 @@ import {
   get_share_object,
   json_response,
   type ShareWorkerEnv,
-} from '../../../_shared/share_r2'
+} from '../../_shared/share_r2'
 
 type PagesContext = {
   request: Request
