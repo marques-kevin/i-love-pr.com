@@ -1,9 +1,13 @@
 import {
+  authorize_share_upload_request,
   cors_headers,
   json_response,
   put_share_object,
+  read_put_upload_size,
+  share_error_response,
   type ShareWorkerEnv,
 } from '../../../_shared/share_r2'
+import { assert_share_upload_byte_length } from '../../../../src/lib/share_upload_auth'
 
 type PagesContext = {
   request: Request
@@ -19,17 +23,25 @@ export const onRequestOptions: PagesFunction<ShareWorkerEnv> = async ({ request 
 }
 
 export const onRequestPut: PagesFunction<ShareWorkerEnv> = async (context: PagesContext) => {
+  const auth = authorize_share_upload_request(context.request, context.env)
+  if (!auth.ok) {
+    return share_error_response(context.request, auth.status, auth.error)
+  }
+
   const share_id = context.params.id?.trim()
   if (!share_id) {
-    return json_response({ error: 'Missing share id' }, { status: 400 })
+    return share_error_response(context.request, 400, 'Missing share id')
+  }
+
+  const declared_size = read_put_upload_size(context.request)
+  if (!declared_size.ok) {
+    return share_error_response(context.request, declared_size.status, declared_size.error)
   }
 
   const body = await context.request.arrayBuffer()
-  if (body.byteLength === 0) {
-    return json_response({ error: 'Empty snapshot' }, { status: 400 })
-  }
-  if (body.byteLength > 50 * 1024 * 1024) {
-    return json_response({ error: 'Snapshot too large (max 50 MB)' }, { status: 413 })
+  const actual_size = assert_share_upload_byte_length(body.byteLength)
+  if (!actual_size.ok) {
+    return share_error_response(context.request, actual_size.status, actual_size.error)
   }
 
   await put_share_object(context.env, share_id, body)

@@ -7,6 +7,11 @@ import {
 } from '@/lib/boundary_parse'
 import type { ExternalValue, JsonObject, JsonValue } from '@/lib/json_value'
 import { parse_repo_snapshot, type RepoSnapshotV1 } from '@/lib/repo_snapshot'
+import {
+  is_worker_share_upload_url,
+  read_client_upload_secret,
+  SHARE_UPLOAD_SECRET_HEADER,
+} from '@/lib/share_upload_auth'
 
 export type ShareUploadUrls = {
   share_id: string
@@ -62,11 +67,28 @@ function parse_share_upload_urls(value: JsonValue): ShareUploadUrls {
   return { share_id, upload_url, download_url, expires_at }
 }
 
-export async function request_share_upload_urls(): Promise<ShareUploadUrls> {
+function client_upload_secret(): string {
+  return read_client_upload_secret(import.meta.env.VITE_SHARE_UPLOAD_SECRET)
+}
+
+export type ShareSnapshotPayload = {
+  body: string
+  byte_length: number
+}
+
+export function encode_share_snapshot(snapshot: RepoSnapshotV1): ShareSnapshotPayload {
+  const body = JSON.stringify(snapshot)
+  return { body, byte_length: new TextEncoder().encode(body).byteLength }
+}
+
+export async function request_share_upload_urls(content_length: number): Promise<ShareUploadUrls> {
   const response = await fetch(share_api_url('/upload-url'), {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: '{}',
+    headers: {
+      'content-type': 'application/json',
+      [SHARE_UPLOAD_SECRET_HEADER]: client_upload_secret(),
+    },
+    body: JSON.stringify({ content_length }),
   })
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
@@ -78,16 +100,16 @@ export async function request_share_upload_urls(): Promise<ShareUploadUrls> {
   return payload
 }
 
-export async function upload_share_snapshot(
-  upload_url: string,
-  snapshot: RepoSnapshotV1,
-): Promise<void> {
+export async function upload_share_snapshot(upload_url: string, body: string): Promise<void> {
+  const headers = new Headers()
+  headers.set('content-type', 'application/json')
+  if (is_worker_share_upload_url(upload_url)) {
+    headers.set(SHARE_UPLOAD_SECRET_HEADER, client_upload_secret())
+  }
   const response = await fetch(upload_url, {
     method: 'PUT',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(snapshot),
+    headers,
+    body,
   })
   if (!response.ok) {
     const detail = await response.text().catch(() => '')

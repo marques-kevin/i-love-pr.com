@@ -11,6 +11,7 @@ import {
 import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
 import {
   build_share_page_url,
+  encode_share_snapshot,
   fetch_share_snapshot,
   request_share_upload_urls,
   upload_share_snapshot,
@@ -231,8 +232,9 @@ export const create_repo_share_link = create_app_async_thunk<
   { repo_full_name: string }
 >('settings/create_repo_share_link', async ({ repo_full_name }, { extra }) => {
   const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
-  const urls = await request_share_upload_urls()
-  await upload_share_snapshot(urls.upload_url, snapshot)
+  const payload = encode_share_snapshot(snapshot)
+  const urls = await request_share_upload_urls(payload.byte_length)
+  await upload_share_snapshot(urls.upload_url, payload.body)
   return {
     share_url: build_share_page_url(urls.share_id),
     pr_count: snapshot.pull_requests.length,
