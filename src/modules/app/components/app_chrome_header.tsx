@@ -13,7 +13,7 @@ export function AppChromeHeader() {
         </a>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-xs font-medium tabular-nums text-muted-foreground">
+          <span className="hidden text-xs font-medium tabular-nums text-muted-foreground sm:inline">
             v{APP_VERSION}
           </span>
           <Button
