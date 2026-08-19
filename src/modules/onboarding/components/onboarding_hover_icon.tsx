@@ -1,6 +1,6 @@
 import { useRef, type ReactNode } from 'react'
 import type { ForwardRefExoticComponent, RefAttributes } from 'react'
-import type { AnimatedIconHandle } from '@/lib/use-icon-animation'
+import type { AnimatedIconHandle } from '@/lib/use_icon_animation'
 import { cn } from '@/lib/utils'
 
 export type OnboardingAnimatedIcon = ForwardRefExoticComponent<

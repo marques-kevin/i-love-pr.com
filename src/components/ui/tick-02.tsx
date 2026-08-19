@@ -4,7 +4,7 @@ import type { Variants } from 'motion/react'
 import { motion, useAnimation } from 'motion/react'
 import type { HTMLAttributes } from 'react'
 import { forwardRef } from 'react'
-import { useIconAnimation } from '@/lib/use-icon-animation'
+import { useIconAnimation } from '@/lib/use_icon_animation'
 import { cn } from '@/lib/utils'
 
 export interface Tick02IconHandle {
