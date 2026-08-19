@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { account_display_name, account_secondary_line } from '@/lib/session'
-import { LocaleSwitcher } from '@/modules/i18n'
 import { connector, type ConnectorProps } from './account_picker.connector'
 
 function initials(login: string, name: string | null): string {
@@ -16,16 +15,13 @@ export function Wrapper({ accounts, switch_account, start_add_account }: Connect
 
   return (
     <div className="mx-auto max-w-md px-6 py-16">
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            {intl.formatMessage({ id: 'account.picker.title' })}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {intl.formatMessage({ id: 'account.picker.description' })}
-          </p>
-        </div>
-        <LocaleSwitcher />
+      <div className="mb-8">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">
+          {intl.formatMessage({ id: 'account.picker.title' })}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {intl.formatMessage({ id: 'account.picker.description' })}
+        </p>
       </div>
 
       <ul className="space-y-2">
