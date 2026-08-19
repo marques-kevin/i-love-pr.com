@@ -17,6 +17,7 @@ import type {
   ReviewRecord,
 } from '@/lib/types'
 import type { Repositories } from '@/repositories'
+import { parse_dashboard_layout_from_json } from '@/lib/dashboard_layout'
 import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 
 export const REPO_SNAPSHOT_VERSION = 1 as const
@@ -104,7 +105,9 @@ function settings_subset_for_repo(
   return {
     teams: structuredClone(settings.teams),
     dashboards: structuredClone(
-      settings.dashboards.filter((tab) => tab.repo_full_name === repo_full_name),
+      settings.dashboards.filter(
+        (tab) => tab.repo_full_name === repo_full_name && tab.layout.length > 0,
+      ),
     ),
     ignored_bots: [...settings.ignored_bots],
     test_file_globs: [...settings.test_file_globs],
@@ -303,11 +306,13 @@ function parse_dashboard_records(rows: JsonArray): DashboardTab[] {
     const id = json_string_field(row, 'id', 'id')
     const repo_full_name = json_string_field(row, 'repo_full_name', 'repoFullName')
     if (!id || !repo_full_name) continue
+    const layout = parse_dashboard_layout_from_json(row.layout)
+    if (!layout || layout.length === 0) continue
     dashboards.push({
       id,
       name: json_string_field(row, 'name', 'name'),
       repo_full_name,
-      layout: [],
+      layout,
       members: parse_string_array(row.members),
       period_key: parse_period_key(row.period_key ?? row.periodKey),
       custom_from: json_string_field(row, 'custom_from', 'customFrom'),
@@ -433,10 +438,16 @@ export async function import_repo_snapshot(
   }
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
-  const merged_dashboards = [
-    ...settings.dashboards.filter((tab) => tab.repo_full_name !== repo_full_name),
-    ...snapshot.settings_subset.dashboards,
-  ]
+  const incoming_dashboards = snapshot.settings_subset.dashboards.filter(
+    (tab) => tab.layout.length > 0,
+  )
+  const merged_dashboards =
+    incoming_dashboards.length > 0
+      ? [
+          ...settings.dashboards.filter((tab) => tab.repo_full_name !== repo_full_name),
+          ...incoming_dashboards,
+        ]
+      : settings.dashboards
   const merged_teams = merge_teams_by_name(settings.teams, snapshot.settings_subset.teams)
 
   await repositories.settings.save({
@@ -444,9 +455,9 @@ export async function import_repo_snapshot(
     repos: merged_repos,
     dashboards: merged_dashboards,
     teams: merged_teams,
-    ignored_bots: snapshot.settings_subset.ignored_bots,
-    test_file_globs: snapshot.settings_subset.test_file_globs,
-    business_hours: snapshot.settings_subset.business_hours,
+    ignored_bots: settings.ignored_bots,
+    test_file_globs: settings.test_file_globs,
+    business_hours: settings.business_hours,
   })
   await repositories.settings.upsert_repos(merged_repos)
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
