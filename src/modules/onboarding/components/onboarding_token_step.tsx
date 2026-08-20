@@ -11,6 +11,7 @@ import type { TokenScopeAnalysis } from '@/lib/github_token_scopes'
 import type { RateLimitInfo } from '@/lib/types'
 import { onboarding_scope_message_key } from '@/lib/i18n'
 import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
+import { landing_command_box, landing_hairline } from './onboarding_surface'
 
 interface OnboardingTokenStepProps {
   token: string
@@ -74,14 +75,14 @@ export function OnboardingTokenStep({
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
+      <div>
         <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
           {intl.formatMessage({ id: 'onboarding.token_kicker' })}
         </p>
-        <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-pretty sm:text-4xl">
+        <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-pretty sm:text-3xl">
           {intl.formatMessage({ id: 'onboarding.setup_title' })}
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
           {intl.formatMessage({ id: 'onboarding.tagline' })}
         </p>
       </div>
@@ -90,7 +91,8 @@ export function OnboardingTokenStep({
         <Label htmlFor="token" className="sr-only">
           {intl.formatMessage({ id: 'onboarding.token_label' })}
         </Label>
-        <div className="flex items-center rounded-full border border-border bg-muted/40 p-1.5 pl-4 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+        <div className={`max-w-xl ${landing_command_box}`}>
+          <span className="hidden pl-4 font-mono text-sm text-muted-foreground sm:inline">$</span>
           <Input
             id="token"
             type="password"
@@ -98,19 +100,18 @@ export function OnboardingTokenStep({
             value={token}
             onChange={(e) => on_token_change(e.target.value)}
             placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
-            className="h-11 min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0"
+            className="h-11 min-w-0 flex-1 rounded-none border-0 bg-transparent font-mono text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0"
           />
-          <Button
+          <button
             type="button"
-            variant="secondary"
-            className="h-11 shrink-0 rounded-full px-6"
+            className={`m-1.5 h-9 shrink-0 rounded-[12px] bg-background px-4 text-sm font-medium text-foreground disabled:opacity-50 ${landing_hairline}`}
             onClick={on_validate}
             disabled={!token.trim() || validating}
           >
             {validating
               ? intl.formatMessage({ id: 'onboarding.checking' })
               : intl.formatMessage({ id: 'onboarding.validate' })}
-          </Button>
+          </button>
         </div>
         <p className="text-sm text-muted-foreground">
           <FormattedMessage
@@ -225,10 +226,10 @@ export function OnboardingTokenStep({
         </Alert>
       )}
 
-      <div className="flex justify-center sm:justify-end">
+      <div className="flex justify-start">
         <Button
           type="button"
-          className="h-11 rounded-full px-8"
+          className="h-10 rounded-xl px-5 shadow-none"
           onClick={on_submit}
           disabled={!can_submit || validating}
         >

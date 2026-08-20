@@ -14,6 +14,7 @@ import { SparklesIcon } from '@/components/ui/sparkles'
 import { UserCheck01Icon } from '@/components/ui/user-check-01'
 import type { MessageKey } from '@/lib/i18n'
 import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
+import { landing_hairline } from './onboarding_surface'
 
 const GALLERY_ITEMS = [
   { key: 'onboarding.hero.pill.local', icon: LockIcon },
@@ -40,22 +41,33 @@ export function OnboardingIconGrid() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          {intl.formatMessage({ id: 'onboarding.hero.grid_title' })}
-        </h2>
-        <p className="text-sm text-muted-foreground">{count}</p>
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              {intl.formatMessage({ id: 'onboarding.hero.grid_title' })}
+            </h2>
+            <p className="text-sm text-muted-foreground">{count}</p>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {intl.formatMessage({ id: 'onboarding.hero.grid.hint' })}
+          </p>
+        </div>
       </div>
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
-        {GALLERY_ITEMS.map((item) => (
-          <li key={item.key}>
+      <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
+        {GALLERY_ITEMS.map((item, index) => (
+          <li
+            key={item.key}
+            className="onboarding-tile-in min-w-0"
+            style={{ animationDelay: `${index * 35}ms` }}
+          >
             <OnboardingHoverIcon
               icon={item.icon}
-              size={36}
-              className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-2xl bg-muted/50 px-3 py-4 text-foreground transition-colors hover:bg-muted"
+              size={32}
+              className={`flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[1rem] bg-muted px-2 py-3 text-foreground motion-safe:transition-[translate,background-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:bg-background ${landing_hairline}`}
               icon_className="shrink-0"
             >
-              <span className="max-w-full truncate text-center font-mono text-[11px] text-muted-foreground sm:text-xs">
+              <span className="max-w-full truncate text-center font-mono text-[10px] text-muted-foreground sm:text-[11px]">
                 {intl.formatMessage({ id: item.key })}
               </span>
             </OnboardingHoverIcon>

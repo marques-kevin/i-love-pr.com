@@ -3,9 +3,8 @@ import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import { GitHubClient } from '@/lib/github-client'
 import { analyze_token_scopes, type TokenScopeAnalysis } from '@/lib/github_token_scopes'
-import type { RateLimitInfo } from '@/lib/types'
-import { LocaleSwitcher } from '@/modules/i18n'
 import { play_sound } from '@/lib/cuelume'
+import type { RateLimitInfo } from '@/lib/types'
 import { connector, type ConnectorProps } from './onboarding.connector'
 import { OnboardingHero } from './onboarding_hero'
 import { OnboardingTokenStep } from './onboarding_token_step'
@@ -109,10 +108,10 @@ export function Wrapper({
 
   return (
     <div>
-      <OnboardingHero on_get_started={scroll_to_setup} toolbar={<LocaleSwitcher />} />
+      <OnboardingHero on_get_started={scroll_to_setup} />
 
-      <section ref={setup_ref} id="setup" className="scroll-mt-20 border-t border-border/60">
-        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+      <section ref={setup_ref} id="setup" className="scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
           {adding_account && accounts.length > 0 ? (
             <Button
               type="button"
@@ -140,6 +139,12 @@ export function Wrapper({
           />
         </div>
       </section>
+
+      <footer className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+        <p className="text-xs text-muted-foreground">
+          {intl.formatMessage({ id: 'onboarding.footer' })}
+        </p>
+      </footer>
     </div>
   )
 }
