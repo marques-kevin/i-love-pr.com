@@ -39,6 +39,10 @@ npm run dev
 
 Open the app, paste a PAT with `repo` (or `public_repo`) read scope, add repositories, and start analyzing.
 
+### Demo mode (local dev)
+
+With `VITE_DEMO_MODE=true` (enabled by default via `.env.development`), the dev server boots an in-memory workspace pre-filled with sample PRs on `acme/widgets` — no PAT or GitHub account required. Set `VITE_DEMO_MODE=false` in `.env.development.local` to use the normal onboarding flow locally.
+
 ## Build & deploy
 
 ```bash

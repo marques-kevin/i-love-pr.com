@@ -17,6 +17,7 @@ import {
   upsert_saved_account,
 } from '@/lib/meta_db'
 import type { GitHubViewerProfile, SavedAccount } from '@/lib/types'
+import { create_demo_account, create_demo_seed, DEMO_LOGIN, is_demo_mode } from '@/lib/demo_mode'
 import { create_dexie_repositories, create_memory_repositories } from '@/repositories'
 import type { Repositories } from '@/repositories'
 import { create_store, type AppStore } from '@/store/create_store'
@@ -130,6 +131,7 @@ export class SessionManager {
   }
   private workspace: IlovePrDatabase | null = null
   private remount_generation = 0
+  private demo_mode = false
 
   subscribe = (listener: Listener): (() => void) => {
     this.listeners.add(listener)
@@ -152,14 +154,21 @@ export class SessionManager {
   private create_session_api(): SessionApi {
     return {
       get_active_login: () => this.snapshot.login,
-      list_accounts: () => list_saved_accounts(),
+      list_accounts: () =>
+        this.demo_mode ? Promise.resolve(this.snapshot.accounts) : list_saved_accounts(),
       get_accounts: () => this.snapshot.accounts,
       logout: () => this.logout(),
       switch_account: (login) => this.switch_account(login),
       start_add_account: () => this.start_add_account(),
       cancel_add_account: () => this.cancel_add_account(),
-      activate_account: (input) => this.activate_account(input),
+      activate_account: (input) => {
+        if (this.demo_mode) {
+          return Promise.reject(new Error('Add a real account by disabling VITE_DEMO_MODE'))
+        }
+        return this.activate_account(input)
+      },
       upsert_account_profile: async (account) => {
+        if (this.demo_mode) return
         await upsert_saved_account(account)
         await this.refresh_accounts()
       },
@@ -202,6 +211,9 @@ export class SessionManager {
   }
 
   private async refresh_accounts() {
+    if (this.demo_mode) {
+      return this.snapshot.accounts
+    }
     const accounts = await list_saved_accounts()
     this.set_snapshot({ accounts })
     this.snapshot.store?.dispatch(
@@ -215,6 +227,11 @@ export class SessionManager {
   }
 
   async boot(): Promise<void> {
+    if (is_demo_mode()) {
+      await this.mount_demo()
+      return
+    }
+
     await migrate_legacy_workspace_if_needed()
     const accounts = await list_saved_accounts()
     const active_login = await get_active_login()
@@ -231,10 +248,34 @@ export class SessionManager {
     await this.mount_guest({ accounts, adding_account: accounts.length === 0 })
   }
 
+  private async mount_demo(): Promise<void> {
+    this.demo_mode = true
+    this.remount_generation += 1
+    await this.close_workspace()
+
+    const account = create_demo_account()
+    const accounts = [account]
+    const repositories = create_memory_repositories(create_demo_seed())
+    const store = this.build_store(repositories, {
+      login: DEMO_LOGIN,
+      accounts,
+      adding_account: false,
+    })
+
+    this.set_snapshot({
+      ready: true,
+      login: DEMO_LOGIN,
+      accounts,
+      store,
+      adding_account: false,
+    })
+  }
+
   private async mount_guest(options?: {
     accounts?: SavedAccount[]
     adding_account?: boolean
   }): Promise<void> {
+    this.demo_mode = false
     this.remount_generation += 1
     await this.close_workspace()
     const accounts = options?.accounts ?? (await list_saved_accounts())
@@ -254,6 +295,7 @@ export class SessionManager {
   }
 
   private async mount_workspace(login: string): Promise<void> {
+    this.demo_mode = false
     this.remount_generation += 1
     const generation = this.remount_generation
     await this.close_workspace()

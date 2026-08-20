@@ -11,6 +11,7 @@ import {
   clamp_active_repo_to_settings,
   refresh_metrics,
 } from '@/modules/dashboard/redux/dashboard_slice'
+import { is_demo_mode } from '@/lib/demo_mode'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import {
@@ -89,9 +90,16 @@ export function register_app_listeners(
       await ensure_pr_facts(api.extra.repositories)
       apply_active_repo_from_settings(api)
       hydrate_filters_from_active_dashboard(api)
-      void api.dispatch(load_available_repos())
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
+
+      if (is_demo_mode()) {
+        api.dispatch(set_bootstrapped(true))
+        void api.dispatch(refresh_metrics())
+        return
+      }
+
+      void api.dispatch(load_available_repos())
 
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
