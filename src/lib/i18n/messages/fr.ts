@@ -4,6 +4,7 @@ export const fr_messages = define_locale_messages({
   'app.loading': 'Chargement…',
   'app.settings': 'Paramètres',
   'app.nav.repositories': 'Dépôts',
+  'app.nav.select_repository': 'Choisir un dépôt',
   'app.nav.repositories_empty': 'Aucun dépôt',
   'app.nav.sync_error': 'Erreur de sync',
   'app.nav.add_repository': 'Ajouter un dépôt',

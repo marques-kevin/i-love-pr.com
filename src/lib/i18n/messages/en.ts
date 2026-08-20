@@ -2,6 +2,7 @@ export const en_messages = {
   'app.loading': 'Loading…',
   'app.settings': 'Settings',
   'app.nav.repositories': 'Repositories',
+  'app.nav.select_repository': 'Select repository',
   'app.nav.repositories_empty': 'No repositories',
   'app.nav.sync_error': 'Sync error',
   'app.nav.add_repository': 'Add repository',

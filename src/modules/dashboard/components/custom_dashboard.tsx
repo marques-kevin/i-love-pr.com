@@ -87,7 +87,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
       </div>
 
       {layout.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-16 text-center">
+        <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-16 text-center">
           <p className="font-display text-lg font-semibold text-foreground">
             {intl.formatMessage({ id: 'dashboard.empty_title' })}
           </p>
@@ -107,7 +107,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {layout.map((item, index) => {
             const meta = get_dashboard_widget_meta(item.widget_id)
             const label = intl.formatMessage({ id: widget_label_key(item.widget_id) })
@@ -115,7 +115,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             return (
               <div key={item.instance_id} className={`relative min-w-0 ${span_class}`}>
                 {editing && (
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/40 px-3 py-2">
                     <span className="text-sm font-medium text-foreground">{label}</span>
                     <div className="flex gap-1">
                       <Button
