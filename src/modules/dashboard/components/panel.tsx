@@ -41,7 +41,7 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <Card className="bg-card/80 backdrop-blur">
+    <Card className="rounded-3xl bg-card py-5 shadow-none ring-1 ring-foreground/10 [--card-spacing:--spacing(5)]">
       <CardHeader>
         <CardTitle className="font-display text-lg">{title}</CardTitle>
         {description && <p className="text-sm font-normal text-muted-foreground">{description}</p>}
@@ -58,7 +58,7 @@ export function Panel({
 
 export function StatCard({ label, value, help }: { label: string; value: string; help?: string }) {
   return (
-    <Card className="bg-card/80 backdrop-blur">
+    <Card className="rounded-3xl bg-card py-5 shadow-none ring-1 ring-foreground/10 [--card-spacing:--spacing(5)]">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
         {help ? (
