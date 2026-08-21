@@ -30,8 +30,6 @@ export function Wrapper({ accounts, switch_account, start_add_account }: Connect
             <button
               type="button"
               className="hover:bg-base-200 flex w-full items-center gap-3 rounded-lg border border-base-300 bg-base-100 px-3 py-3 text-left transition-colors"
-              data-cuelume-press=""
-              data-cuelume-release=""
               onClick={() => void switch_account(account.login)}
             >
               <div className="avatar">
