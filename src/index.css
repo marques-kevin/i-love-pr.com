@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lexend:wght@300..800&display=swap');
 @import 'tailwindcss';
 @plugin "daisyui" {
   themes: all;
@@ -59,22 +60,11 @@
   }
 }
 
-@font-face {
-  font-family: 'Geist Pixel Square';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 400;
-  src: url('./assets/fonts/GeistPixel-Square.woff2') format('woff2');
-}
-
 @theme inline {
   --font-sans:
-    'Geist Variable', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Lexend', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-mono:
-    'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-pixel:
-    'Geist Pixel Square', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-heading: var(--font-sans);
   --font-display: var(--font-sans);
   --color-heart: #e5322d;

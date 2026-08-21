@@ -66,7 +66,7 @@ function ChartContainer({
         data-slot="chart"
         data-chart={chartId}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-axis-tick_text]:font-pixel [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-base-300/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-base-300 [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-300 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-base-200 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-300 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-base-300/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-base-300 [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-300 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-base-200 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-300 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
           className,
         )}
         {...props}
@@ -175,7 +175,7 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        'bg-base-100 grid min-w-32 items-start gap-1.5 rounded-lg border border-base-300/50 px-2.5 py-1.5 font-pixel text-xs shadow-xl',
+        'bg-base-100 grid min-w-32 items-start gap-1.5 rounded-lg border border-base-300/50 px-2.5 py-1.5 text-xs shadow-xl',
         className,
       )}
     >
@@ -233,7 +233,7 @@ function ChartTooltipContent({
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-pixel font-medium text-base-content tabular-nums">
+                        <span className="font-mono font-medium text-base-content tabular-nums">
                           {format_tooltip_value(item.value)}
                         </span>
                       )}
@@ -269,7 +269,7 @@ function ChartLegendContent({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-4 font-pixel',
+        'flex items-center justify-center gap-4',
         verticalAlign === 'top' ? 'pb-3' : 'pt-3',
         className,
       )}
