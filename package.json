@@ -55,6 +55,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "daisyui": "^5.7.20",
     "husky": "^9.1.7",
+    "linkedom": "^0.18.13",
     "lint-staged": "^17.3.0",
     "oxlint": "^1.78.0",
     "prettier": "^3.8.1",
