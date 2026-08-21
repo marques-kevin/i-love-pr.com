@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { GithubIcon } from '@/components/icons/github'
+import { Download01Icon } from '@/components/icons/download_01'
 import { Loading03Icon } from '@/components/icons/loading_03'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,12 @@ function cue_label(cue: SyncCue, error_label: string, syncing_label: string) {
   return syncing_label
 }
 
-export function Wrapper({ repos, sync_states, request_add_repository }: ConnectorProps) {
+export function Wrapper({
+  repos,
+  sync_states,
+  request_add_repository,
+  open_import_dialog,
+}: ConnectorProps) {
   const intl = useIntl()
   const error_label = intl.formatMessage({ id: 'app.nav.sync_error' })
   const syncing_label = intl.formatMessage({ id: 'sync.syncing' })
@@ -51,10 +57,16 @@ export function Wrapper({ repos, sync_states, request_add_repository }: Connecto
             <p className="text-base-content/60 max-w-md text-sm">
               {intl.formatMessage({ id: 'home.empty_body' })}
             </p>
-            <Button type="button" className="btn-primary mt-3" onClick={request_add_repository}>
-              <HoverIcon icon={PlusSignIcon} size={16} />
-              {intl.formatMessage({ id: 'app.nav.add_repository' })}
-            </Button>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <Button type="button" className="btn-primary" onClick={request_add_repository}>
+                <HoverIcon icon={PlusSignIcon} size={16} />
+                {intl.formatMessage({ id: 'app.nav.add_repository' })}
+              </Button>
+              <Button type="button" className="btn-ghost" onClick={() => open_import_dialog()}>
+                <HoverIcon icon={Download01Icon} size={16} />
+                {intl.formatMessage({ id: 'app.nav.import' })}
+              </Button>
+            </div>
           </div>
         </section>
       ) : (

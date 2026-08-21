@@ -139,6 +139,7 @@ function build_demo_settings(): AppSettings {
     id: 'settings',
     token: DEMO_TOKEN,
     repos: [DEMO_REPO],
+    repo_sources: { [DEMO_REPO]: 'pat' },
     active_repo: DEMO_REPO,
     sync_interval_hours: 24,
     backfill_limit: DEFAULT_BACKFILL_LIMIT,

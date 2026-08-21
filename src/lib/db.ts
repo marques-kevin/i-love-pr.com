@@ -19,6 +19,7 @@ import {
   parse_dashboard_tabs_from_json,
 } from './dashboard_layout'
 import { normalize_stored_locale } from './i18n'
+import { normalize_repo_sources, parse_repo_sources } from './repo_sources'
 import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
 import type { JsonObject, JsonValue } from './json_value'
 import type {
@@ -85,10 +86,13 @@ function migrate_settings_row(row: JsonObject): AppSettings {
     dashboard_layout: legacy_layout,
   })
 
+  const repo_sources = normalize_repo_sources(repos, parse_repo_sources(row.repo_sources))
+
   return {
     id: 'settings',
     token: json_string_field(row, 'token', 'token'),
     repos,
+    repo_sources,
     sync_interval_hours: Number(row.sync_interval_hours ?? row.syncIntervalHours ?? 24),
     backfill_limit: Number(row.backfill_limit ?? row.backfillLimit ?? DEFAULT_BACKFILL_LIMIT),
     ignored_bots: json_string_array(row.ignored_bots ?? row.ignoredBots),

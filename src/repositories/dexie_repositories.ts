@@ -19,6 +19,7 @@ import {
   type SettingsDashboardsInput,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
+import { merge_pat_repo_sources, normalize_repo_sources } from '@/lib/repo_sources'
 import type {
   PullRequestRepository,
   PrChangedFilesRepository,
@@ -58,6 +59,7 @@ function normalize_settings(settings: AppSettings & Partial<SettingsDashboardsIn
     id: settings.id,
     token: settings.token,
     repos: settings.repos,
+    repo_sources: normalize_repo_sources(settings.repos, settings.repo_sources),
     sync_interval_hours: settings.sync_interval_hours,
     backfill_limit: settings.backfill_limit,
     ignored_bots: settings.ignored_bots,
@@ -91,6 +93,9 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       id: 'settings',
       token: partial.token,
       repos: partial.repos,
+      repo_sources: partial.repo_sources
+        ? normalize_repo_sources(partial.repos, partial.repo_sources)
+        : merge_pat_repo_sources(partial.repos, existing?.repo_sources),
       sync_interval_hours: partial.sync_interval_hours ?? existing?.sync_interval_hours ?? 24,
       backfill_limit: partial.backfill_limit ?? existing?.backfill_limit ?? DEFAULT_BACKFILL_LIMIT,
       ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? [...DEFAULT_IGNORED_BOTS],

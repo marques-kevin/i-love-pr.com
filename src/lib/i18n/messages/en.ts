@@ -13,6 +13,17 @@ export const en_messages = {
   'app.nav.add_repository_confirm': 'Add',
   'app.nav.add_repository_saving': 'Saving…',
   'app.nav.add_repository_failed': 'Failed to add repository',
+  'app.nav.import': 'Import',
+  'app.nav.import_title': 'Import a shared repository',
+  'app.nav.import_description':
+    'Paste a share link from a teammate to import their dashboard snapshot (no GitHub sync required).',
+  'app.nav.import_label': 'Share link',
+  'app.nav.import_placeholder': 'https://…/?import=…',
+  'app.nav.import_cancel': 'Cancel',
+  'app.nav.import_confirm': 'Import',
+  'app.nav.import_working': 'Importing…',
+  'app.nav.import_done': 'Imported {count} PRs into {repo}.',
+  'app.nav.import_failed': 'Import failed',
   'home.empty_body': 'Add a GitHub repository to open its dashboard.',
   'home.open_repo': 'Open {repo}',
   'dashboard.back_to_list': 'Back to repositories',
@@ -384,14 +395,9 @@ export const en_messages = {
   'settings.share.create_link': 'Create share link',
   'settings.share.working': 'Sharing…',
   'settings.share.link_label': 'Share link (copied to clipboard)',
-  'settings.share.import_label': 'Import from share link',
-  'settings.share.import_placeholder': 'https://…/?import=…',
-  'settings.share.import': 'Import snapshot',
   'settings.share.download_done': 'Snapshot downloaded.',
   'settings.share.link_ready': 'Share link copied ({count} PRs).',
-  'settings.share.import_done': 'Imported {count} PRs into {repo}.',
   'settings.share.failed': 'Share failed',
-  'settings.share.import_failed': 'Import failed',
 } as const
 
 export type MessageKey = keyof typeof en_messages

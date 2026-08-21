@@ -63,10 +63,14 @@ export interface DashboardTab {
   hide_test_files: boolean
 }
 
+export type RepoSource = 'pat' | 'import'
+
 export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
+  /** How each repo was added: GitHub PAT picker vs shared snapshot import. */
+  repo_sources: Record<string, 'pat' | 'import'>
   /** Currently focused repo in the app shell (`owner/name`). */
   active_repo: string | null
   sync_interval_hours: number

@@ -21,6 +21,7 @@ function base_settings(repos: string[]): AppSettings {
     id: 'settings',
     token: 'ghp_test',
     repos,
+    repo_sources: Object.fromEntries(repos.map((repo) => [repo, 'pat' as const])),
     active_repo: repos[0] ?? null,
     sync_interval_hours: 24,
     backfill_limit: 200,
@@ -115,6 +116,7 @@ describe('repo_snapshot', () => {
 
     const settings = await target.settings.get()
     expect(settings?.repos).toContain(repo)
+    expect(settings?.repo_sources[repo]).toBe('import')
     const prs = await target.pull_requests.list_by_repos([repo])
     expect(prs).toHaveLength(1)
     const facts = await target.pr_facts.list_by_repos([repo])

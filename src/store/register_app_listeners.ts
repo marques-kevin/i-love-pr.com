@@ -10,8 +10,10 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
+  open_import_dialog,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
+import { consume_home_import_url_param } from '@/lib/import_link'
 import { is_demo_mode } from '@/lib/demo_mode'
 import { active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
@@ -115,6 +117,10 @@ export function register_app_listeners(
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(refresh_metrics())
+        const import_prefill = consume_home_import_url_param()
+        if (import_prefill) {
+          api.dispatch(open_import_dialog(import_prefill))
+        }
         return
       }
 
@@ -123,6 +129,11 @@ export function register_app_listeners(
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(run_sync({ force: false }))
+      }
+
+      const import_prefill = consume_home_import_url_param()
+      if (import_prefill) {
+        api.dispatch(open_import_dialog(import_prefill))
       }
     },
   })

@@ -19,6 +19,7 @@ import type {
 import type { Repositories } from '@/repositories'
 import { parse_dashboard_layout_from_json } from '@/lib/dashboard_layout'
 import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
+import { mark_repo_imported } from '@/lib/repo_sources'
 
 export const REPO_SNAPSHOT_VERSION = 1 as const
 
@@ -453,6 +454,7 @@ export async function import_repo_snapshot(
   await repositories.settings.save({
     token: settings.token,
     repos: merged_repos,
+    repo_sources: mark_repo_imported(merged_repos, settings.repo_sources ?? {}, repo_full_name),
     dashboards: merged_dashboards,
     teams: merged_teams,
     ignored_bots: settings.ignored_bots,
