@@ -1,15 +1,16 @@
-import { Bar, BarChart, CartesianGrid, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  Scatter,
+  ScatterChart,
+  XAxis,
+  YAxis,
+  ZAxis,
+} from 'recharts'
 import { useIntl } from 'react-intl'
-import { Line as DitherLine } from '@/components/dither-kit/area'
-import { LineChart as DitherLineChart } from '@/components/dither-kit/area-chart'
-import { Bar as DitherBar } from '@/components/dither-kit/bar'
-import { BarChart as DitherBarChart } from '@/components/dither-kit/bar-chart'
-import type { ChartConfig as DitherChartConfig } from '@/components/dither-kit/chart-context'
-import { Grid as DitherGrid } from '@/components/dither-kit/grid'
-import { Legend as DitherLegend } from '@/components/dither-kit/legend'
-import { Tooltip as DitherTooltip } from '@/components/dither-kit/tooltip'
-import { XAxis as DitherXAxis } from '@/components/dither-kit/x-axis'
-import { YAxis as DitherYAxis } from '@/components/dither-kit/y-axis'
 import { is_external_object, is_number_value, is_string_value } from '@/lib/boundary_parse'
 import type { ExternalValue } from '@/lib/json_value'
 import {
@@ -23,28 +24,33 @@ import {
 import type { MetricsSnapshot } from '@/lib/types'
 
 const cycleConfig = {
-  avgHours: { label: 'Avg cycle time (h)', color: 'red' },
-} satisfies DitherChartConfig
+  avgHours: { label: 'Avg cycle time (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const sizeConfig = {
-  count: { label: 'PRs', color: 'red' },
-} satisfies DitherChartConfig
+  count: { label: 'PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const throughputConfig = {
-  count: { label: 'Merged PRs', color: 'purple' },
-} satisfies DitherChartConfig
+  count: { label: 'Merged PRs', color: 'var(--chart-3)' },
+} satisfies ChartConfig
 
 const reviewerConfig = {
   given: { label: 'Reviews given', color: 'var(--chart-1)' },
   received: { label: 'Reviews received', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
+const sizeVsReviewColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
+
 const sizeVsReviewCostConfig = {
   avgHoursPerHundredLines: {
     label: 'Approve h / 100 lines',
-    color: 'purple',
+    color: 'var(--chart-3)',
   },
-} satisfies DitherChartConfig
+} satisfies ChartConfig
 
 const scatterConfig = {
   timeToApproveHours: {
@@ -54,38 +60,43 @@ const scatterConfig = {
 } satisfies ChartConfig
 
 const cycleBreakdownConfig = {
-  createToAskHours: { label: 'Create → ask (h)', color: 'red' },
-  askToFirstReviewHours: { label: 'Ask → first review (h)', color: 'blue' },
-  firstReviewToApproveHours: { label: 'First review → approve (h)', color: 'purple' },
-  approveToMergeHours: { label: 'Approve → merge (h)', color: 'orange' },
-} satisfies DitherChartConfig
+  createToAskHours: { label: 'Create → ask (h)', color: 'var(--chart-1)' },
+  askToFirstReviewHours: { label: 'Ask → first review (h)', color: 'var(--chart-2)' },
+  firstReviewToApproveHours: { label: 'First review → approve (h)', color: 'var(--chart-3)' },
+  approveToMergeHours: { label: 'Approve → merge (h)', color: 'var(--chart-4)' },
+} satisfies ChartConfig
+
+const reviewLatencyColors = {
+  avgTimeToFirstReviewHours: 'var(--chart-1)',
+  avgTimeToApproveHours: 'var(--chart-2)',
+} as const
 
 const cyclePercentilesConfig = {
-  p50Hours: { label: 'p50 (h)', color: 'red' },
-  p95Hours: { label: 'p95 (h)', color: 'blue' },
-} satisfies DitherChartConfig
+  p50Hours: { label: 'p50 (h)', color: 'var(--chart-1)' },
+  p95Hours: { label: 'p95 (h)', color: 'var(--chart-2)' },
+} satisfies ChartConfig
 
 const reviewRoundsConfig = {
-  count: { label: 'PRs', color: 'red' },
-} satisfies DitherChartConfig
+  count: { label: 'PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const openPrAgeConfig = {
-  count: { label: 'Open PRs', color: 'red' },
-} satisfies DitherChartConfig
+  count: { label: 'Open PRs', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const flowVolumeConfig = {
-  opened: { label: 'Opened', color: 'blue' },
-  merged: { label: 'Merged', color: 'red' },
-} satisfies DitherChartConfig
+  opened: { label: 'Opened', color: 'var(--chart-2)' },
+  merged: { label: 'Merged', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const draftLatencyConfig = {
-  avgHours: { label: 'Create → ask (h)', color: 'red' },
-} satisfies DitherChartConfig
+  avgHours: { label: 'Create → ask (h)', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 const leadVsCycleConfig = {
-  leadHours: { label: 'Lead: create → merge (h)', color: 'red' },
-  reviewCycleHours: { label: 'Review cycle: ask → approve (h)', color: 'blue' },
-} satisfies DitherChartConfig
+  leadHours: { label: 'Lead: create → merge (h)', color: 'var(--chart-1)' },
+  reviewCycleHours: { label: 'Review cycle: ask → approve (h)', color: 'var(--chart-2)' },
+} satisfies ChartConfig
 
 const repoComparisonConfig = {
   mergedCount: { label: 'Merged PRs', color: 'var(--chart-1)' },
@@ -100,45 +111,52 @@ const reviewBalanceConfig = {
 } satisfies ChartConfig
 
 const reviewStateMixConfig = {
-  approved: { label: 'APPROVED', color: 'red' },
-  changesRequested: { label: 'CHANGES_REQUESTED', color: 'blue' },
-  commented: { label: 'COMMENTED', color: 'purple' },
-} satisfies DitherChartConfig
+  approved: { label: 'APPROVED', color: 'var(--chart-1)' },
+  changesRequested: { label: 'CHANGES_REQUESTED', color: 'var(--chart-2)' },
+  commented: { label: 'COMMENTED', color: 'var(--chart-3)' },
+} satisfies ChartConfig
 
 const additionsDeletionsConfig = {
-  additions: { label: 'Additions', color: 'red' },
-  deletions: { label: 'Deletions', color: 'blue' },
-} satisfies DitherChartConfig
+  additions: { label: 'Additions', color: 'var(--chart-1)' },
+  deletions: { label: 'Deletions', color: 'var(--chart-2)' },
+} satisfies ChartConfig
 
 const roundsVsSizeConfig = {
-  avgReviewRounds: { label: 'Avg review rounds', color: 'red' },
-} satisfies DitherChartConfig
+  avgReviewRounds: { label: 'Avg review rounds', color: 'var(--chart-1)' },
+} satisfies ChartConfig
 
 export function CycleTimeChart({ data }: { data: MetricsSnapshot['cycleTimeSeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherLineChart data={data} config={cycleConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="date" />
-        <DitherLine dataKey="avgHours" />
-      </DitherLineChart>
-    </div>
+    <ChartContainer config={cycleConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgHours"
+          stroke="var(--color-avgHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
   )
 }
 
 export function PRSizeChart({ data }: { data: MetricsSnapshot['prSizeBuckets'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={sizeConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="bucket" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="bucket" />
-        <DitherBar dataKey="count" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={sizeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -168,15 +186,15 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
     .sort((a, b) => a.period.localeCompare(b.period))
 
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={chartData} config={throughputConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="period" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="period" />
-        <DitherBar dataKey="count" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={throughputConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -185,13 +203,13 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
   const config = {
     avgTimeToFirstReviewHours: {
       label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
-      color: 'red',
+      color: sizeVsReviewColors.avgTimeToFirstReviewHours,
     },
     avgTimeToApproveHours: {
       label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
-      color: 'blue',
+      color: sizeVsReviewColors.avgTimeToApproveHours,
     },
-  } satisfies DitherChartConfig
+  } satisfies ChartConfig
 
   const chartData = data.map((row) => ({
     ...row,
@@ -204,17 +222,27 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
   }))
 
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={chartData} config={config} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="bucket" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="bucket" />
-        <DitherBar dataKey="avgTimeToFirstReviewHours" variant="hatched" />
-        <DitherBar dataKey="avgTimeToApproveHours" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
+      <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="avgTimeToFirstReviewHours"
+          fill="var(--color-avgTimeToFirstReviewHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="avgTimeToApproveHours"
+          fill="var(--color-avgTimeToApproveHours)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -227,16 +255,21 @@ export function SizeVsReviewCostChart({ data }: { data: MetricsSnapshot['sizeVsR
   }))
 
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={chartData} config={sizeVsReviewCostConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="bucket" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="bucket" />
-        <DitherBar dataKey="avgHoursPerHundredLines" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={sizeVsReviewCostConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="avgHoursPerHundredLines"
+          fill="var(--color-avgHoursPerHundredLines)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -307,19 +340,43 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
 
 export function CycleBreakdownChart({ data }: { data: MetricsSnapshot['cycleBreakdownSeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={cycleBreakdownConfig} stackType="stacked" bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherBar dataKey="createToAskHours" variant="hatched" />
-        <DitherBar dataKey="askToFirstReviewHours" variant="hatched" />
-        <DitherBar dataKey="firstReviewToApproveHours" variant="hatched" />
-        <DitherBar dataKey="approveToMergeHours" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={cycleBreakdownConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="createToAskHours"
+          stackId="cycle"
+          fill="var(--color-createToAskHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="askToFirstReviewHours"
+          stackId="cycle"
+          fill="var(--color-askToFirstReviewHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="firstReviewToApproveHours"
+          stackId="cycle"
+          fill="var(--color-firstReviewToApproveHours)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="approveToMergeHours"
+          stackId="cycle"
+          fill="var(--color-approveToMergeHours)"
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -328,26 +385,40 @@ export function ReviewLatencyChart({ data }: { data: MetricsSnapshot['reviewLate
   const config = {
     avgTimeToFirstReviewHours: {
       label: intl.formatMessage({ id: 'chart.legend.wait_to_first_review' }),
-      color: 'red',
+      color: reviewLatencyColors.avgTimeToFirstReviewHours,
     },
     avgTimeToApproveHours: {
       label: intl.formatMessage({ id: 'chart.legend.wait_to_approve' }),
-      color: 'blue',
+      color: reviewLatencyColors.avgTimeToApproveHours,
     },
-  } satisfies DitherChartConfig
+  } satisfies ChartConfig
 
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherLineChart data={data} config={config} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherLine dataKey="avgTimeToFirstReviewHours" />
-        <DitherLine dataKey="avgTimeToApproveHours" />
-      </DitherLineChart>
-    </div>
+    <ChartContainer config={config} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgTimeToFirstReviewHours"
+          stroke="var(--color-avgTimeToFirstReviewHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="avgTimeToApproveHours"
+          stroke="var(--color-avgTimeToApproveHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
   )
 }
 
@@ -357,91 +428,126 @@ export function CyclePercentilesChart({
   data: MetricsSnapshot['cyclePercentileSeries']
 }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherLineChart data={data} config={cyclePercentilesConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherLine dataKey="p50Hours" />
-        <DitherLine dataKey="p95Hours" />
-      </DitherLineChart>
-    </div>
+    <ChartContainer config={cyclePercentilesConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="p50Hours"
+          stroke="var(--color-p50Hours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="p95Hours"
+          stroke="var(--color-p95Hours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
   )
 }
 
 export function ReviewRoundsChart({ data }: { data: MetricsSnapshot['reviewRoundsBuckets'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={reviewRoundsConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="rounds" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="rounds" />
-        <DitherBar dataKey="count" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={reviewRoundsConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="rounds" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
 export function OpenPrAgeChart({ data }: { data: MetricsSnapshot['openPrAgeBuckets'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={openPrAgeConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="bucket" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="bucket" />
-        <DitherBar dataKey="count" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={openPrAgeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
 export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={flowVolumeConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherBar dataKey="opened" variant="hatched" />
-        <DitherBar dataKey="merged" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={flowVolumeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar dataKey="opened" fill="var(--color-opened)" radius={4} isAnimationActive={false} />
+        <Bar dataKey="merged" fill="var(--color-merged)" radius={4} isAnimationActive={false} />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
 export function DraftLatencyChart({ data }: { data: MetricsSnapshot['draftLatencySeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherLineChart data={data} config={draftLatencyConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="date" />
-        <DitherLine dataKey="avgHours" />
-      </DitherLineChart>
-    </div>
+    <ChartContainer config={draftLatencyConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Line
+          type="monotone"
+          dataKey="avgHours"
+          stroke="var(--color-avgHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
   )
 }
 
 export function LeadVsCycleChart({ data }: { data: MetricsSnapshot['leadVsCycleSeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherLineChart data={data} config={leadVsCycleConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherLine dataKey="leadHours" />
-        <DitherLine dataKey="reviewCycleHours" />
-      </DitherLineChart>
-    </div>
+    <ChartContainer config={leadVsCycleConfig} className="aspect-auto h-72 w-full">
+      <LineChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          type="monotone"
+          dataKey="leadHours"
+          stroke="var(--color-leadHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+        <Line
+          type="monotone"
+          dataKey="reviewCycleHours"
+          stroke="var(--color-reviewCycleHours)"
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={false}
+        />
+      </LineChart>
+    </ChartContainer>
   )
 }
 
@@ -506,18 +612,36 @@ export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBala
 
 export function ReviewStateMixChart({ data }: { data: MetricsSnapshot['reviewStateMixSeries'] }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={reviewStateMixConfig} stackType="stacked" bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherBar dataKey="approved" variant="hatched" />
-        <DitherBar dataKey="changesRequested" variant="hatched" />
-        <DitherBar dataKey="commented" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={reviewStateMixConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="approved"
+          stackId="state"
+          fill="var(--color-approved)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="changesRequested"
+          stackId="state"
+          fill="var(--color-changesRequested)"
+          radius={0}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="commented"
+          stackId="state"
+          fill="var(--color-commented)"
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -527,17 +651,27 @@ export function AdditionsDeletionsChart({
   data: MetricsSnapshot['additionsDeletionsSeries']
 }) {
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={data} config={additionsDeletionsConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="date" />
-        <DitherYAxis />
-        <DitherLegend />
-        <DitherTooltip labelKey="date" />
-        <DitherBar dataKey="additions" variant="hatched" />
-        <DitherBar dataKey="deletions" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={additionsDeletionsConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Bar
+          dataKey="additions"
+          fill="var(--color-additions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+        <Bar
+          dataKey="deletions"
+          fill="var(--color-deletions)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
@@ -548,15 +682,20 @@ export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSiz
     avgReviewRounds: row.avgReviewRounds != null ? Math.round(row.avgReviewRounds * 10) / 10 : 0,
   }))
   return (
-    <div className="aspect-auto h-72 w-full">
-      <DitherBarChart data={chart_data} config={roundsVsSizeConfig} bloom="off">
-        <DitherGrid />
-        <DitherXAxis dataKey="bucket" />
-        <DitherYAxis />
-        <DitherTooltip labelKey="bucket" />
-        <DitherBar dataKey="avgReviewRounds" variant="hatched" />
-      </DitherBarChart>
-    </div>
+    <ChartContainer config={roundsVsSizeConfig} className="aspect-auto h-72 w-full">
+      <BarChart data={chart_data} margin={{ left: 8, right: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} width={40} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar
+          dataKey="avgReviewRounds"
+          fill="var(--color-avgReviewRounds)"
+          radius={4}
+          isAnimationActive={false}
+        />
+      </BarChart>
+    </ChartContainer>
   )
 }
 
