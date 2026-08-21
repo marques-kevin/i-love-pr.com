@@ -16,4 +16,11 @@ describe('partition_gallery_repos', () => {
     expect(result.own).toEqual(['acme/widgets'])
     expect(result.imported).toEqual([])
   })
+
+  it('returns empty lists when repos is empty', () => {
+    expect(partition_gallery_repos([], ['acme/imported'])).toEqual({
+      own: [],
+      imported: [],
+    })
+  })
 })
