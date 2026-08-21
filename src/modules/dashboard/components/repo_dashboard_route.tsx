@@ -6,7 +6,9 @@ import {
   TAB_CROSSFADE_DURATION_S,
   dashboard_window_motion,
 } from '@/modules/dashboard/lib/window_chrome'
+import { CustomizeFab } from './customize_fab'
 import { Dashboard } from './dashboard'
+import { DashboardEditProvider } from './dashboard_edit_context'
 import { DashboardHeader } from './dashboard_header'
 import { DashboardToolbar } from './dashboard_toolbar'
 import { connector, type ConnectorProps } from './repo_dashboard_route.connector'
@@ -40,28 +42,31 @@ export function Wrapper({
         {close_pending ? null : (
           <motion.div
             key="dashboard-window"
-            className="dashboard-window mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-base-100 shadow-sm ring-1 ring-base-content/10"
+            className="dashboard-window relative mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-base-100 shadow-sm ring-1 ring-base-content/10"
             initial={window_motion.initial}
             animate={window_motion.animate}
             exit={window_motion.exit}
           >
-            <div className="shrink-0">
-              <DashboardHeader on_close_window={() => set_close_pending(true)} />
-              <DashboardToolbar />
-            </div>
-            <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 lg:px-8">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={active_dashboard_id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: TAB_CROSSFADE_DURATION_S }}
-                >
-                  <Dashboard />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+            <DashboardEditProvider>
+              <div className="shrink-0">
+                <DashboardHeader on_close_window={() => set_close_pending(true)} />
+                <DashboardToolbar />
+              </div>
+              <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-20 px-4 pt-6 pb-20 sm:px-6 lg:px-8">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={active_dashboard_id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: TAB_CROSSFADE_DURATION_S }}
+                  >
+                    <Dashboard />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+              <CustomizeFab />
+            </DashboardEditProvider>
           </motion.div>
         )}
       </AnimatePresence>
