@@ -202,6 +202,7 @@ export function Wrapper({
             type="password"
             value={token}
             onChange={(e) => set_token(e.target.value)}
+            className="font-mono"
           />
         </label>
 
