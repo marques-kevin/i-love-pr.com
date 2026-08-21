@@ -63,10 +63,14 @@ export interface DashboardTab {
   hide_test_files: boolean
 }
 
+export type RepoSource = 'pat' | 'import'
+
 export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
+  /** How each repo was added; missing entries default to `pat`. */
+  repo_sources?: Record<string, RepoSource>
   /** Currently focused repo in the app shell (`owner/name`). */
   active_repo: string | null
   sync_interval_hours: number

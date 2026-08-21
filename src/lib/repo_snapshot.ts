@@ -5,6 +5,7 @@ import {
   is_string_value,
   json_string_field,
   parse_json_array,
+  has_browser_navigator,
 } from '@/lib/boundary_parse'
 import type { ExternalValue, JsonArray, JsonObject, JsonValue } from '@/lib/json_value'
 import type {
@@ -19,6 +20,7 @@ import type {
 import type { Repositories } from '@/repositories'
 import { parse_dashboard_layout_from_json } from '@/lib/dashboard_layout'
 import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
+import { mark_repo_source } from '@/lib/repo_sources'
 
 export const REPO_SNAPSHOT_VERSION = 1 as const
 
@@ -453,6 +455,7 @@ export async function import_repo_snapshot(
   await repositories.settings.save({
     token: settings.token,
     repos: merged_repos,
+    repo_sources: mark_repo_source(settings.repo_sources, repo_full_name, 'import'),
     dashboards: merged_dashboards,
     teams: merged_teams,
     ignored_bots: settings.ignored_bots,
@@ -501,4 +504,22 @@ export function parse_share_id_from_url(raw_url: string): string | null {
   } catch {
     return raw_url.trim() || null
   }
+}
+
+/** Read `?import=` / `?share=` from the current URL, strip it, and return a paste-ready link. */
+export function consume_share_link_from_location(): string | null {
+  if (!has_browser_navigator()) return null
+  const params = new URLSearchParams(window.location.search)
+  const import_param = params.get('import') ?? params.get('share')
+  if (!import_param) return null
+
+  params.delete('import')
+  params.delete('share')
+  const next_search = params.toString()
+  const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
+  window.history.replaceState({}, '', next_url)
+
+  return import_param.includes('://')
+    ? import_param
+    : `${window.location.origin}/?import=${import_param}`
 }

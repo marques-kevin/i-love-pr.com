@@ -27,6 +27,7 @@ import type {
   PrFactRecord,
   PullRequestRecord,
   RepoRecord,
+  RepoSource,
   ReviewRecord,
   SyncState,
 } from './types'
@@ -61,6 +62,17 @@ function parse_sync_mode(value: JsonValue | undefined): SyncState['mode'] {
   return 'idle'
 }
 
+function parse_repo_sources(row: JsonObject): Record<string, RepoSource> | undefined {
+  const raw = parse_string_record(row.repo_sources) ?? {}
+  const next: Record<string, RepoSource> = {}
+  for (const [repo, source] of Object.entries(raw)) {
+    if (source === 'pat' || source === 'import') {
+      next[repo] = source
+    }
+  }
+  return Object.keys(next).length > 0 ? next : undefined
+}
+
 function migrate_settings_row(row: JsonObject): AppSettings {
   const teams = parse_json_array(row.teams)
     .filter(is_json_object)
@@ -89,6 +101,7 @@ function migrate_settings_row(row: JsonObject): AppSettings {
     id: 'settings',
     token: json_string_field(row, 'token', 'token'),
     repos,
+    repo_sources: parse_repo_sources(row),
     sync_interval_hours: Number(row.sync_interval_hours ?? row.syncIntervalHours ?? 24),
     backfill_limit: Number(row.backfill_limit ?? row.backfillLimit ?? DEFAULT_BACKFILL_LIMIT),
     ignored_bots: json_string_array(row.ignored_bots ?? row.ignoredBots),

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
+import { repo_source } from '@/lib/repo_sources'
 import {
   assert_snapshot_has_no_token,
   export_repo_snapshot,
@@ -115,6 +116,7 @@ describe('repo_snapshot', () => {
 
     const settings = await target.settings.get()
     expect(settings?.repos).toContain(repo)
+    expect(repo_source(settings!, repo)).toBe('import')
     const prs = await target.pull_requests.list_by_repos([repo])
     expect(prs).toHaveLength(1)
     const facts = await target.pr_facts.list_by_repos([repo])

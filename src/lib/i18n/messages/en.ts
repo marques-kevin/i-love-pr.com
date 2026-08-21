@@ -15,6 +15,17 @@ export const en_messages = {
   'app.nav.add_repository_failed': 'Failed to add repository',
   'home.empty_body': 'Add a GitHub repository to open its dashboard.',
   'home.open_repo': 'Open {repo}',
+  'home.import': 'Import',
+  'home.import_title': 'Import shared repository',
+  'home.import_description':
+    'Paste a teammate’s share link to import their synced PR snapshot into your workspace.',
+  'home.import_label': 'Share link',
+  'home.import_placeholder': 'https://…/?import=…',
+  'home.import_confirm': 'Import snapshot',
+  'home.import_cancel': 'Cancel',
+  'home.import_working': 'Importing…',
+  'home.import_done': 'Imported {count} PRs into {repo}.',
+  'home.import_failed': 'Import failed',
   'dashboard.back_to_list': 'Back to repositories',
   'app.language': 'Language',
   'app.locale.en': 'English',
@@ -384,14 +395,9 @@ export const en_messages = {
   'settings.share.create_link': 'Create share link',
   'settings.share.working': 'Sharing…',
   'settings.share.link_label': 'Share link (copied to clipboard)',
-  'settings.share.import_label': 'Import from share link',
-  'settings.share.import_placeholder': 'https://…/?import=…',
-  'settings.share.import': 'Import snapshot',
   'settings.share.download_done': 'Snapshot downloaded.',
   'settings.share.link_ready': 'Share link copied ({count} PRs).',
-  'settings.share.import_done': 'Imported {count} PRs into {repo}.',
   'settings.share.failed': 'Share failed',
-  'settings.share.import_failed': 'Import failed',
 } as const
 
 export type MessageKey = keyof typeof en_messages

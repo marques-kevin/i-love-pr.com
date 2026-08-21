@@ -26,7 +26,12 @@ function cue_label(cue: SyncCue, error_label: string, syncing_label: string) {
   return syncing_label
 }
 
-export function Wrapper({ repos, sync_states, request_add_repository }: ConnectorProps) {
+export function Wrapper({
+  repos,
+  sync_states,
+  request_add_repository,
+  request_import_repository,
+}: ConnectorProps) {
   const intl = useIntl()
   const error_label = intl.formatMessage({ id: 'app.nav.sync_error' })
   const syncing_label = intl.formatMessage({ id: 'sync.syncing' })
@@ -51,10 +56,15 @@ export function Wrapper({ repos, sync_states, request_add_repository }: Connecto
             <p className="text-base-content/60 max-w-md text-sm">
               {intl.formatMessage({ id: 'home.empty_body' })}
             </p>
-            <Button type="button" className="btn-primary mt-3" onClick={request_add_repository}>
-              <HoverIcon icon={PlusSignIcon} size={16} />
-              {intl.formatMessage({ id: 'app.nav.add_repository' })}
-            </Button>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <Button type="button" className="btn-primary" onClick={request_add_repository}>
+                <HoverIcon icon={PlusSignIcon} size={16} />
+                {intl.formatMessage({ id: 'app.nav.add_repository' })}
+              </Button>
+              <Button type="button" className="btn-outline" onClick={request_import_repository}>
+                {intl.formatMessage({ id: 'home.import' })}
+              </Button>
+            </div>
           </div>
         </section>
       ) : (

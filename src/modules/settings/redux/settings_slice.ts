@@ -16,6 +16,7 @@ import {
   request_share_upload_urls,
   upload_share_snapshot,
 } from '@/lib/share_client'
+import { mark_new_pat_repos } from '@/lib/repo_sources'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
 import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
@@ -68,9 +69,11 @@ export const save_settings = create_app_async_thunk<
   const repos = input.repos.map((r) => r.trim()).filter(Boolean)
 
   const previous = await extra.repositories.settings.get()
+  const repo_sources = mark_new_pat_repos(previous?.repo_sources, previous?.repos ?? [], repos)
   const payload: SaveSettingsInput = {
     token,
     repos,
+    repo_sources,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
     ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,

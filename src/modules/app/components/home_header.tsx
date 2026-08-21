@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
+import { Download01Icon } from '@/components/icons/download_01'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Settings01Icon } from '@/components/icons/settings_01'
 import { IlovePrLogo } from '@/components/ilove_pr_logo'
@@ -8,10 +9,12 @@ import { Button } from '@/components/ui/button'
 import { APP_VERSION } from '@/lib/app_meta'
 import { AccountMenu } from '@/modules/accounts/components/account_menu'
 import { AddRepositoryDialog } from '@/modules/settings/components/add_repository_dialog'
+import { RepoImportDialog } from '@/modules/settings/components/repo_import_dialog'
 import { connector, type ConnectorProps } from './home_header.connector'
 
 export function Wrapper({
   add_repository_requested,
+  request_import_repository,
   set_show_settings,
   load_available_repos,
   clear_add_repository_request,
@@ -43,6 +46,15 @@ export function Wrapper({
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Button
             type="button"
+            className="btn-outline btn-sm rounded-full"
+            aria-label={intl.formatMessage({ id: 'home.import' })}
+            onClick={request_import_repository}
+          >
+            <HoverIcon icon={Download01Icon} size={16} />
+            <span className="hidden sm:inline">{intl.formatMessage({ id: 'home.import' })}</span>
+          </Button>
+          <Button
+            type="button"
             className="btn-primary btn-sm rounded-full"
             aria-label={intl.formatMessage({ id: 'app.nav.add_repository' })}
             onClick={open_add_repo}
@@ -69,6 +81,7 @@ export function Wrapper({
         </div>
       </div>
       {show_add_repo_dialog ? <AddRepositoryDialog on_close={close_add_repo_dialog} /> : null}
+      <RepoImportDialog />
     </header>
   )
 }
