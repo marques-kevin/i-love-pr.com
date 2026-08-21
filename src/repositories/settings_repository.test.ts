@@ -20,6 +20,29 @@ describe('create_memory_repositories settings', () => {
     expect(loaded?.token).toBe('ghp_test')
   })
 
+  it('defaults imported_repos to an empty array', async () => {
+    const repositories = create_memory_repositories()
+    const saved = await repositories.settings.save({
+      token: 'ghp_test',
+      repos: ['acme/app'],
+    })
+    expect(saved.imported_repos).toEqual([])
+  })
+
+  it('preserves imported_repos unless explicitly updated', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({
+      token: 'ghp_test',
+      repos: ['acme/imported'],
+      imported_repos: ['acme/imported'],
+    })
+    const saved = await repositories.settings.save({
+      token: 'ghp_test',
+      repos: ['acme/imported'],
+    })
+    expect(saved.imported_repos).toEqual(['acme/imported'])
+  })
+
   it('saves dashboard layout on the active tab', async () => {
     const repositories = create_memory_repositories()
     await repositories.settings.save({ token: 't', repos: ['a/b'] })

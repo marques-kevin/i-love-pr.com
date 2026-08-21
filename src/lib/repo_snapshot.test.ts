@@ -21,6 +21,7 @@ function base_settings(repos: string[]): AppSettings {
     id: 'settings',
     token: 'ghp_test',
     repos,
+    imported_repos: [],
     active_repo: repos[0] ?? null,
     sync_interval_hours: 24,
     backfill_limit: 200,
@@ -115,6 +116,7 @@ describe('repo_snapshot', () => {
 
     const settings = await target.settings.get()
     expect(settings?.repos).toContain(repo)
+    expect(settings?.imported_repos).toContain(repo)
     const prs = await target.pull_requests.list_by_repos([repo])
     expect(prs).toHaveLength(1)
     const facts = await target.pr_facts.list_by_repos([repo])
@@ -298,5 +300,55 @@ describe('repo_snapshot', () => {
     const settings = await target.settings.get()
     expect(settings?.dashboards).toEqual([local_tab])
     expect(settings?.ignored_bots).toEqual([...DEFAULT_IGNORED_BOTS])
+  })
+
+  it('tags imported repos in imported_repos', async () => {
+    const repo = 'acme/widgets'
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests: [sample_pr(repo)],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    const target = create_memory_repositories({ settings: base_settings([]) })
+    await import_repo_snapshot(target, snapshot)
+    const settings = await target.settings.get()
+    expect(settings?.imported_repos).toEqual([repo])
+  })
+
+  it('keeps PAT repos out of imported_repos when re-importing', async () => {
+    const repo = 'acme/widgets'
+    const pat_settings = base_settings([repo])
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests: [sample_pr(repo)],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    const target = create_memory_repositories({ settings: pat_settings })
+    await import_repo_snapshot(target, snapshot)
+    const settings = await target.settings.get()
+    expect(settings?.repos).toContain(repo)
+    expect(settings?.imported_repos).toEqual([])
   })
 })

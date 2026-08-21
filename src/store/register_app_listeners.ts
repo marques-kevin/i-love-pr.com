@@ -10,6 +10,7 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
+  request_import_repo,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
@@ -111,6 +112,22 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
+
+      if (has_browser_navigator()) {
+        const params = new URLSearchParams(window.location.search)
+        const import_param = params.get('import') ?? params.get('share')
+        if (import_param) {
+          const link = import_param.includes('://')
+            ? import_param
+            : `${window.location.origin}/?import=${import_param}`
+          api.dispatch(request_import_repo(link))
+          params.delete('import')
+          params.delete('share')
+          const next_search = params.toString()
+          const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
+          window.history.replaceState({}, '', next_url)
+        }
+      }
 
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))

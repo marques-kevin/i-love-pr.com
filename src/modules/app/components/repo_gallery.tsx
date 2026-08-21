@@ -92,6 +92,7 @@ export function Wrapper({
   imported_repositories,
   sync_states,
   request_add_repository,
+  request_import_repository,
 }: ConnectorProps) {
   const intl = useIntl()
   const error_label = intl.formatMessage({ id: 'app.nav.sync_error' })
@@ -122,10 +123,19 @@ export function Wrapper({
                 <p className="text-base-content/60 max-w-md text-sm">
                   {intl.formatMessage({ id: 'home.empty_body' })}
                 </p>
-                <Button type="button" className="btn-primary mt-3" onClick={request_add_repository}>
-                  <HoverIcon icon={PlusSignIcon} size={16} />
-                  {intl.formatMessage({ id: 'app.nav.add_repository' })}
-                </Button>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" className="btn-primary" onClick={request_add_repository}>
+                    <HoverIcon icon={PlusSignIcon} size={16} />
+                    {intl.formatMessage({ id: 'app.nav.add_repository' })}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => request_import_repository()}
+                  >
+                    {intl.formatMessage({ id: 'app.nav.import_repository' })}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

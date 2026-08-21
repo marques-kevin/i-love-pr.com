@@ -49,6 +49,7 @@ const sample_settings: AppSettings = {
   id: 'settings',
   token: 't',
   repos: ['org/repo'],
+  imported_repos: [],
   active_repo: 'org/repo',
   sync_interval_hours: 24,
   backfill_limit: 200,

@@ -89,6 +89,7 @@ function migrate_settings_row(row: JsonObject): AppSettings {
     id: 'settings',
     token: json_string_field(row, 'token', 'token'),
     repos,
+    imported_repos: json_string_array(row.imported_repos ?? row.importedRepos),
     sync_interval_hours: Number(row.sync_interval_hours ?? row.syncIntervalHours ?? 24),
     backfill_limit: Number(row.backfill_limit ?? row.backfillLimit ?? DEFAULT_BACKFILL_LIMIT),
     ignored_bots: json_string_array(row.ignored_bots ?? row.ignoredBots),

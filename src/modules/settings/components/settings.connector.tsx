@@ -4,13 +4,11 @@ import {
   clear_all_data,
   create_repo_share_link,
   download_repo_snapshot_file,
-  import_repo_snapshot_from_link,
   load_settings,
   refresh_metrics,
   reset_sync_data,
   run_sync,
   save_settings,
-  set_active_repo,
   set_bootstrapped,
   set_show_settings,
 } from '@/store'
@@ -32,8 +30,6 @@ export const map_dispatch_to_props = {
   run_sync,
   download_repo_snapshot_file,
   create_repo_share_link,
-  import_repo_snapshot_from_link,
-  set_active_repo,
 }
 
 export const connector = connect(map_state_to_props, map_dispatch_to_props)
