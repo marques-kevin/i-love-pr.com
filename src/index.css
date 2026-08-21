@@ -40,6 +40,12 @@
   --noise: 0;
 }
 
+/* daisyUI .btn-outline sets --btn-border to 100% --color-base-content; match idle .input hairline on ilovepr only. */
+[data-theme='ilovepr'] .btn-outline,
+[data-theme='ilovepr'] .btn-dash {
+  --btn-border: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+}
+
 @supports (corner-shape: squircle) {
   * {
     corner-shape: squircle;
