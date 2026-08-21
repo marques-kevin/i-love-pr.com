@@ -67,6 +67,8 @@ export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
+  /** Repos added via snapshot import (#47); omitted on older settings rows. */
+  imported_repos?: string[]
   /** Currently focused repo in the app shell (`owner/name`). */
   active_repo: string | null
   sync_interval_hours: number
@@ -113,15 +115,11 @@ export interface SessionRecord {
   legacy_migrated: boolean
 }
 
-export type RepoSource = 'github' | 'import'
-
 export interface RepoRecord {
   full_name: string
   owner: string
   name: string
   added_at: string
-  /** Snapshot imports only; omitted or `github` for synced repositories. */
-  source?: RepoSource
 }
 
 export interface SyncState {

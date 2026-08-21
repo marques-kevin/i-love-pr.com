@@ -1,13 +1,14 @@
 import { connect, type ConnectedProps } from 'react-redux'
-import { split_repos_for_gallery } from '@/lib/repo_gallery_sections'
+import { partition_gallery_repos } from '@/lib/repo_gallery'
 import { request_add_repository as request_add_repository_action } from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => {
   const repos = state.settings.settings?.repos ?? []
-  const { my_repositories, imported } = split_repos_for_gallery(repos, state.settings.repo_records)
+  const imported_repos = state.settings.settings?.imported_repos ?? []
+  const { own, imported } = partition_gallery_repos(repos, imported_repos)
   return {
-    my_repositories,
+    own_repositories: own,
     imported_repositories: imported,
     sync_states: state.sync.sync_states,
   }

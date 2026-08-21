@@ -17,7 +17,6 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
-  RepoRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
@@ -75,7 +74,6 @@ function normalize_settings(
 
 type MemoryBag = {
   settings: AppSettings | undefined
-  repo_records: Map<string, RepoRecord>
   pull_requests: Map<string, PullRequestRecord>
   reviews: Map<string, ReviewRecord>
   sync_states: Map<string, SyncState>
@@ -93,7 +91,6 @@ export function create_memory_repositories(seed?: {
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
-    repo_records: new Map(),
     pull_requests: new Map((seed?.pull_requests ?? []).map((pr) => [pr.id, structuredClone(pr)])),
     reviews: new Map((seed?.reviews ?? []).map((r) => [r.id, structuredClone(r)])),
     sync_states: new Map(
@@ -298,37 +295,17 @@ export function create_memory_repositories(seed?: {
       if (!bag.settings) throw new Error('Settings not initialized')
       return save_teams((bag.settings.teams ?? []).filter((t) => t.id !== id))
     },
-    upsert_repos: async (full_names, options) => {
-      const now = new Date().toISOString()
-      const source = options?.source ?? 'github'
+    upsert_repos: async (full_names) => {
       for (const full_name of full_names) {
         const [owner, name] = full_name.split('/')
         if (!owner || !name) continue
-        const existing = bag.repo_records.get(full_name)
-        if (!existing) {
-          bag.repo_records.set(full_name, {
-            full_name,
-            owner,
-            name,
-            added_at: now,
-            source,
-          })
-        } else if (source === 'import') {
-          bag.repo_records.set(full_name, { ...existing, source: 'import' })
-        }
         if (!bag.sync_states.has(full_name)) {
           bag.sync_states.set(full_name, empty_sync_state(full_name))
         }
       }
     },
-    list_repos: async () =>
-      [...bag.repo_records.values()].map((record) => ({
-        ...record,
-        source: record.source ?? 'github',
-      })),
     clear_all_data: async () => {
       bag.settings = undefined
-      bag.repo_records.clear()
       bag.pull_requests.clear()
       bag.reviews.clear()
       bag.sync_states.clear()

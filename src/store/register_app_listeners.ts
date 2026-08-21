@@ -19,9 +19,7 @@ import { play_sound } from '@/lib/cuelume'
 import {
   create_dashboard,
   delete_dashboard,
-  import_repo_snapshot_from_link,
   load_available_repos,
-  load_repo_records,
   load_settings,
   save_dashboard_filters,
   save_settings,
@@ -91,10 +89,6 @@ function hydrate_filters_from_active_dashboard(api: {
   api.dispatch(hydrate_dashboard_filters(normalize_dashboard_filters(active)))
 }
 
-function dispatch_load_repo_records(api: { dispatch: AppDispatch }) {
-  void api.dispatch(load_repo_records())
-}
-
 export function register_app_listeners(
   middleware: ListenerMiddlewareInstance<RootState, AppDispatch, ThunkExtra>,
 ) {
@@ -115,7 +109,6 @@ export function register_app_listeners(
       await ensure_pr_facts(api.extra.repositories)
       apply_active_repo_from_url_or_settings(api)
       hydrate_filters_from_active_dashboard(api)
-      dispatch_load_repo_records(api)
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
 
@@ -143,7 +136,6 @@ export function register_app_listeners(
       apply_active_repo_from_url_or_settings(api)
       api.dispatch(clamp_active_repo_to_settings(settings.repos))
       hydrate_filters_from_active_dashboard(api)
-      dispatch_load_repo_records(api)
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(load_available_repos({ token: settings.token }))
 
@@ -151,14 +143,6 @@ export function register_app_listeners(
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(run_sync({ force: false }))
       }
-    },
-  })
-
-  middleware.startListening({
-    actionCreator: import_repo_snapshot_from_link.fulfilled,
-    effect: async (_action, api) => {
-      await api.dispatch(load_settings())
-      dispatch_load_repo_records(api)
     },
   })
 

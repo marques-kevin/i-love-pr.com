@@ -115,8 +115,6 @@ describe('repo_snapshot', () => {
 
     const settings = await target.settings.get()
     expect(settings?.repos).toContain(repo)
-    const repo_records = await target.settings.list_repos()
-    expect(repo_records.find((record) => record.full_name === repo)?.source).toBe('import')
     const prs = await target.pull_requests.list_by_repos([repo])
     expect(prs).toHaveLength(1)
     const facts = await target.pr_facts.list_by_repos([repo])

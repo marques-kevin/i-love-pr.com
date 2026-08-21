@@ -88,7 +88,7 @@ function RepoGrid({
 }
 
 export function Wrapper({
-  my_repositories,
+  own_repositories,
   imported_repositories,
   sync_states,
   request_add_repository,
@@ -113,7 +113,7 @@ export function Wrapper({
           <h2 className="font-display text-lg">
             {intl.formatMessage({ id: 'home.my_repositories' })}
           </h2>
-          {my_repositories.length === 0 ? (
+          {own_repositories.length === 0 ? (
             <div className="card bg-base-100 ring-base-content/10 mt-4 rounded-3xl shadow-none ring-1">
               <div className="card-body items-center gap-3 px-6 py-16 text-center">
                 <h3 className="font-display text-lg font-semibold">
@@ -131,7 +131,7 @@ export function Wrapper({
           ) : (
             <div className="mt-4">
               <RepoGrid
-                repos={my_repositories}
+                repos={own_repositories}
                 sync_states={sync_states}
                 show_imported_badge={false}
                 error_label={error_label}

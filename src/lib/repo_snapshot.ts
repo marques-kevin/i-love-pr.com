@@ -85,10 +85,7 @@ function decode_external_array(values: ExternalValue[]): JsonArray {
   return rows
 }
 
-function repo_record_from_full_name(
-  repo_full_name: string,
-  source: RepoRecord['source'] = 'github',
-): RepoRecord {
+function repo_record_from_full_name(repo_full_name: string): RepoRecord {
   const [owner, name] = repo_full_name.split('/')
   if (!owner || !name) {
     throw new RepoSnapshotError(`Invalid repository name: ${repo_full_name}`)
@@ -98,7 +95,6 @@ function repo_record_from_full_name(
     owner,
     name,
     added_at: new Date().toISOString(),
-    source,
   }
 }
 
@@ -193,10 +189,8 @@ function parse_repo_records(rows: JsonArray): RepoRecord[] {
     const owner = json_string_field(row, 'owner', 'owner')
     const name = json_string_field(row, 'name', 'name')
     const added_at = json_string_field(row, 'added_at', 'addedAt', new Date().toISOString())
-    const source_raw = row.source
-    const source = source_raw === 'import' || source_raw === 'github' ? source_raw : undefined
     if (!full_name || !owner || !name) continue
-    repos.push({ full_name, owner, name, added_at, source })
+    repos.push({ full_name, owner, name, added_at })
   }
   return repos
 }
@@ -465,7 +459,7 @@ export async function import_repo_snapshot(
     test_file_globs: settings.test_file_globs,
     business_hours: settings.business_hours,
   })
-  await repositories.settings.upsert_repos([repo_full_name], { source: 'import' })
+  await repositories.settings.upsert_repos(merged_repos)
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
