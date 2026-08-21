@@ -150,8 +150,6 @@ export const en_messages = {
 
   'metrics.empty': 'No data yet. Run a sync to pull pull requests.',
 
-  'dashboard.subtitle': 'Your custom dashboard',
-  'dashboard.subtitle_editing': 'Add, reorder, or remove charts on your dashboard.',
   'dashboard.filters': 'Filters',
   'dashboard.filters.title': 'Filters',
   'dashboard.filters.description': 'Narrow charts by teams and members for this dashboard.',
