@@ -438,11 +438,12 @@ export async function import_repo_snapshot(
   }
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
+  const previous_imported = settings.imported_repos ?? []
   const is_pat_repo =
-    settings.repos.includes(repo_full_name) && !settings.imported_repos.includes(repo_full_name)
+    settings.repos.includes(repo_full_name) && !previous_imported.includes(repo_full_name)
   const merged_imported_repos = is_pat_repo
-    ? settings.imported_repos.filter((repo) => repo !== repo_full_name)
-    : Array.from(new Set([...settings.imported_repos, repo_full_name]))
+    ? previous_imported.filter((repo) => repo !== repo_full_name)
+    : Array.from(new Set([...previous_imported, repo_full_name]))
   const incoming_dashboards = snapshot.settings_subset.dashboards.filter(
     (tab) => tab.layout.length > 0,
   )
