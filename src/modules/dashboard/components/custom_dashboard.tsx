@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { ArrowDown02Icon } from '@/components/icons/arrow_down_02'
 import { ArrowUp02Icon } from '@/components/icons/arrow_up_02'
 import { Cancel01Icon } from '@/components/icons/cancel_01'
@@ -59,7 +60,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
         <div className="flex flex-wrap gap-2">
           {editing && (
             <Button type="button" className="btn-outline btn-sm" onClick={open_picker}>
-              <PlusSignIcon size={16} aria-hidden={true} />
+              <HoverIcon icon={PlusSignIcon} size={16} />
               {intl.formatMessage({ id: 'dashboard.add_chart' })}
             </Button>
           )}
@@ -70,12 +71,12 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           >
             {editing ? (
               <>
-                <Cancel01Icon size={16} aria-hidden={true} />
+                <HoverIcon icon={Cancel01Icon} size={16} />
                 {intl.formatMessage({ id: 'dashboard.done' })}
               </>
             ) : (
               <>
-                <Edit02Icon size={16} aria-hidden={true} />
+                <HoverIcon icon={Edit02Icon} size={16} />
                 {intl.formatMessage({ id: 'dashboard.customize' })}
               </>
             )}
@@ -99,7 +100,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
               open_picker()
             }}
           >
-            <PlusSignIcon size={16} aria-hidden={true} />
+            <HoverIcon icon={PlusSignIcon} size={16} />
             {intl.formatMessage({ id: 'dashboard.add_chart' })}
           </Button>
         </div>
@@ -122,7 +123,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => save_layout(move_item(layout, item.instance_id, -1))}
                         aria-label={intl.formatMessage({ id: 'dashboard.move_up' })}
                       >
-                        <ArrowUp02Icon size={16} aria-hidden={true} />
+                        <HoverIcon icon={ArrowUp02Icon} size={16} />
                       </Button>
                       <Button
                         type="button"
@@ -131,7 +132,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => save_layout(move_item(layout, item.instance_id, 1))}
                         aria-label={intl.formatMessage({ id: 'dashboard.move_down' })}
                       >
-                        <ArrowDown02Icon size={16} aria-hidden={true} />
+                        <HoverIcon icon={ArrowDown02Icon} size={16} />
                       </Button>
                       <Button
                         type="button"
@@ -139,7 +140,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => remove_widget(item.instance_id)}
                         aria-label={intl.formatMessage({ id: 'dashboard.remove' }, { label })}
                       >
-                        <Delete02Icon size={16} aria-hidden={true} />
+                        <HoverIcon icon={Delete02Icon} size={16} />
                       </Button>
                     </div>
                   </div>
@@ -224,7 +225,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             className="btn-primary"
             onClick={() => add_widget(preview_widget_id)}
           >
-            <PlusSignIcon size={16} aria-hidden={true} />
+            <HoverIcon icon={PlusSignIcon} size={16} />
             {intl.formatMessage({ id: 'dashboard.add_confirm' })}
           </Button>
         </div>

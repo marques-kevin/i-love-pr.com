@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { ChevronDownIcon } from '@/components/icons/chevron_down'
 import { Loading03Icon } from '@/components/icons/loading_03'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
@@ -175,10 +176,10 @@ export function Wrapper({
                       </span>
                     )}
                   </span>
-                  <ChevronDownIcon
+                  <HoverIcon
+                    icon={ChevronDownIcon}
                     size={16}
-                    className="text-base-content/60 shrink-0"
-                    aria-hidden={true}
+                    icon_className="text-base-content/60"
                   />
                 </Button>
                 <ul
@@ -203,7 +204,7 @@ export function Wrapper({
                           </span>
                           <span className="min-w-0 flex-1 truncate">{repo_short_name(repo)}</span>
                           <RepoCue cue={cue} error_label={error_label} />
-                          {active ? <Tick02Icon size={16} aria-hidden={true} /> : null}
+                          {active ? <HoverIcon icon={Tick02Icon} size={16} /> : null}
                         </button>
                       </li>
                     )
@@ -220,7 +221,7 @@ export function Wrapper({
               aria-label={intl.formatMessage({ id: 'app.nav.add_repository' })}
               onClick={open_add_repo}
             >
-              <PlusSignIcon size={16} aria-hidden={true} />
+              <HoverIcon icon={PlusSignIcon} size={16} />
               <span className="hidden sm:inline">
                 {intl.formatMessage({ id: 'app.nav.add_repository' })}
               </span>
@@ -235,7 +236,7 @@ export function Wrapper({
                 aria-label={intl.formatMessage({ id: 'app.settings' })}
                 onClick={() => set_show_settings(true)}
               >
-                <Settings01Icon size={16} aria-hidden={true} />
+                <HoverIcon icon={Settings01Icon} size={16} />
               </Button>
             </div>
             <AccountMenu />

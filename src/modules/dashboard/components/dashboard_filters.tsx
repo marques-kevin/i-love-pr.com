@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { FilterIcon } from '@/components/icons/filter'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -22,7 +23,7 @@ export function Wrapper(props: ConnectorProps) {
   return (
     <>
       <Button type="button" className="btn-outline btn-sm" onClick={() => set_open(true)}>
-        <FilterIcon size={16} aria-hidden={true} />
+        <HoverIcon icon={FilterIcon} size={16} />
         {intl.formatMessage({ id: 'dashboard.filters' })}
         {count > 0 ? <span className="badge badge-sm badge-neutral">{count}</span> : null}
       </Button>

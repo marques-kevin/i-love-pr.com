@@ -1,13 +1,13 @@
 import { FormattedMessage, useIntl } from 'react-intl'
+import { HoverIcon, type AnimatedIcon } from '@/components/hover_icon'
 import { AlertCircleIcon } from '@/components/icons/alert_circle'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { MinusSignCircleIcon } from '@/components/icons/minus_sign_circle'
 import { Tick02Icon } from '@/components/icons/tick_02'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import type { TokenScopeAnalysis } from '@/lib/github_token_scopes'
-import type { RateLimitInfo } from '@/lib/types'
 import { onboarding_scope_message_key } from '@/lib/i18n'
-import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
+import type { RateLimitInfo } from '@/lib/types'
 import { landing_command_box, landing_hairline } from './onboarding_surface'
 
 interface OnboardingTokenStepProps {
@@ -41,17 +41,10 @@ function scope_status_label(
 }
 
 function ScopeStatusIcon({ status }: { status: TokenScopeAnalysis['scopes'][number]['status'] }) {
-  const icon: OnboardingAnimatedIcon = status === 'missing' ? MinusSignCircleIcon : Tick02Icon
+  const icon: AnimatedIcon = status === 'missing' ? MinusSignCircleIcon : Tick02Icon
   const icon_className = status === 'granted' ? 'text-primary' : 'text-base-content/60'
 
-  return (
-    <OnboardingHoverIcon
-      icon={icon}
-      size={16}
-      className="shrink-0"
-      icon_className={icon_className}
-    />
-  )
+  return <HoverIcon icon={icon} size={16} className="shrink-0" icon_className={icon_className} />
 }
 
 export function OnboardingTokenStep({

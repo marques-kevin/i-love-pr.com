@@ -1,4 +1,5 @@
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { ChevronDownIcon } from '@/components/icons/chevron_down'
 import { Logout01Icon } from '@/components/icons/logout_01'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
@@ -49,7 +50,7 @@ export function Wrapper({
         disabled
         aria-label={intl.formatMessage({ id: 'account.unknown' })}
       >
-        <UserIcon size={16} aria-hidden={true} />
+        <HoverIcon icon={UserIcon} size={16} />
       </Button>
     )
   }
@@ -70,10 +71,11 @@ export function Wrapper({
         <span className="hidden max-w-28 truncate text-sm font-medium sm:inline">
           {display_name}
         </span>
-        <ChevronDownIcon
+        <HoverIcon
+          icon={ChevronDownIcon}
           size={16}
-          className="text-base-content/60 hidden sm:block"
-          aria-hidden={true}
+          className="hidden sm:inline-flex"
+          icon_className="text-base-content/60"
         />
       </Button>
       <ul
@@ -115,7 +117,7 @@ export function Wrapper({
               close_daisy_dropdown(event.currentTarget)
             }}
           >
-            <PlusSignIcon size={16} aria-hidden={true} />
+            <HoverIcon icon={PlusSignIcon} size={16} />
             {intl.formatMessage({ id: 'account.add' })}
           </button>
         </li>
@@ -127,7 +129,7 @@ export function Wrapper({
               close_daisy_dropdown(event.currentTarget)
             }}
           >
-            <Logout01Icon size={16} aria-hidden={true} />
+            <HoverIcon icon={Logout01Icon} size={16} />
             {intl.formatMessage({ id: 'account.logout' })}
           </button>
         </li>
