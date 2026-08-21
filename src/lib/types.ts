@@ -113,11 +113,15 @@ export interface SessionRecord {
   legacy_migrated: boolean
 }
 
+export type RepoSource = 'github' | 'import'
+
 export interface RepoRecord {
   full_name: string
   owner: string
   name: string
   added_at: string
+  /** Snapshot imports only; omitted or `github` for synced repositories. */
+  source?: RepoSource
 }
 
 export interface SyncState {

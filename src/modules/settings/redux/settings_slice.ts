@@ -18,12 +18,13 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
+import type { AppSettings, BusinessHoursConfig, RepoRecord } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SettingsState = {
   settings: AppSettings | null
+  repo_records: RepoRecord[]
   loading: boolean
   error: string | null
   available_repos: GitHubRepoOption[]
@@ -34,6 +35,7 @@ export type SettingsState = {
 
 const initial_state: SettingsState = {
   settings: null,
+  repo_records: [],
   loading: true,
   error: null,
   available_repos: [],
@@ -49,6 +51,11 @@ export const load_settings = create_app_async_thunk<AppSettings | null, void>(
     const settings = await extra.repositories.settings.get()
     return settings ?? null
   },
+)
+
+export const load_repo_records = create_app_async_thunk<RepoRecord[], void>(
+  'settings/load_repo_records',
+  async (_, { extra }) => extra.repositories.settings.list_repos(),
 )
 
 export const save_settings = create_app_async_thunk<
@@ -324,6 +331,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
         state.loading = false
       })
+      .addCase(load_repo_records.fulfilled, (state, action) => {
+        state.repo_records = action.payload
+      })
       .addCase(load_settings.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message ?? 'Failed to load settings'
@@ -361,6 +371,7 @@ const settings_slice = createSlice({
       })
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
+        state.repo_records = []
         state.loading = false
         state.available_repos = []
         state.available_repos_loading = false

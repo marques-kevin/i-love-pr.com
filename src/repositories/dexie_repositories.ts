@@ -307,8 +307,9 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
       if (!existing) throw new Error('Settings not initialized')
       return save_teams((existing.teams ?? []).filter((t) => t.id !== id))
     },
-    upsert_repos: async (full_names) => {
+    upsert_repos: async (full_names, options) => {
       const now = new Date().toISOString()
+      const source = options?.source ?? 'github'
       await database.transaction('rw', database.repos, database.sync_state, async () => {
         for (const full_name of full_names) {
           const [owner, name] = full_name.split('/')
@@ -320,7 +321,10 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
               owner,
               name,
               added_at: now,
+              source,
             })
+          } else if (source === 'import') {
+            await database.repos.put({ ...existing, source: 'import' })
           }
           const sync = await database.sync_state.get(full_name)
           if (!sync) {
@@ -328,6 +332,13 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
           }
         }
       })
+    },
+    list_repos: async () => {
+      const records = await database.repos.toArray()
+      return records.map((record) => ({
+        ...record,
+        source: record.source ?? 'github',
+      }))
     },
     clear_all_data: async () => {
       await database.transaction(

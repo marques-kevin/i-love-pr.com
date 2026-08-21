@@ -126,11 +126,14 @@ function migrate_settings_row(row: JsonObject): AppSettings {
 function migrate_repo_row(row: JsonObject): RepoRecord | null {
   const full_name = json_string_field(row, 'full_name', 'fullName')
   if (!full_name) return null
+  const source_raw = row.source
+  const source = source_raw === 'import' || source_raw === 'github' ? source_raw : undefined
   return {
     full_name,
     owner: json_string_field(row, 'owner', 'owner', full_name.split('/')[0] ?? ''),
     name: json_string_field(row, 'name', 'name', full_name.split('/')[1] ?? ''),
     added_at: json_string_field(row, 'added_at', 'addedAt', new Date().toISOString()),
+    source,
   }
 }
 

@@ -5,6 +5,7 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoRecord,
   ReviewRecord,
   SyncState,
   DashboardLayoutItem,
@@ -33,7 +34,8 @@ export interface SettingsRepository {
   save_locale: (locale: AppSettings['locale']) => Promise<AppSettings>
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
-  upsert_repos: (full_names: string[]) => Promise<void>
+  upsert_repos: (full_names: string[], options?: { source?: RepoRecord['source'] }) => Promise<void>
+  list_repos: () => Promise<RepoRecord[]>
   clear_all_data: () => Promise<void>
   reset_sync_data: () => Promise<void>
 }
