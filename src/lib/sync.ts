@@ -25,10 +25,12 @@ export async function sync_all_repos(options: {
   const client = new GitHubClient(settings.token)
   let last_rate_limit: RateLimitInfo | null = null
   let sync_completed = false
-  const repos =
+  const imported_repos = new Set(settings.imported_repos ?? [])
+  const repos = (
     options.repos && options.repos.length > 0
       ? options.repos.filter((repo) => settings.repos.includes(repo))
       : settings.repos
+  ).filter((repo) => !imported_repos.has(repo))
 
   for (const full_name of repos) {
     const result = await sync_repo(full_name, {
@@ -58,6 +60,16 @@ async function sync_repo(
   },
 ): Promise<{ rate_limit: RateLimitInfo | null; sync_completed: boolean }> {
   const { repositories } = ctx
+  if (ctx.settings.imported_repos?.includes(full_name)) {
+    ctx.on_progress?.({
+      repo_full_name: full_name,
+      mode: 'idle',
+      fetched: 0,
+      message: `Skipping imported snapshot ${full_name}.`,
+      rate_limit: ctx.client.getRateLimit(),
+    })
+    return { rate_limit: ctx.client.getRateLimit(), sync_completed: false }
+  }
   const parsed = parseRepoFullName(full_name)
   if (!parsed) {
     await repositories.sync_state.update(full_name, {

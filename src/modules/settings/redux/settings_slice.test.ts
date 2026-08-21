@@ -35,4 +35,50 @@ describe('settings thunks with memory repositories', () => {
     await store2.dispatch(load_settings())
     expect(store2.getState().settings.settings?.token).toBe('ghp_x')
   })
+
+  it('does not clear imported_repos when saving settings without adding a repo', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({
+      token: 'ghp_x',
+      repos: ['acme/imported'],
+      imported_repos: ['acme/imported'],
+    })
+    const store = create_store({
+      repositories,
+      session: create_mock_session({ get_active_login: () => 'testuser' }),
+    })
+
+    await store.dispatch(
+      save_settings({
+        token: 'ghp_x',
+        repos: ['acme/imported'],
+        sync_interval_hours: 12,
+      }),
+    )
+
+    expect(store.getState().settings.settings?.imported_repos).toEqual(['acme/imported'])
+  })
+
+  it('promotes a newly PAT-added repo that was listed in imported_repos', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({
+      token: 'ghp_x',
+      repos: [],
+      imported_repos: ['acme/imported'],
+    })
+    const store = create_store({
+      repositories,
+      session: create_mock_session({ get_active_login: () => 'testuser' }),
+    })
+
+    await store.dispatch(
+      save_settings({
+        token: 'ghp_x',
+        repos: ['acme/imported'],
+      }),
+    )
+
+    expect(store.getState().settings.settings?.repos).toEqual(['acme/imported'])
+    expect(store.getState().settings.settings?.imported_repos).toEqual([])
+  })
 })

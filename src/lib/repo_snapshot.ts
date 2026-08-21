@@ -438,6 +438,11 @@ export async function import_repo_snapshot(
   }
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
+  const is_pat_repo =
+    settings.repos.includes(repo_full_name) && !settings.imported_repos.includes(repo_full_name)
+  const merged_imported_repos = is_pat_repo
+    ? settings.imported_repos.filter((repo) => repo !== repo_full_name)
+    : Array.from(new Set([...settings.imported_repos, repo_full_name]))
   const incoming_dashboards = snapshot.settings_subset.dashboards.filter(
     (tab) => tab.layout.length > 0,
   )
@@ -453,6 +458,7 @@ export async function import_repo_snapshot(
   await repositories.settings.save({
     token: settings.token,
     repos: merged_repos,
+    imported_repos: merged_imported_repos,
     dashboards: merged_dashboards,
     teams: merged_teams,
     ignored_bots: settings.ignored_bots,

@@ -27,6 +27,9 @@ export type DashboardState = {
   show_settings: boolean
   /** One-shot: open the add-repository dialog after onboarding. */
   add_repository_requested: boolean
+  /** One-shot: open the import-repository dialog (optionally prefilled). */
+  import_repo_requested: boolean
+  import_repo_link: string | null
 }
 
 const initial_state: DashboardState = {
@@ -41,6 +44,8 @@ const initial_state: DashboardState = {
   loading: false,
   show_settings: false,
   add_repository_requested: false,
+  import_repo_requested: false,
+  import_repo_link: null,
 }
 
 export const refresh_metrics = create_app_async_thunk<
@@ -110,6 +115,14 @@ const dashboard_slice = createSlice({
     clear_add_repository_request(state) {
       state.add_repository_requested = false
     },
+    request_import_repo(state, action: PayloadAction<string | null>) {
+      state.import_repo_requested = true
+      state.import_repo_link = action.payload
+    },
+    clear_import_repo_request(state) {
+      state.import_repo_requested = false
+      state.import_repo_link = null
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -139,6 +152,8 @@ export const {
   set_show_settings,
   request_add_repository,
   clear_add_repository_request,
+  request_import_repo,
+  clear_import_repo_request,
 } = dashboard_slice.actions
 
 export const dashboard_reducer = dashboard_slice.reducer

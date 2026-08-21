@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
+import { Download01Icon } from '@/components/icons/download_01'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Settings01Icon } from '@/components/icons/settings_01'
 import { IlovePrLogo } from '@/components/ilove_pr_logo'
@@ -8,26 +9,40 @@ import { Button } from '@/components/ui/button'
 import { APP_VERSION } from '@/lib/app_meta'
 import { AccountMenu } from '@/modules/accounts/components/account_menu'
 import { AddRepositoryDialog } from '@/modules/settings/components/add_repository_dialog'
+import { ImportRepoDialog } from '@/modules/settings/components/import_repo_dialog'
 import { connector, type ConnectorProps } from './home_header.connector'
 
 export function Wrapper({
   add_repository_requested,
+  import_repo_requested,
   set_show_settings,
   load_available_repos,
   clear_add_repository_request,
+  clear_import_repo_request,
 }: ConnectorProps) {
   const intl = useIntl()
   const [add_repo_open, set_add_repo_open] = useState(false)
+  const [import_repo_open, set_import_repo_open] = useState(false)
   const show_add_repo_dialog = add_repo_open || add_repository_requested
+  const show_import_repo_dialog = import_repo_open || import_repo_requested
 
   function close_add_repo_dialog() {
     set_add_repo_open(false)
     if (add_repository_requested) clear_add_repository_request()
   }
 
+  function close_import_repo_dialog() {
+    set_import_repo_open(false)
+    if (import_repo_requested) clear_import_repo_request()
+  }
+
   function open_add_repo() {
     load_available_repos()
     set_add_repo_open(true)
+  }
+
+  function open_import_repo() {
+    set_import_repo_open(true)
   }
 
   return (
@@ -41,6 +56,17 @@ export function Wrapper({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Button
+            type="button"
+            className="btn-ghost btn-sm rounded-full"
+            aria-label={intl.formatMessage({ id: 'app.nav.import_repository' })}
+            onClick={open_import_repo}
+          >
+            <HoverIcon icon={Download01Icon} size={16} />
+            <span className="hidden sm:inline">
+              {intl.formatMessage({ id: 'app.nav.import_repository' })}
+            </span>
+          </Button>
           <Button
             type="button"
             className="btn-primary btn-sm rounded-full"
@@ -69,6 +95,7 @@ export function Wrapper({
         </div>
       </div>
       {show_add_repo_dialog ? <AddRepositoryDialog on_close={close_add_repo_dialog} /> : null}
+      {show_import_repo_dialog ? <ImportRepoDialog on_close={close_import_repo_dialog} /> : null}
     </header>
   )
 }
