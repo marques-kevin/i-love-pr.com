@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { HoverIcon } from '@/components/hover_icon'
 import { Cancel01Icon } from '@/components/icons/cancel_01'
 import { Delete02Icon } from '@/components/icons/delete_02'
 import { Edit02Icon } from '@/components/icons/edit_02'
@@ -162,7 +163,7 @@ export function Wrapper({
           <span className="badge badge-ghost">Entire team</span>
         ) : teamMode && activeTeam ? (
           <span className="badge badge-primary gap-1.5 pr-1">
-            <UserGroupIcon size={12} aria-hidden={true} />
+            <HoverIcon icon={UserGroupIcon} size={12} />
             {activeTeam.name}
             <span className="opacity-70">· {activeTeam.members.length}</span>
             <button
@@ -171,7 +172,7 @@ export function Wrapper({
               onClick={clear}
               className="hover:bg-primary-content/20 rounded-full p-0.5"
             >
-              <Cancel01Icon size={12} aria-hidden={true} />
+              <HoverIcon icon={Cancel01Icon} size={12} />
             </button>
           </span>
         ) : (
@@ -184,7 +185,7 @@ export function Wrapper({
                 onClick={() => remove(member)}
                 className="hover:bg-primary-content/20 rounded-full p-0.5"
               >
-                <Cancel01Icon size={12} aria-hidden={true} />
+                <HoverIcon icon={Cancel01Icon} size={12} />
               </button>
             </span>
           ))
@@ -198,7 +199,7 @@ export function Wrapper({
               className="btn-outline btn-sm h-7 gap-1"
               disabled={contributors.length === 0}
             >
-              <PlusSignIcon size={14} aria-hidden={true} />
+              <HoverIcon icon={PlusSignIcon} size={14} />
               Add member
             </Button>
             <div
@@ -229,10 +230,10 @@ export function Wrapper({
                             close_daisy_dropdown(event.currentTarget)
                           }}
                         >
-                          <Tick02Icon
+                          <HoverIcon
+                            icon={Tick02Icon}
                             size={16}
-                            className={isSelected ? 'opacity-100' : 'opacity-0'}
-                            aria-hidden={true}
+                            icon_className={isSelected ? 'opacity-100' : 'opacity-0'}
                           />
                           @{c}
                         </button>
@@ -247,7 +248,7 @@ export function Wrapper({
 
         <div className="dropdown">
           <Button type="button" tabIndex={0} className="btn-outline btn-sm h-7 gap-1">
-            <UserGroupIcon size={14} aria-hidden={true} />
+            <HoverIcon icon={UserGroupIcon} size={14} />
             Teams
             {teams.length > 0 ? (
               <span className="text-base-content/60">({teams.length})</span>
@@ -280,12 +281,12 @@ export function Wrapper({
                           close_daisy_dropdown(event.currentTarget)
                         }}
                       >
-                        <Tick02Icon
+                        <HoverIcon
+                          icon={Tick02Icon}
                           size={16}
-                          className={
+                          icon_className={
                             activeTeamId === team.id ? 'shrink-0 opacity-100' : 'shrink-0 opacity-0'
                           }
-                          aria-hidden={true}
                         />
                         <span className="truncate font-medium">{team.name}</span>
                         <span className="text-base-content/60 text-xs">{team.members.length}</span>
@@ -301,7 +302,7 @@ export function Wrapper({
                             close_daisy_dropdown(e.currentTarget)
                           }}
                         >
-                          <Edit02Icon size={12} aria-hidden={true} />
+                          <HoverIcon icon={Edit02Icon} size={12} />
                           Manage members
                         </button>
                         <button
@@ -314,7 +315,7 @@ export function Wrapper({
                             close_daisy_dropdown(e.currentTarget)
                           }}
                         >
-                          <Delete02Icon size={12} aria-hidden={true} />
+                          <HoverIcon icon={Delete02Icon} size={12} />
                           Delete
                         </button>
                       </div>
@@ -333,7 +334,7 @@ export function Wrapper({
                       close_daisy_dropdown(event.currentTarget)
                     }}
                   >
-                    <SaveIcon size={16} aria-hidden={true} />
+                    <HoverIcon icon={SaveIcon} size={16} />
                     Save current selection…
                   </button>
                 </li>
@@ -353,7 +354,7 @@ export function Wrapper({
                 setSaveOpen(true)
               }}
             >
-              <SaveIcon size={14} aria-hidden={true} />
+              <HoverIcon icon={SaveIcon} size={14} />
               Save team
             </Button>
             <Button type="button" className="btn-ghost btn-sm h-7" onClick={clear}>
@@ -369,7 +370,7 @@ export function Wrapper({
               className="btn-outline btn-sm h-7 gap-1"
               onClick={() => activeTeam && openManage(activeTeam)}
             >
-              <Edit02Icon size={14} aria-hidden={true} />
+              <HoverIcon icon={Edit02Icon} size={14} />
               Manage members
             </Button>
             <Button type="button" className="btn-ghost btn-sm h-7" onClick={clear}>
@@ -455,10 +456,10 @@ export function Wrapper({
                         checked && 'bg-base-200',
                       )}
                     >
-                      <Tick02Icon
+                      <HoverIcon
+                        icon={Tick02Icon}
                         size={16}
-                        className={checked ? 'opacity-100' : 'opacity-0'}
-                        aria-hidden={true}
+                        icon_className={checked ? 'opacity-100' : 'opacity-0'}
                       />
                       @{login}
                     </button>

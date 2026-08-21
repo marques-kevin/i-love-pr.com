@@ -1,4 +1,5 @@
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { account_display_name, account_secondary_line } from '@/lib/session'
@@ -60,7 +61,7 @@ export function Wrapper({ accounts, switch_account, start_add_account }: Connect
         className="btn-outline mt-4 w-full"
         onClick={() => void start_add_account()}
       >
-        <PlusSignIcon size={16} aria-hidden={true} />
+        <HoverIcon icon={PlusSignIcon} size={16} />
         {intl.formatMessage({ id: 'account.add' })}
       </Button>
     </div>

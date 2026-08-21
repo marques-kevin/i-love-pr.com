@@ -1,4 +1,5 @@
 import { useIntl } from 'react-intl'
+import { HoverIcon, type AnimatedIcon } from '@/components/hover_icon'
 import { Clock01Icon } from '@/components/icons/clock_01'
 import { CloudIcon } from '@/components/icons/cloud'
 import { DashboardSquare01Icon } from '@/components/icons/dashboard_square_01'
@@ -13,7 +14,6 @@ import { Search01Icon } from '@/components/icons/search_01'
 import { SparklesIcon } from '@/components/icons/sparkles'
 import { UserCheck01Icon } from '@/components/icons/user_check_01'
 import type { MessageKey } from '@/lib/i18n'
-import { OnboardingHoverIcon, type OnboardingAnimatedIcon } from './onboarding_hover_icon'
 import { landing_hairline } from './onboarding_surface'
 
 const GALLERY_ITEMS = [
@@ -30,7 +30,7 @@ const GALLERY_ITEMS = [
   { key: 'onboarding.hero.grid.ship', icon: Rocket01Icon },
   { key: 'onboarding.hero.grid.history', icon: HistoryIcon },
   { key: 'onboarding.hero.grid.insights', icon: SparklesIcon },
-] as const satisfies readonly { key: MessageKey; icon: OnboardingAnimatedIcon }[]
+] as const satisfies readonly { key: MessageKey; icon: AnimatedIcon }[]
 
 export function OnboardingIconGrid() {
   const intl = useIntl()
@@ -61,7 +61,7 @@ export function OnboardingIconGrid() {
             className="onboarding-tile-in min-w-0"
             style={{ animationDelay: `${index * 35}ms` }}
           >
-            <OnboardingHoverIcon
+            <HoverIcon
               icon={item.icon}
               size={32}
               className={`flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[1rem] bg-base-200 px-2 py-3 text-base-content motion-safe:transition-[translate,background-color,box-shadow] motion-safe:hover:-translate-y-0.5 hover:bg-base-100 ${landing_hairline}`}
@@ -70,7 +70,7 @@ export function OnboardingIconGrid() {
               <span className="max-w-full truncate text-center font-mono text-[10px] text-base-content/60 sm:text-[11px]">
                 {intl.formatMessage({ id: item.key })}
               </span>
-            </OnboardingHoverIcon>
+            </HoverIcon>
           </li>
         ))}
       </ul>

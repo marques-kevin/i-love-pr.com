@@ -1,3 +1,4 @@
+import { HoverIcon } from '@/components/hover_icon'
 import { GithubIcon } from '@/components/icons/github'
 import { IlovePrLogo } from '@/components/ilove_pr_logo'
 import { APP_GITHUB_URL, APP_VERSION } from '@/lib/app_meta'
@@ -22,7 +23,7 @@ export function AppChromeHeader() {
             aria-label="GitHub"
             className="btn btn-ghost btn-sm rounded-full"
           >
-            <GithubIcon size={16} aria-hidden={true} />
+            <HoverIcon icon={GithubIcon} size={16} />
             <span className="hidden sm:inline">GitHub</span>
           </a>
           <LocaleSwitcher />

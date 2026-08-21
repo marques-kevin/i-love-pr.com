@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { GithubIcon } from '@/components/icons/github'
 import { APP_GITHUB_URL } from '@/lib/app_meta'
 import { OnboardingGhostIcons } from './onboarding_ghost_icons'
-import { OnboardingHoverIcon } from './onboarding_hover_icon'
 import { OnboardingIconGrid } from './onboarding_icon_grid'
 import { landing_command_box, landing_hairline } from './onboarding_surface'
 
@@ -63,7 +63,7 @@ export function OnboardingHero({ on_get_started }: OnboardingHeroProps) {
               className={`m-1.5 inline-flex size-9 shrink-0 items-center justify-center rounded-[12px] bg-base-100 ${landing_hairline}`}
               aria-label={intl.formatMessage({ id: 'onboarding.hero.cta_github' })}
             >
-              <OnboardingHoverIcon icon={GithubIcon} size={16} icon_className="text-base-content" />
+              <HoverIcon icon={GithubIcon} size={16} icon_className="text-base-content" />
             </a>
           </div>
 

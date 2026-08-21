@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { Delete02Icon } from '@/components/icons/delete_02'
 import { Edit02Icon } from '@/components/icons/edit_02'
 import { MoreHorizontalIcon } from '@/components/icons/more_horizontal'
@@ -101,7 +102,7 @@ export function Wrapper({
                     className="btn btn-ghost btn-circle btn-xs"
                     aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
                   >
-                    <MoreHorizontalIcon size={14} aria-hidden={true} />
+                    <HoverIcon icon={MoreHorizontalIcon} size={14} />
                   </button>
                   <ul
                     tabIndex={-1}
@@ -115,7 +116,7 @@ export function Wrapper({
                           close_daisy_dropdown(event.currentTarget)
                         }}
                       >
-                        <Edit02Icon size={16} aria-hidden={true} />
+                        <HoverIcon icon={Edit02Icon} size={16} />
                         {intl.formatMessage({ id: 'dashboard.rename_tab' })}
                       </button>
                     </li>
@@ -134,7 +135,7 @@ export function Wrapper({
                           close_daisy_dropdown(event.currentTarget)
                         }}
                       >
-                        <Delete02Icon size={16} aria-hidden={true} />
+                        <HoverIcon icon={Delete02Icon} size={16} />
                         {intl.formatMessage({ id: 'dashboard.delete_tab' })}
                       </button>
                     </li>
@@ -155,7 +156,7 @@ export function Wrapper({
         }}
         aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
       >
-        <PlusSignIcon size={16} aria-hidden={true} />
+        <HoverIcon icon={PlusSignIcon} size={16} />
       </Button>
 
       <Modal

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { HoverIcon } from '@/components/hover_icon'
 import { Cancel01Icon } from '@/components/icons/cancel_01'
 import { cn } from '@/lib/utils'
 
@@ -51,7 +52,7 @@ export function Modal({
               className="btn btn-ghost btn-circle btn-sm absolute top-2 right-2"
               aria-label="Close"
             >
-              <Cancel01Icon size={16} aria-hidden={true} />
+              <HoverIcon icon={Cancel01Icon} size={16} />
             </button>
           </form>
         )}

@@ -1,6 +1,7 @@
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { enUS, fr } from 'date-fns/locale'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { RefreshIcon } from '@/components/icons/refresh'
 import { Button } from '@/components/ui/button'
 import { SyncCoverage } from './sync_coverage'
@@ -82,10 +83,10 @@ export function Wrapper({
           disabled={syncing || !active_repo}
           title={intl.formatMessage({ id: 'sync.tooltip' })}
         >
-          <RefreshIcon
+          <HoverIcon
+            icon={RefreshIcon}
             size={16}
-            className={active_syncing ? 'animate-spin' : undefined}
-            aria-hidden={true}
+            icon_className={active_syncing ? 'animate-spin' : undefined}
           />
           {button_label}
         </Button>

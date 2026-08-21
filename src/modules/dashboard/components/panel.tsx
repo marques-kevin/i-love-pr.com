@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { HelpCircleIcon } from '@/components/icons/help_circle'
 import { Button } from '@/components/ui/button'
 
@@ -13,7 +14,7 @@ function HelpButton({ help }: { help: string }) {
         className="btn-ghost btn-circle btn-xs text-base-content/60"
         aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
       >
-        <HelpCircleIcon size={16} aria-hidden={true} />
+        <HoverIcon icon={HelpCircleIcon} size={16} />
       </Button>
       <div
         tabIndex={-1}

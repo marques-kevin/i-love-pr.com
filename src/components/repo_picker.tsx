@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
+import { HoverIcon } from '@/components/hover_icon'
 import { Cancel01Icon } from '@/components/icons/cancel_01'
 import { ChevronDownIcon } from '@/components/icons/chevron_down'
 import { Loading03Icon } from '@/components/icons/loading_03'
@@ -124,7 +125,7 @@ export function RepoPicker({
           {loading ? (
             <Loading03Icon size={16} className="animate-spin opacity-60" aria-hidden={true} />
           ) : (
-            <ChevronDownIcon size={16} className="opacity-60" aria-hidden={true} />
+            <HoverIcon icon={ChevronDownIcon} size={16} icon_className="opacity-60" />
           )}
         </Button>
         <div
@@ -155,10 +156,10 @@ export function RepoPicker({
                         close_daisy_dropdown(event.currentTarget)
                       }}
                     >
-                      <Tick02Icon
+                      <HoverIcon
+                        icon={Tick02Icon}
                         size={16}
-                        className={isSelected ? 'opacity-100' : 'opacity-0'}
-                        aria-hidden={true}
+                        icon_className={isSelected ? 'opacity-100' : 'opacity-0'}
                       />
                       <span className="flex-1 truncate">{repo.fullName}</span>
                       {repo.isPrivate ? (
@@ -233,7 +234,7 @@ export function RepoPicker({
                 onClick={() => removeRepo(repo)}
                 className="hover:bg-base-content/10 rounded-full p-0.5"
               >
-                <Cancel01Icon size={12} aria-hidden={true} />
+                <HoverIcon icon={Cancel01Icon} size={12} />
               </button>
             </span>
           ))}
