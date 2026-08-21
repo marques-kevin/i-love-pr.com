@@ -29,8 +29,10 @@ export async function sync_all_repos(options: {
     options.repos && options.repos.length > 0
       ? options.repos.filter((repo) => settings.repos.includes(repo))
       : settings.repos
+  const imported_set = new Set(settings.imported_repos ?? [])
 
   for (const full_name of repos) {
+    if (imported_set.has(full_name)) continue
     const result = await sync_repo(full_name, {
       repositories: options.repositories,
       client,

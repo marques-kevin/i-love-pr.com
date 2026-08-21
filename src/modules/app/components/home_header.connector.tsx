@@ -1,5 +1,10 @@
 import { connect, type ConnectedProps } from 'react-redux'
-import { clear_add_repository_request, load_available_repos, set_show_settings } from '@/store'
+import {
+  clear_add_repository_request,
+  load_available_repos,
+  request_import_repository,
+  set_show_settings,
+} from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
@@ -15,6 +20,9 @@ export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   },
   clear_add_repository_request: () => {
     dispatch(clear_add_repository_request())
+  },
+  request_import_repository: () => {
+    dispatch(request_import_repository(undefined))
   },
 })
 

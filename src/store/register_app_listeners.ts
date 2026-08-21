@@ -10,10 +10,12 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
+  request_import_repository,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
 import { active_repo_from_url_or_settings } from '@/lib/repo_path'
+import { consume_share_link_from_location } from '@/lib/repo_snapshot'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import {
@@ -111,6 +113,13 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
+
+      if (current_pathname() === '/') {
+        const share_link = consume_share_link_from_location()
+        if (share_link) {
+          api.dispatch(request_import_repository(share_link))
+        }
+      }
 
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))

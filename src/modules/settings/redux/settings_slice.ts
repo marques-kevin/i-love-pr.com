@@ -68,9 +68,14 @@ export const save_settings = create_app_async_thunk<
   const repos = input.repos.map((r) => r.trim()).filter(Boolean)
 
   const previous = await extra.repositories.settings.get()
+  const previous_repos = previous?.repos ?? []
+  const previous_imported = previous?.imported_repos ?? []
+  const newly_added = repos.filter((repo) => !previous_repos.includes(repo))
+  const imported_repos = previous_imported.filter((repo) => !newly_added.includes(repo))
   const payload: SaveSettingsInput = {
     token,
     repos,
+    imported_repos,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
     ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
@@ -117,7 +122,6 @@ export const save_settings = create_app_async_thunk<
     track_umami_event('token_saved')
   }
 
-  const previous_repos = previous?.repos ?? []
   for (const repo of next.repos) {
     if (!previous_repos.includes(repo)) {
       track_umami_event('repository_added')

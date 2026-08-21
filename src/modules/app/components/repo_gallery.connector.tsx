@@ -1,6 +1,9 @@
 import { connect, type ConnectedProps } from 'react-redux'
 import { partition_gallery_repos } from '@/lib/repo_gallery'
-import { request_add_repository as request_add_repository_action } from '@/store'
+import {
+  request_add_repository as request_add_repository_action,
+  request_import_repository as request_import_repository_action,
+} from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => {
@@ -17,6 +20,9 @@ export const map_state_to_props = (state: RootState) => {
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   request_add_repository: () => {
     dispatch(request_add_repository_action())
+  },
+  request_import_repository: () => {
+    dispatch(request_import_repository_action(undefined))
   },
 })
 
