@@ -306,6 +306,9 @@ export function create_memory_repositories(seed?: {
         }
       }
     },
+    delete_repo: async (_repo_full_name) => {
+      // Memory repositories do not persist the repos catalog table.
+    },
     clear_all_data: async () => {
       bag.settings = undefined
       bag.pull_requests.clear()
@@ -347,6 +350,12 @@ export function create_memory_repositories(seed?: {
         bag.pull_requests.set(pr.id, structuredClone(pr))
       }
     },
+    delete_by_repos: async (repos) => {
+      const set = new Set(repos)
+      for (const [id, pr] of [...bag.pull_requests.entries()]) {
+        if (set.has(pr.repo_full_name)) bag.pull_requests.delete(id)
+      }
+    },
     clear: async () => {
       bag.pull_requests.clear()
     },
@@ -371,6 +380,12 @@ export function create_memory_repositories(seed?: {
       }
       for (const review of next_reviews) {
         bag.reviews.set(review.id, structuredClone(review))
+      }
+    },
+    delete_by_repos: async (repos) => {
+      const set = new Set(repos)
+      for (const [id, review] of [...bag.reviews.entries()]) {
+        if (set.has(review.repo_full_name)) bag.reviews.delete(id)
       }
     },
     clear: async () => {
@@ -405,6 +420,11 @@ export function create_memory_repositories(seed?: {
       const next = empty_sync_state(repo_full_name)
       bag.sync_states.set(repo_full_name, next)
       return structuredClone(next)
+    },
+    delete_by_repos: async (repos) => {
+      for (const repo of repos) {
+        bag.sync_states.delete(repo)
+      }
     },
     reset_all: async () => {
       for (const key of bag.sync_states.keys()) {
@@ -461,6 +481,17 @@ export function create_memory_repositories(seed?: {
       const set = new Set(pr_ids)
       for (const [id, file] of [...bag.pr_changed_files.entries()]) {
         if (set.has(file.pr_id)) bag.pr_changed_files.delete(id)
+      }
+    },
+    delete_by_repos: async (repos) => {
+      const set = new Set(repos)
+      const pr_ids = new Set(
+        [...bag.pull_requests.values()]
+          .filter((pr) => set.has(pr.repo_full_name))
+          .map((pr) => pr.id),
+      )
+      for (const [id, file] of [...bag.pr_changed_files.entries()]) {
+        if (pr_ids.has(file.pr_id)) bag.pr_changed_files.delete(id)
       }
     },
     clear: async () => {

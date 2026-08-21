@@ -9,6 +9,7 @@ import {
   parse_share_id_from_url,
 } from '@/lib/repo_snapshot'
 import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
+import { build_settings_after_remove_repo } from '@/lib/remove_repo'
 import {
   build_share_page_url,
   encode_share_snapshot,
@@ -274,6 +275,38 @@ export const import_repo_snapshot_from_link = create_app_async_thunk<
   return import_repo_snapshot(extra.repositories, snapshot)
 })
 
+export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name: string }>(
+  'settings/remove_repo',
+  async ({ repo_full_name }, { extra }) => {
+    const existing = await extra.repositories.settings.get()
+    if (!existing) throw new Error('Settings not initialized')
+    if (!existing.repos.includes(repo_full_name)) {
+      throw new Error('Repo not configured')
+    }
+
+    const next_settings = build_settings_after_remove_repo(existing, repo_full_name)
+    const next = await extra.repositories.settings.save({
+      token: existing.token,
+      repos: next_settings.repos,
+      imported_repos: next_settings.imported_repos,
+      dashboards: next_settings.dashboards,
+      active_repo: next_settings.active_repo,
+      active_dashboard_id: next_settings.active_dashboard_id,
+      active_dashboard_by_repo: next_settings.active_dashboard_by_repo,
+    })
+
+    const repos = [repo_full_name]
+    await extra.repositories.pr_facts.delete_by_repos(repos)
+    await extra.repositories.pull_requests.delete_by_repos(repos)
+    await extra.repositories.reviews.delete_by_repos(repos)
+    await extra.repositories.pr_changed_files.delete_by_repos(repos)
+    await extra.repositories.sync_state.delete_by_repos(repos)
+    await extra.repositories.settings.delete_repo(repo_full_name)
+
+    return next
+  },
+)
+
 export type LoadAvailableReposArg = {
   token?: string
   force?: boolean
@@ -363,6 +396,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(set_active_repo.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(remove_repo.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {

@@ -34,6 +34,7 @@ export interface SettingsRepository {
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>
+  delete_repo: (repo_full_name: string) => Promise<void>
   clear_all_data: () => Promise<void>
   reset_sync_data: () => Promise<void>
 }
@@ -43,6 +44,7 @@ export interface PullRequestRepository {
   get_created_at_bounds_by_repos: (repos: string[]) => Promise<PrCreatedAtBounds | null>
   count_by_repo: (repo_full_name: string) => Promise<number>
   put_many: (prs: PullRequestRecord[]) => Promise<void>
+  delete_by_repos: (repos: string[]) => Promise<void>
   clear: () => Promise<void>
 }
 
@@ -50,6 +52,7 @@ export interface ReviewRepository {
   list_by_pr_ids: (pr_ids: string[]) => Promise<ReviewRecord[]>
   list_by_repos: (repos: string[]) => Promise<ReviewRecord[]>
   replace_for_pr: (pr_id: string, reviews: ReviewRecord[]) => Promise<void>
+  delete_by_repos: (repos: string[]) => Promise<void>
   clear: () => Promise<void>
 }
 
@@ -59,6 +62,7 @@ export interface SyncStateRepository {
   put: (state: SyncState) => Promise<void>
   update: (repo_full_name: string, patch: Partial<SyncState>) => Promise<SyncState>
   ensure: (repo_full_name: string) => Promise<SyncState>
+  delete_by_repos: (repos: string[]) => Promise<void>
   reset_all: () => Promise<void>
   clear: () => Promise<void>
 }
@@ -75,6 +79,7 @@ export interface PrChangedFilesRepository {
   list_by_pr_ids: (pr_ids: string[]) => Promise<PrChangedFileRecord[]>
   replace_for_pr: (pr_id: string, files: PrChangedFileRecord[]) => Promise<void>
   delete_by_pr_ids: (pr_ids: string[]) => Promise<void>
+  delete_by_repos: (repos: string[]) => Promise<void>
   clear: () => Promise<void>
 }
 

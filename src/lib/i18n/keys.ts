@@ -131,4 +131,11 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   'app.nav.import_repository_confirm',
   'app.nav.import_repository_importing',
   'app.nav.import_repository_failed',
+  'repo_gallery.menu_label',
+  'repo_gallery.view',
+  'repo_gallery.share',
+  'repo_gallery.delete',
+  'repo_gallery.delete_title',
+  'repo_gallery.delete_confirm',
+  'repo_gallery.delete_cancel',
 ]

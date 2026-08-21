@@ -331,6 +331,11 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
         }
       })
     },
+    delete_repo: async (repo_full_name) => {
+      await database.transaction('rw', database.repos, async () => {
+        await database.repos.delete(repo_full_name)
+      })
+    },
     clear_all_data: async () => {
       await database.transaction(
         'rw',
@@ -410,6 +415,14 @@ export function create_dexie_pull_request_repository(
     put_many: async (prs) => {
       await database.pull_requests.bulkPut(prs)
     },
+    delete_by_repos: async (repos) => {
+      if (repos.length === 0) return
+      if (repos.length === 1) {
+        await database.pull_requests.where('repo_full_name').equals(repos[0]).delete()
+        return
+      }
+      await database.pull_requests.where('repo_full_name').anyOf(repos).delete()
+    },
     clear: async () => {
       await database.pull_requests.clear()
     },
@@ -446,6 +459,10 @@ export function create_dexie_review_repository(database: IlovePrDatabase): Revie
         }
       })
     },
+    delete_by_repos: async (repos) => {
+      if (repos.length === 0) return
+      await database.reviews.where('repo_full_name').anyOf(repos).delete()
+    },
     clear: async () => {
       await database.reviews.clear()
     },
@@ -479,6 +496,10 @@ export function create_dexie_sync_state_repository(database: IlovePrDatabase): S
       const next = empty_sync_state(repo_full_name)
       await database.sync_state.put(next)
       return next
+    },
+    delete_by_repos: async (repos) => {
+      if (repos.length === 0) return
+      await database.sync_state.bulkDelete(repos)
     },
     reset_all: async () => {
       const states = await database.sync_state.toArray()
@@ -541,6 +562,16 @@ export function create_dexie_pr_changed_files_repository(
       })
     },
     delete_by_pr_ids: async (pr_ids) => {
+      if (pr_ids.length === 0) return
+      await database.pr_changed_files.where('pr_id').anyOf(pr_ids).delete()
+    },
+    delete_by_repos: async (repos) => {
+      if (repos.length === 0) return
+      const prs =
+        repos.length === 1
+          ? await database.pull_requests.where('repo_full_name').equals(repos[0]).toArray()
+          : await database.pull_requests.where('repo_full_name').anyOf(repos).toArray()
+      const pr_ids = prs.map((pr) => pr.id)
       if (pr_ids.length === 0) return
       await database.pr_changed_files.where('pr_id').anyOf(pr_ids).delete()
     },
