@@ -154,8 +154,6 @@ export const fr_messages = define_locale_messages({
 
   'metrics.empty': 'Pas encore de données. Lancez une sync pour récupérer les pull requests.',
 
-  'dashboard.subtitle': 'Votre dashboard personnalisé',
-  'dashboard.subtitle_editing': 'Ajoutez, réordonnez ou retirez des graphiques.',
   'dashboard.filters': 'Filtres',
   'dashboard.filters.title': 'Filtres',
   'dashboard.filters.description':

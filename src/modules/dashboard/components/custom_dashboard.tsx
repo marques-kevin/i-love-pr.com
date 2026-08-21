@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { ArrowDown02Icon } from '@/components/icons/arrow_down_02'
 import { ArrowUp02Icon } from '@/components/icons/arrow_up_02'
-import { Cancel01Icon } from '@/components/icons/cancel_01'
 import { Delete02Icon } from '@/components/icons/delete_02'
-import { Edit02Icon } from '@/components/icons/edit_02'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -14,6 +13,7 @@ import { create_layout_item } from '@/lib/dashboard_layout'
 import { widget_description_key, widget_label_key } from '@/lib/i18n'
 import { DASHBOARD_WIDGET_CATALOG, get_dashboard_widget_meta } from '../lib/widget_catalog'
 import { connector, type ConnectorProps } from './custom_dashboard.connector'
+import { CustomizeFab } from './customize_fab'
 import { DashboardWidget } from './dashboard_widget'
 
 function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: number) {
@@ -31,6 +31,11 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
   const intl = useIntl()
   const [editing, set_editing] = useState(false)
   const [picker_open, set_picker_open] = useState(false)
+  const [fab_portal_target, set_fab_portal_target] = useState<Element | null>(null)
+
+  useLayoutEffect(() => {
+    set_fab_portal_target(document.querySelector('.dashboard-window'))
+  }, [])
   const [preview_widget_id, set_preview_widget_id] = useState<DashboardWidgetId>(
     DASHBOARD_WIDGET_CATALOG[0].widget_id,
   )
@@ -50,40 +55,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-base-content/60 text-sm">
-          {editing
-            ? intl.formatMessage({ id: 'dashboard.subtitle_editing' })
-            : intl.formatMessage({ id: 'dashboard.subtitle' })}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {editing && (
-            <Button type="button" className="btn-outline btn-sm" onClick={open_picker}>
-              <HoverIcon icon={PlusSignIcon} size={16} />
-              {intl.formatMessage({ id: 'dashboard.add_chart' })}
-            </Button>
-          )}
-          <Button
-            type="button"
-            className={editing ? 'btn-primary btn-sm' : 'btn-outline btn-sm'}
-            onClick={() => set_editing((value) => !value)}
-          >
-            {editing ? (
-              <>
-                <HoverIcon icon={Cancel01Icon} size={16} />
-                {intl.formatMessage({ id: 'dashboard.done' })}
-              </>
-            ) : (
-              <>
-                <HoverIcon icon={Edit02Icon} size={16} />
-                {intl.formatMessage({ id: 'dashboard.customize' })}
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
+    <>
       {layout.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-base-300 bg-base-100 px-6 py-16 text-center">
           <p className="font-display text-lg font-semibold">
@@ -230,7 +202,18 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           </Button>
         </div>
       </Modal>
-    </div>
+
+      {fab_portal_target
+        ? createPortal(
+            <CustomizeFab
+              editing={editing}
+              on_toggle={() => set_editing((value) => !value)}
+              on_add={open_picker}
+            />,
+            fab_portal_target,
+          )
+        : null}
+    </>
   )
 }
 
