@@ -3,6 +3,7 @@ import { partition_gallery_repos } from '@/lib/repo_gallery'
 import {
   request_add_repository as request_add_repository_action,
   request_import_repo as request_import_repo_action,
+  remove_repo,
 } from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
@@ -24,6 +25,7 @@ export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   request_import_repository: () => {
     dispatch(request_import_repo_action(null))
   },
+  remove_repo: (repo_full_name: string) => dispatch(remove_repo({ repo_full_name })),
 })
 
 export const connector = connect(map_state_to_props, map_dispatch_to_props)
