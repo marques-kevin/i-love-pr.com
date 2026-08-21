@@ -11,6 +11,13 @@ import {
   ZAxis,
 } from 'recharts'
 import { useIntl } from 'react-intl'
+import { Bar as DitherBar } from '@/components/dither-kit/bar'
+import { BarChart as DitherBarChart } from '@/components/dither-kit/bar-chart'
+import type { ChartConfig as DitherChartConfig } from '@/components/dither-kit/chart-context'
+import { Grid as DitherGrid } from '@/components/dither-kit/grid'
+import { Tooltip as DitherTooltip } from '@/components/dither-kit/tooltip'
+import { XAxis as DitherXAxis } from '@/components/dither-kit/x-axis'
+import { YAxis as DitherYAxis } from '@/components/dither-kit/y-axis'
 import { is_external_object, is_number_value, is_string_value } from '@/lib/boundary_parse'
 import type { ExternalValue } from '@/lib/json_value'
 import {
@@ -28,8 +35,8 @@ const cycleConfig = {
 } satisfies ChartConfig
 
 const sizeConfig = {
-  count: { label: 'PRs', color: 'var(--chart-1)' },
-} satisfies ChartConfig
+  count: { label: 'PRs', color: 'red' },
+} satisfies DitherChartConfig
 
 const throughputConfig = {
   count: { label: 'Merged PRs', color: 'var(--chart-3)' },
@@ -148,15 +155,15 @@ export function CycleTimeChart({ data }: { data: MetricsSnapshot['cycleTimeSerie
 
 export function PRSizeChart({ data }: { data: MetricsSnapshot['prSizeBuckets'] }) {
   return (
-    <ChartContainer config={sizeConfig} className="aspect-auto h-72 w-full">
-      <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="count" fill="var(--color-count)" radius={6} isAnimationActive={false} />
-      </BarChart>
-    </ChartContainer>
+    <div className="aspect-auto h-72 w-full">
+      <DitherBarChart data={data} config={sizeConfig} bloom="off">
+        <DitherGrid />
+        <DitherXAxis dataKey="bucket" />
+        <DitherYAxis />
+        <DitherTooltip labelKey="bucket" />
+        <DitherBar dataKey="count" variant="hatched" />
+      </DitherBarChart>
+    </div>
   )
 }
 

@@ -18,6 +18,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@hugeicons-animated": "https://hugeicons-animated.com/r/{name}.json"
+    "@hugeicons-animated": "https://hugeicons-animated.com/r/{name}.json",
+    "@dither-kit": "https://tripwire.sh/r/{name}.json"
   }
 }
