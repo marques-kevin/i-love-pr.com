@@ -12,7 +12,7 @@ export function Wrapper({ data }: ConnectorProps) {
       help={intl.formatMessage({ id: 'chart.scatter.help' })}
     >
       {data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No reviewed PRs in this period/filter.</p>
+        <p className="text-sm text-base-content/60">No reviewed PRs in this period/filter.</p>
       ) : (
         <SizeReviewScatterChartView data={data} />
       )}

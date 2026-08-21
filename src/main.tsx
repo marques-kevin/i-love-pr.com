@@ -24,7 +24,7 @@ function SessionRoot() {
 
   if (!session.ready || !session.store) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      <div className="flex min-h-screen items-center justify-center text-base-content/60">
         Loading…
       </div>
     )

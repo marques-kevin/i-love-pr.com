@@ -2,30 +2,26 @@ import type { ReactNode } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 function HelpButton({ help }: { help: string }) {
   const intl = useIntl()
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground hover:text-foreground"
-          aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
-        >
-          <CircleHelp className="size-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-3">
-        <p className="whitespace-pre-line text-sm leading-relaxed text-popover-foreground">
-          {help}
-        </p>
-      </PopoverContent>
-    </Popover>
+    <div className="dropdown dropdown-end">
+      <Button
+        type="button"
+        tabIndex={0}
+        className="btn-ghost btn-circle btn-xs text-base-content/60"
+        aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
+      >
+        <CircleHelp className="size-4" />
+      </Button>
+      <div
+        tabIndex={-1}
+        className="dropdown-content bg-base-100 rounded-box z-50 w-80 max-w-[calc(100vw-2rem)] p-3 shadow"
+      >
+        <p className="text-sm leading-relaxed whitespace-pre-line">{help}</p>
+      </div>
+    </div>
   )
 }
 
@@ -41,35 +37,33 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <Card className="rounded-3xl bg-card py-5 shadow-none ring-1 ring-foreground/10 [--card-spacing:--spacing(5)]">
-      <CardHeader>
-        <CardTitle className="font-display text-lg">{title}</CardTitle>
-        {description && <p className="text-sm font-normal text-muted-foreground">{description}</p>}
-        {help ? (
-          <CardAction>
-            <HelpButton help={help} />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+    <section className="card bg-base-100 ring-base-content/10 shadow-none ring-1">
+      <div className="card-body gap-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="card-title font-display text-lg">{title}</h2>
+            {description ? (
+              <p className="text-base-content/60 text-sm font-normal">{description}</p>
+            ) : null}
+          </div>
+          {help ? <HelpButton help={help} /> : null}
+        </div>
+        <div>{children}</div>
+      </div>
+    </section>
   )
 }
 
 export function StatCard({ label, value, help }: { label: string; value: string; help?: string }) {
   return (
-    <Card className="rounded-3xl bg-card py-5 shadow-none ring-1 ring-foreground/10 [--card-spacing:--spacing(5)]">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        {help ? (
-          <CardAction>
-            <HelpButton help={help} />
-          </CardAction>
-        ) : null}
-      </CardHeader>
-      <CardContent>
+    <section className="card bg-base-100 ring-base-content/10 shadow-none ring-1">
+      <div className="card-body gap-2 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-base-content/60 text-sm font-medium">{label}</h2>
+          {help ? <HelpButton help={help} /> : null}
+        </div>
         <p className="font-display text-3xl font-bold tracking-tight">{value}</p>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

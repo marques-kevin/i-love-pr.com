@@ -3,14 +3,6 @@ import { enUS, fr } from 'date-fns/locale'
 import { CalendarRangeIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { compute_sync_depth_progress, min_remote_oldest_created_at } from '@/lib/pr_coverage'
 import type { SyncState } from '@/lib/types'
 import { connector, type ConnectorProps } from './sync_coverage.connector'
@@ -52,74 +44,62 @@ export function Wrapper({ pr_coverage, sync_states, active_repo }: ConnectorProp
       : intl.formatNumber(progress, { style: 'percent', maximumFractionDigits: 0 })
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="text-muted-foreground hover:text-foreground"
-          aria-label={intl.formatMessage({ id: 'sync.coverage.trigger_aria' })}
-        >
-          <CalendarRangeIcon />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-72">
-        <PopoverHeader>
-          <PopoverTitle>{intl.formatMessage({ id: 'sync.coverage.title' })}</PopoverTitle>
-          {pr_coverage ? (
-            <PopoverDescription>
-              {intl.formatMessage({ id: 'sync.coverage.count' }, { count: pr_coverage.count })}
-              {percent_label
-                ? ` · ${intl.formatMessage({ id: 'sync.coverage.progress' }, { percent: percent_label })}`
-                : ''}
-            </PopoverDescription>
-          ) : null}
-        </PopoverHeader>
+    <div className="dropdown dropdown-end">
+      <Button
+        type="button"
+        tabIndex={0}
+        className="btn-ghost btn-circle btn-sm text-base-content/60"
+        aria-label={intl.formatMessage({ id: 'sync.coverage.trigger_aria' })}
+      >
+        <CalendarRangeIcon />
+      </Button>
+      <div tabIndex={-1} className="dropdown-content bg-base-100 rounded-box z-50 w-72 p-4 shadow">
+        <p className="font-medium">{intl.formatMessage({ id: 'sync.coverage.title' })}</p>
+        {pr_coverage ? (
+          <p className="text-base-content/60 mt-1 text-sm">
+            {intl.formatMessage({ id: 'sync.coverage.count' }, { count: pr_coverage.count })}
+            {percent_label
+              ? ` · ${intl.formatMessage({ id: 'sync.coverage.progress' }, { percent: percent_label })}`
+              : ''}
+          </p>
+        ) : null}
         {!pr_coverage ? (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-base-content/60 mt-3 text-xs">
             {intl.formatMessage({ id: 'sync.coverage.empty' })}
           </p>
         ) : (
-          <div className="space-y-2">
-            <div
-              className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={progress == null ? undefined : Math.round(progress * 100)}
+          <div className="mt-3 space-y-2">
+            <progress
+              className="progress progress-primary w-full"
+              value={Math.round((progress ?? 0) * 100)}
+              max={100}
               aria-label={intl.formatMessage(
                 { id: 'sync.coverage.range_aria' },
                 { oldest: oldest_label!, newest: newest_label! },
               )}
-            >
-              <div
-                className="absolute inset-y-0 right-0 rounded-full bg-primary transition-[width] duration-500 ease-out"
-                style={{ width: `${Math.round((progress ?? 0) * 100)}%` }}
-              />
-            </div>
+            />
             <div className="flex items-center justify-between gap-3 text-xs">
               <div className="min-w-0">
-                <p className="text-muted-foreground">
+                <p className="text-base-content/60">
                   {intl.formatMessage({
                     id: remote_oldest_created_at
                       ? 'sync.coverage.oldest_remote'
                       : 'sync.coverage.oldest',
                   })}
                 </p>
-                <p className="font-medium text-foreground">{oldest_label}</p>
+                <p className="font-medium">{oldest_label}</p>
               </div>
               <div className="min-w-0 text-right">
-                <p className="text-muted-foreground">
+                <p className="text-base-content/60">
                   {intl.formatMessage({ id: 'sync.coverage.newest' })}
                 </p>
-                <p className="font-medium text-foreground">{newest_label}</p>
+                <p className="font-medium">{newest_label}</p>
               </div>
             </div>
           </div>
         )}
-      </PopoverContent>
-    </Popover>
+      </div>
+    </div>
   )
 }
 

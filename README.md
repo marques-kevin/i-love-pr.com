@@ -14,17 +14,20 @@ Self-hosted, single-user GitHub pull request analytics. A lightweight Swarmia/Li
 ## Stack
 
 - React + Vite + TypeScript
-- shadcn/ui (Radix Nova) + Tailwind CSS
+- daisyUI 5 + Tailwind CSS v4 (`@plugin "daisyui"` in `src/index.css`)
 - Dexie.js (IndexedDB)
 - GitHub GraphQL API v4
-- Recharts via shadcn Chart
+- Recharts (chart colors mapped to the daisyUI `ilovepr` theme)
+- Hugeicons Animated (`src/components/icons/`)
 - vite-plugin-pwa
 
-Add UI primitives with:
+Add a Hugeicons Animated icon with:
 
 ```bash
-npx shadcn@latest add <component>
+npx shadcn@latest add @hugeicons-animated/<name>
 ```
+
+Then move the generated file from `src/components/ui/` to `src/components/icons/` and rename it to snake_case.
 
 ## Quick start
 

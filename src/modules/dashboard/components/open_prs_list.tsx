@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { differenceInDays, formatDistanceToNow, parseISO } from 'date-fns'
 import { enUS, fr } from 'date-fns/locale'
 import { useIntl } from 'react-intl'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Panel } from './panel'
 import { connector, type ConnectorProps } from './open_prs_list.connector'
@@ -29,12 +28,12 @@ export function Wrapper({ prs }: ConnectorProps) {
       help={intl.formatMessage({ id: 'chart.open_prs.help' })}
     >
       {prs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-base-content/60">
           {intl.formatMessage({ id: 'open_prs.empty' })}
         </p>
       ) : (
         <div className="space-y-4">
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-base-300">
             {page_items.map((pr) => {
               const age_days = differenceInDays(new Date(), parseISO(pr.created_at))
               const stale = age_days >= 7
@@ -48,11 +47,11 @@ export function Wrapper({ prs }: ConnectorProps) {
                       href={`https://github.com/${pr.repo_full_name}/pull/${pr.pr_number}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-foreground hover:text-primary"
+                      className="font-medium text-base-content hover:text-primary"
                     >
                       #{pr.pr_number} {pr.title}
                     </a>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-base-content/60">
                       {intl.formatMessage(
                         { id: 'open_prs.meta' },
                         {
@@ -63,13 +62,13 @@ export function Wrapper({ prs }: ConnectorProps) {
                       )}
                     </p>
                   </div>
-                  <Badge variant={stale ? 'destructive' : 'secondary'}>
+                  <span className={stale ? 'badge badge-error' : 'badge badge-ghost'}>
                     {formatDistanceToNow(parseISO(pr.created_at), {
                       addSuffix: true,
                       locale: date_locale,
                     })}
                     {stale ? ` · ${intl.formatMessage({ id: 'open_prs.stale' })}` : ''}
-                  </Badge>
+                  </span>
                 </li>
               )
             })}
@@ -77,9 +76,9 @@ export function Wrapper({ prs }: ConnectorProps) {
 
           {total_pages > 1 && (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-base-content/60">
                 {intl.formatMessage({ id: 'open_prs.range' }, { from, to, count: prs.length })}
-                <span className="mx-2 text-border">·</span>
+                <span className="mx-2 text-base-300">·</span>
                 {intl.formatMessage(
                   { id: 'open_prs.page' },
                   { page: current_page, total: total_pages },
@@ -88,8 +87,7 @@ export function Wrapper({ prs }: ConnectorProps) {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
+                  className="btn-outline btn-sm"
                   disabled={current_page <= 1}
                   onClick={() => set_page(current_page - 1)}
                 >
@@ -97,8 +95,7 @@ export function Wrapper({ prs }: ConnectorProps) {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
+                  className="btn-outline btn-sm"
                   disabled={current_page >= total_pages}
                   onClick={() => set_page(current_page + 1)}
                 >

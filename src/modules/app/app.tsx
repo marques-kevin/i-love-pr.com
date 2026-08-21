@@ -12,7 +12,7 @@ export function Wrapper({ settings, settings_loading, accounts, adding_account }
     return (
       <div className="min-h-screen">
         <AppChromeHeader />
-        <div className="flex items-center justify-center px-4 py-24 text-muted-foreground">
+        <div className="flex items-center justify-center px-4 py-24 text-base-content/60">
           {intl.formatMessage({ id: 'app.loading' })}
         </div>
       </div>

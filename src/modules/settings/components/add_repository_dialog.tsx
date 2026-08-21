@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { RepoPicker } from '@/components/repo_picker'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Modal } from '@/components/ui/modal'
 import { connector, type ConnectorProps } from './add_repository_dialog.connector'
 
 export function Wrapper({
@@ -64,20 +57,15 @@ export function Wrapper({
   }
 
   return (
-    <Dialog
-      open
-      onOpenChange={(next) => {
-        if (!next) on_close()
-      }}
-    >
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{intl.formatMessage({ id: 'app.nav.add_repository_title' })}</DialogTitle>
-          <DialogDescription>
-            {intl.formatMessage({ id: 'app.nav.add_repository_description' })}
-          </DialogDescription>
-        </DialogHeader>
+    <Modal open on_close={on_close} box_className="max-w-lg">
+      <h3 className="font-display text-lg font-semibold">
+        {intl.formatMessage({ id: 'app.nav.add_repository_title' })}
+      </h3>
+      <p className="text-base-content/60 mt-1 text-sm">
+        {intl.formatMessage({ id: 'app.nav.add_repository_description' })}
+      </p>
 
+      <div className="mt-4">
         <RepoPicker
           id="sidebar-add-repo"
           availableRepos={available_repos}
@@ -87,21 +75,26 @@ export function Wrapper({
           loading={available_repos_loading}
           disabled={!settings.token.trim() || saving}
         />
+      </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-error mt-3 text-sm">{error}</p> : null}
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={on_close}>
-            {intl.formatMessage({ id: 'app.nav.add_repository_cancel' })}
-          </Button>
-          <Button type="button" disabled={!can_save} onClick={() => void handle_save()}>
-            {saving
-              ? intl.formatMessage({ id: 'app.nav.add_repository_saving' })
-              : intl.formatMessage({ id: 'app.nav.add_repository_confirm' })}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <div className="modal-action">
+        <Button type="button" className="btn-outline" onClick={on_close}>
+          {intl.formatMessage({ id: 'app.nav.add_repository_cancel' })}
+        </Button>
+        <Button
+          type="button"
+          className="btn-primary"
+          disabled={!can_save}
+          onClick={() => void handle_save()}
+        >
+          {saving
+            ? intl.formatMessage({ id: 'app.nav.add_repository_saving' })
+            : intl.formatMessage({ id: 'app.nav.add_repository_confirm' })}
+        </Button>
+      </div>
+    </Modal>
   )
 }
 

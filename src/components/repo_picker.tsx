@@ -1,19 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { CheckIcon, ChevronsUpDownIcon, Loader2Icon, XIcon } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { close_daisy_dropdown } from '@/lib/daisy'
 import { GitHubClient, parseRepoFullName, type GitHubRepoOption } from '@/lib/github-client'
 import { cn } from '@/lib/utils'
 
@@ -41,7 +31,7 @@ export function RepoPicker({
   manual_add_visible = true,
 }: RepoPickerProps) {
   const intl = useIntl()
-  const [open, setOpen] = useState(false)
+  const [query, set_query] = useState('')
   const [manual_input, set_manual_input] = useState('')
   const [manual_error, set_manual_error] = useState<string | null>(null)
   const [adding_manual, set_adding_manual] = useState(false)
@@ -57,10 +47,15 @@ export function RepoPicker({
     return [...map.values()].sort((a, b) => a.fullName.localeCompare(b.fullName))
   }, [availableRepos, selected])
 
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    if (!needle) return options
+    return options.filter((repo) => repo.fullName.toLowerCase().includes(needle))
+  }, [options, query])
+
   function addRepo(fullName: string) {
     if (selected.includes(fullName)) return
     onChange([...selected, fullName])
-    setOpen(false)
   }
 
   function removeRepo(fullName: string) {
@@ -112,66 +107,75 @@ export function RepoPicker({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{intl.formatMessage({ id: 'repo_picker.label' })}</Label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            id={id}
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled || loading}
-            className="h-10 w-full justify-between font-normal"
-          >
-            <span className="truncate text-muted-foreground">{combobox_placeholder}</span>
-            {loading ? (
-              <Loader2Icon className="size-4 animate-spin opacity-60" />
+      <label htmlFor={id} className="label">
+        {intl.formatMessage({ id: 'repo_picker.label' })}
+      </label>
+      <div className="dropdown w-full">
+        <Button
+          id={id}
+          type="button"
+          tabIndex={0}
+          role="combobox"
+          disabled={disabled || loading}
+          className="btn-outline h-10 w-full justify-between font-normal"
+        >
+          <span className="text-base-content/60 truncate">{combobox_placeholder}</span>
+          {loading ? (
+            <Loader2Icon className="size-4 animate-spin opacity-60" />
+          ) : (
+            <ChevronsUpDownIcon className="size-4 opacity-60" />
+          )}
+        </Button>
+        <div
+          tabIndex={-1}
+          className="dropdown-content bg-base-100 rounded-box z-50 mt-2 w-full p-2 shadow"
+        >
+          <Input
+            value={query}
+            onChange={(event) => set_query(event.target.value)}
+            placeholder={intl.formatMessage({ id: 'repo_picker.search_placeholder' })}
+            className="input-sm mb-2"
+          />
+          <ul className="menu max-h-64 overflow-y-auto p-0">
+            {filtered.length === 0 ? (
+              <li className="text-base-content/60 px-3 py-4 text-center text-sm">
+                {intl.formatMessage({ id: 'repo_picker.search_empty' })}
+              </li>
             ) : (
-              <ChevronsUpDownIcon className="size-4 opacity-60" />
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-          <Command>
-            <CommandInput
-              placeholder={intl.formatMessage({ id: 'repo_picker.search_placeholder' })}
-            />
-            <CommandList>
-              <CommandEmpty>{intl.formatMessage({ id: 'repo_picker.search_empty' })}</CommandEmpty>
-              <CommandGroup>
-                {options.map((repo) => {
-                  const isSelected = selected.includes(repo.fullName)
-                  return (
-                    <CommandItem
-                      key={repo.fullName}
-                      value={repo.fullName}
+              filtered.map((repo) => {
+                const isSelected = selected.includes(repo.fullName)
+                return (
+                  <li key={repo.fullName}>
+                    <button
+                      type="button"
                       disabled={isSelected}
-                      onSelect={() => addRepo(repo.fullName)}
+                      onClick={(event) => {
+                        addRepo(repo.fullName)
+                        close_daisy_dropdown(event.currentTarget)
+                      }}
                     >
                       <CheckIcon
                         className={cn('size-4', isSelected ? 'opacity-100' : 'opacity-0')}
                       />
                       <span className="flex-1 truncate">{repo.fullName}</span>
-                      {repo.isPrivate && (
-                        <Badge variant="secondary" className="text-[10px]">
+                      {repo.isPrivate ? (
+                        <span className="badge badge-ghost badge-xs">
                           {intl.formatMessage({ id: 'repo_picker.private_badge' })}
-                        </Badge>
-                      )}
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                )
+              })
+            )}
+          </ul>
+        </div>
+      </div>
 
       {!manual_add_visible && !show_manual_add && (
         <Button
           type="button"
-          variant="link"
-          className="h-auto p-0 text-primary"
+          className="btn-link h-auto min-h-0 p-0"
           onClick={() => set_show_manual_add(true)}
         >
           {intl.formatMessage({ id: 'onboarding.add_public_repo_link' })}
@@ -198,8 +202,7 @@ export function RepoPicker({
           />
           <Button
             type="button"
-            variant="outline"
-            className="h-10"
+            className="btn-outline h-10"
             disabled={disabled || adding_manual || !manual_input.trim()}
             onClick={() => void addManualRepo()}
           >
@@ -214,25 +217,25 @@ export function RepoPicker({
           </Button>
         </div>
       )}
-      {manual_error && <p className="text-sm text-destructive">{manual_error}</p>}
+      {manual_error ? <p className="text-error text-sm">{manual_error}</p> : null}
 
-      {selected.length > 0 && (
+      {selected.length > 0 ? (
         <div className="flex flex-wrap gap-2 pt-1">
           {selected.map((repo) => (
-            <Badge key={repo} variant="secondary" className="gap-1 pr-1">
+            <span key={repo} className="badge badge-ghost gap-1 pr-1">
               {repo}
               <button
                 type="button"
                 aria-label={intl.formatMessage({ id: 'repo_picker.remove' }, { repo })}
                 onClick={() => removeRepo(repo)}
-                className="rounded-full p-0.5 hover:bg-foreground/10"
+                className="hover:bg-base-content/10 rounded-full p-0.5"
               >
                 <XIcon className="size-3" />
               </button>
-            </Badge>
+            </span>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

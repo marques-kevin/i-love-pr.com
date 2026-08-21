@@ -115,9 +115,7 @@ export function Wrapper({
           {adding_account && accounts.length > 0 ? (
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="mb-8 px-0"
+              className="btn-ghost btn-sm mb-8 px-0"
               onClick={() => void cancel_add_account()}
             >
               {intl.formatMessage({ id: 'account.back_to_accounts' })}
@@ -141,7 +139,7 @@ export function Wrapper({
       </section>
 
       <footer className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-base-content/60">
           {intl.formatMessage({ id: 'onboarding.footer' })}
         </p>
       </footer>

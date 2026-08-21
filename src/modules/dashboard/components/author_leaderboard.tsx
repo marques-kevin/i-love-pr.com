@@ -18,13 +18,13 @@ export function Wrapper({ data }: ConnectorProps) {
       help={intl.formatMessage({ id: 'chart.author_leaderboard.help' })}
     >
       {data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-base-content/60">
           {intl.formatMessage({ id: 'chart.author_leaderboard.empty' })}
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[32rem] text-left text-sm">
-            <thead className="border-b border-border text-muted-foreground">
+          <table className="table w-full min-w-[32rem] text-left text-sm">
+            <thead>
               <tr>
                 <th className="pb-2 pr-3 font-medium">
                   {intl.formatMessage({ id: 'chart.author_leaderboard.author' })}
@@ -43,18 +43,18 @@ export function Wrapper({ data }: ConnectorProps) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-base-300">
               {data.map((row) => (
                 <tr key={row.author}>
-                  <td className="py-2 pr-3 font-medium text-foreground">@{row.author}</td>
-                  <td className="py-2 pr-3 text-foreground">{row.mergedCount}</td>
-                  <td className="py-2 pr-3 text-foreground">
+                  <td className="py-2 pr-3 font-medium text-base-content">@{row.author}</td>
+                  <td className="py-2 pr-3 text-base-content">{row.mergedCount}</td>
+                  <td className="py-2 pr-3 text-base-content">
                     {format_hours(row.avgCycleTimeHours)}
                   </td>
-                  <td className="py-2 pr-3 text-foreground">
+                  <td className="py-2 pr-3 text-base-content">
                     {row.avgLinesChanged == null ? '—' : Math.round(row.avgLinesChanged)}
                   </td>
-                  <td className="py-2 text-foreground">
+                  <td className="py-2 text-base-content">
                     {row.avgReviewRounds == null ? '—' : row.avgReviewRounds.toFixed(1)}
                   </td>
                 </tr>

@@ -1,17 +1,10 @@
 import { ChevronsUpDownIcon, LogOutIcon, PlusIcon, UserRoundIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { close_daisy_dropdown } from '@/lib/daisy'
 import { account_display_name, account_secondary_line } from '@/lib/session'
 import type { SavedAccount } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import { connector, type ConnectorProps } from './account_menu.connector'
 
 function initials(login: string, name: string | null): string {
@@ -21,10 +14,17 @@ function initials(login: string, name: string | null): string {
 
 function AccountAvatar({ account, className }: { account: SavedAccount; className?: string }) {
   return (
-    <Avatar className={className}>
-      {account.avatar_url ? <AvatarImage src={account.avatar_url} alt="" /> : null}
-      <AvatarFallback>{initials(account.login, account.name)}</AvatarFallback>
-    </Avatar>
+    <div className={cn('avatar', className)}>
+      <div className="bg-neutral text-neutral-content w-full rounded-full">
+        {account.avatar_url ? (
+          <img src={account.avatar_url} alt="" />
+        ) : (
+          <span className="flex size-full items-center justify-center text-[10px] font-semibold">
+            {initials(account.login, account.name)}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -42,9 +42,7 @@ export function Wrapper({
     return (
       <Button
         type="button"
-        variant="outline"
-        size="icon"
-        className="rounded-full"
+        className="btn-outline btn-circle btn-sm"
         disabled
         aria-label={intl.formatMessage({ id: 'account.unknown' })}
       >
@@ -57,59 +55,77 @@ export function Wrapper({
   const display_name = account_display_name(active)
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-8 gap-2 rounded-full px-1.5 sm:h-9 sm:px-2"
-          aria-label={display_name}
-          title={display_name}
-        >
-          <AccountAvatar account={active} className="size-6 sm:size-7" />
-          <span className="hidden max-w-28 truncate text-sm font-medium sm:inline">
-            {display_name}
-          </span>
-          <ChevronsUpDownIcon className="hidden size-4 text-muted-foreground sm:block" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-56 rounded-xl" side="bottom" sideOffset={8}>
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+    <div className="dropdown dropdown-end">
+      <Button
+        type="button"
+        tabIndex={0}
+        className="btn-outline btn-sm h-8 gap-2 rounded-full px-1.5 sm:h-9 sm:px-2"
+        aria-label={display_name}
+        title={display_name}
+      >
+        <AccountAvatar account={active} className="size-6 sm:size-7" />
+        <span className="hidden max-w-28 truncate text-sm font-medium sm:inline">
+          {display_name}
+        </span>
+        <ChevronsUpDownIcon className="text-base-content/60 hidden size-4 sm:block" />
+      </Button>
+      <ul
+        tabIndex={-1}
+        className="dropdown-content menu bg-base-100 rounded-box z-50 mt-2 min-w-56 p-2 shadow"
+      >
+        <li className="menu-title">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left font-normal text-base-content">
             <AccountAvatar account={active} className="size-8" />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{display_name}</span>
-              <span className="truncate text-xs text-muted-foreground">
+              <span className="text-base-content/60 truncate text-xs">
                 {account_secondary_line(active)}
               </span>
             </div>
           </div>
-        </DropdownMenuLabel>
-        {other_accounts.length > 0 ? (
-          <>
-            <DropdownMenuSeparator />
-            {other_accounts.map((account) => (
-              <DropdownMenuItem
-                key={account.login}
-                onClick={() => void switch_account(account.login)}
-              >
-                <AccountAvatar account={account} className="size-4" />
-                <span className="truncate">{account_display_name(account)}</span>
-              </DropdownMenuItem>
-            ))}
-          </>
-        ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void start_add_account()}>
-          <PlusIcon />
-          {intl.formatMessage({ id: 'account.add' })}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => void logout_account()}>
-          <LogOutIcon />
-          {intl.formatMessage({ id: 'account.logout' })}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </li>
+        {other_accounts.length > 0
+          ? other_accounts.map((account) => (
+              <li key={account.login}>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    void switch_account(account.login)
+                    close_daisy_dropdown(event.currentTarget)
+                  }}
+                >
+                  <AccountAvatar account={account} className="size-4" />
+                  <span className="truncate">{account_display_name(account)}</span>
+                </button>
+              </li>
+            ))
+          : null}
+        <li>
+          <button
+            type="button"
+            onClick={(event) => {
+              void start_add_account()
+              close_daisy_dropdown(event.currentTarget)
+            }}
+          >
+            <PlusIcon />
+            {intl.formatMessage({ id: 'account.add' })}
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={(event) => {
+              void logout_account()
+              close_daisy_dropdown(event.currentTarget)
+            }}
+          >
+            <LogOutIcon />
+            {intl.formatMessage({ id: 'account.logout' })}
+          </button>
+        </li>
+      </ul>
+    </div>
   )
 }
 

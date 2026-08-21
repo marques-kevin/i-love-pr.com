@@ -1,21 +1,21 @@
 import type { ComponentType } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { AlertCircleIcon } from '@/components/ui/alert-circle'
-import { Clock01Icon } from '@/components/ui/clock-01'
-import { CloudIcon } from '@/components/ui/cloud'
-import { DashboardSquare01Icon } from '@/components/ui/dashboard-square-01'
-import { Download01Icon } from '@/components/ui/download-01'
-import { GithubIcon } from '@/components/ui/github'
-import { HistoryIcon } from '@/components/ui/history'
-import { Key01Icon } from '@/components/ui/key-01'
-import { LockIcon } from '@/components/ui/lock'
-import { MinusSignCircleIcon } from '@/components/ui/minus-sign-circle'
-import { RefreshIcon } from '@/components/ui/refresh'
-import { Rocket01Icon } from '@/components/ui/rocket-01'
-import { Search01Icon } from '@/components/ui/search-01'
-import { SparklesIcon } from '@/components/ui/sparkles'
-import { Tick02Icon } from '@/components/ui/tick-02'
-import { UserCheck01Icon } from '@/components/ui/user-check-01'
+import { AlertCircleIcon } from '@/components/icons/alert_circle'
+import { Clock01Icon } from '@/components/icons/clock_01'
+import { CloudIcon } from '@/components/icons/cloud'
+import { DashboardSquare01Icon } from '@/components/icons/dashboard_square_01'
+import { Download01Icon } from '@/components/icons/download_01'
+import { GithubIcon } from '@/components/icons/github'
+import { HistoryIcon } from '@/components/icons/history'
+import { Key01Icon } from '@/components/icons/key_01'
+import { LockIcon } from '@/components/icons/lock'
+import { MinusSignCircleIcon } from '@/components/icons/minus_sign_circle'
+import { RefreshIcon } from '@/components/icons/refresh'
+import { Rocket01Icon } from '@/components/icons/rocket_01'
+import { Search01Icon } from '@/components/icons/search_01'
+import { SparklesIcon } from '@/components/icons/sparkles'
+import { Tick02Icon } from '@/components/icons/tick_02'
+import { UserCheck01Icon } from '@/components/icons/user_check_01'
 import { cn } from '@/lib/utils'
 
 type GhostIcon = ComponentType<{ size?: number; className?: string }>
@@ -69,7 +69,7 @@ export function OnboardingGhostIcons({
     return (
       <div
         aria-hidden
-        className="flex items-center justify-start gap-8 py-2 text-foreground opacity-[0.22] sm:hidden"
+        className="flex items-center justify-start gap-8 py-2 text-base-content opacity-[0.22] sm:hidden"
       >
         {items.map(({ Icon, rotate }, index) => (
           <div
@@ -89,7 +89,7 @@ export function OnboardingGhostIcons({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 hidden overflow-hidden text-foreground opacity-[0.22] sm:block"
+      className="pointer-events-none absolute inset-0 hidden overflow-hidden text-base-content opacity-[0.22] sm:block"
     >
       {items.map(({ Icon, left, top, rotate }, index) => (
         <div
