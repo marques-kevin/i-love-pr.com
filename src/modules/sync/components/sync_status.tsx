@@ -2,8 +2,6 @@ import { formatDistanceToNow, parseISO } from 'date-fns'
 import { enUS, fr } from 'date-fns/locale'
 import { RefreshCwIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SyncCoverage } from './sync_coverage'
 import { connector, type ConnectorProps } from './sync_status.connector'
@@ -61,21 +59,20 @@ export function Wrapper({
 
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <div className="text-base-content/60 flex flex-wrap items-center gap-2 text-sm">
         <span>{status_label}</span>
-        {rate_limit && (
-          <Badge variant="secondary">
+        {rate_limit ? (
+          <span className="badge badge-ghost">
             {intl.formatMessage(
               { id: 'sync.api' },
               { remaining: rate_limit.remaining, limit: rate_limit.limit },
             )}
-          </Badge>
-        )}
+          </span>
+        ) : null}
         <SyncCoverage />
         <Button
           type="button"
-          variant="outline"
-          size="sm"
+          className="btn-outline btn-sm"
           onClick={() =>
             void run_sync({
               force: true,
@@ -89,16 +86,16 @@ export function Wrapper({
           {button_label}
         </Button>
       </div>
-      {error && (
-        <Alert variant="destructive" className="max-w-md py-2">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {!error && paused_error && (
-        <Alert className="max-w-md py-2">
-          <AlertDescription>{paused_error}</AlertDescription>
-        </Alert>
-      )}
+      {error ? (
+        <div role="alert" className="alert alert-error max-w-md py-2">
+          <span>{error}</span>
+        </div>
+      ) : null}
+      {!error && paused_error ? (
+        <div role="alert" className="alert max-w-md py-2">
+          <span>{paused_error}</span>
+        </div>
+      ) : null}
     </div>
   )
 }

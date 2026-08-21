@@ -1,19 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useIntl } from 'react-intl'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Switch } from '@/components/ui/switch'
+import { Modal } from '@/components/ui/modal'
 import { Textarea } from '@/components/ui/textarea'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import {
@@ -249,360 +238,366 @@ export function Wrapper({
   }
 
   return (
-    <Dialog open={open} onOpenChange={set_show_settings}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl">
-            {intl.formatMessage({ id: 'settings.title' })}
-          </DialogTitle>
-          <DialogDescription>
-            {intl.formatMessage({ id: 'settings.description' })}
-          </DialogDescription>
-        </DialogHeader>
+    <Modal
+      open={open}
+      on_close={() => set_show_settings(false)}
+      box_className="max-h-[90vh] max-w-xl overflow-y-auto"
+    >
+      <h3 className="font-display text-xl font-semibold">
+        {intl.formatMessage({ id: 'settings.title' })}
+      </h3>
+      <p className="text-base-content/60 mt-1 text-sm">
+        {intl.formatMessage({ id: 'settings.description' })}
+      </p>
 
-        <form onSubmit={(e) => void handle_save(e)} className="space-y-5">
-          <div className="space-y-2">
-            <Label>{intl.formatMessage({ id: 'settings.language' })}</Label>
-            <LocaleSwitcher />
-          </div>
+      <form onSubmit={(e) => void handle_save(e)} className="mt-5 space-y-5">
+        <div className="space-y-2">
+          <span className="label">{intl.formatMessage({ id: 'settings.language' })}</span>
+          <LocaleSwitcher />
+        </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="settings-sound">{intl.formatMessage({ id: 'settings.sound' })}</Label>
-              <p className="text-xs text-muted-foreground">
-                {intl.formatMessage({ id: 'settings.sound_help' })}
-              </p>
-            </div>
-            <Switch
-              id="settings-sound"
-              checked={sound_enabled}
-              onCheckedChange={(enabled) => {
-                set_sound_enabled(enabled)
-                set_sound_enabled_state(enabled)
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="settings-token">{intl.formatMessage({ id: 'settings.token' })}</Label>
-            <Input
-              id="settings-token"
-              type="password"
-              value={token}
-              onChange={(e) => set_token(e.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="sync-interval">
-                {intl.formatMessage({ id: 'settings.sync_interval' })}
-              </Label>
-              <Input
-                id="sync-interval"
-                type="number"
-                min={1}
-                max={168}
-                value={sync_interval_hours}
-                onChange={(e) => set_sync_interval_hours(Number(e.target.value) || 24)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Auto refresh only if cache is older than this.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="backfill-limit">
-                {intl.formatMessage({ id: 'settings.backfill_limit' })}
-              </Label>
-              <Input
-                id="backfill-limit"
-                type="number"
-                min={25}
-                max={5000}
-                step={25}
-                value={backfill_limit}
-                onChange={(e) =>
-                  set_backfill_limit(Math.max(25, Number(e.target.value) || DEFAULT_BACKFILL_LIMIT))
-                }
-              />
-              <p className="text-xs text-muted-foreground">
-                Each Sync history pulls the next N PRs. Re-run later when the rate limit resets to
-                go deeper.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bots">{intl.formatMessage({ id: 'settings.ignored_bots' })}</Label>
-            <Textarea
-              id="bots"
-              rows={5}
-              value={ignored_bots}
-              onChange={(e) => set_ignored_bots(e.target.value)}
-              className="font-mono text-sm"
-            />
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto p-0"
-              onClick={() => set_ignored_bots(DEFAULT_IGNORED_BOTS.join('\n'))}
-            >
-              Reset to defaults
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="test-file-globs">
-              {intl.formatMessage({ id: 'settings.test_file_globs' })}
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              {intl.formatMessage({ id: 'settings.test_file_globs_help' })}
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <label htmlFor="settings-sound" className="label">
+              {intl.formatMessage({ id: 'settings.sound' })}
+            </label>
+            <p className="text-base-content/60 text-xs">
+              {intl.formatMessage({ id: 'settings.sound_help' })}
             </p>
-            <Textarea
-              id="test-file-globs"
-              rows={5}
-              value={test_file_globs}
-              onChange={(e) => set_test_file_globs(e.target.value)}
-              className="font-mono text-sm"
+          </div>
+          <input
+            id="settings-sound"
+            type="checkbox"
+            className="toggle toggle-primary"
+            checked={sound_enabled}
+            onChange={(event) => {
+              set_sound_enabled(event.target.checked)
+              set_sound_enabled_state(event.target.checked)
+            }}
+          />
+        </div>
+
+        <label className="form-control w-full">
+          <span className="label">{intl.formatMessage({ id: 'settings.token' })}</span>
+          <Input
+            id="settings-token"
+            type="password"
+            value={token}
+            onChange={(e) => set_token(e.target.value)}
+          />
+        </label>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="form-control w-full">
+            <span className="label">{intl.formatMessage({ id: 'settings.sync_interval' })}</span>
+            <Input
+              id="sync-interval"
+              type="number"
+              min={1}
+              max={168}
+              value={sync_interval_hours}
+              onChange={(e) => set_sync_interval_hours(Number(e.target.value) || 24)}
             />
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto p-0"
-              onClick={() => set_test_file_globs(DEFAULT_TEST_FILE_GLOBS.join('\n'))}
-            >
-              Reset to defaults
-            </Button>
+            <span className="text-base-content/60 mt-1 text-xs">
+              Auto refresh only if cache is older than this.
+            </span>
+          </label>
+          <label className="form-control w-full">
+            <span className="label">{intl.formatMessage({ id: 'settings.backfill_limit' })}</span>
+            <Input
+              id="backfill-limit"
+              type="number"
+              min={25}
+              max={5000}
+              step={25}
+              value={backfill_limit}
+              onChange={(e) =>
+                set_backfill_limit(Math.max(25, Number(e.target.value) || DEFAULT_BACKFILL_LIMIT))
+              }
+            />
+            <span className="text-base-content/60 mt-1 text-xs">
+              Each Sync history pulls the next N PRs. Re-run later when the rate limit resets to go
+              deeper.
+            </span>
+          </label>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="bots" className="label">
+            {intl.formatMessage({ id: 'settings.ignored_bots' })}
+          </label>
+          <Textarea
+            id="bots"
+            rows={5}
+            value={ignored_bots}
+            onChange={(e) => set_ignored_bots(e.target.value)}
+            className="font-mono text-sm"
+          />
+          <Button
+            type="button"
+            className="btn-link h-auto min-h-0 p-0"
+            onClick={() => set_ignored_bots(DEFAULT_IGNORED_BOTS.join('\n'))}
+          >
+            Reset to defaults
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="test-file-globs" className="label">
+            {intl.formatMessage({ id: 'settings.test_file_globs' })}
+          </label>
+          <p className="text-base-content/60 text-xs">
+            {intl.formatMessage({ id: 'settings.test_file_globs_help' })}
+          </p>
+          <Textarea
+            id="test-file-globs"
+            rows={5}
+            value={test_file_globs}
+            onChange={(e) => set_test_file_globs(e.target.value)}
+            className="font-mono text-sm"
+          />
+          <Button
+            type="button"
+            className="btn-link h-auto min-h-0 p-0"
+            onClick={() => set_test_file_globs(DEFAULT_TEST_FILE_GLOBS.join('\n'))}
+          >
+            Reset to defaults
+          </Button>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-base-300 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <label htmlFor="business-hours" className="label">
+                {intl.formatMessage({ id: 'settings.business_hours' })}
+              </label>
+              <p className="text-base-content/60 mt-1 text-xs">
+                {intl.formatMessage({ id: 'settings.business_hours_help' })}
+              </p>
+            </div>
+            <input
+              id="business-hours"
+              type="checkbox"
+              className="toggle toggle-primary"
+              checked={business_hours.enabled}
+              onChange={(event) =>
+                set_business_hours((prev) => ({ ...prev, enabled: event.target.checked }))
+              }
+            />
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border p-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label htmlFor="business-hours">
-                  {intl.formatMessage({ id: 'settings.business_hours' })}
-                </Label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {intl.formatMessage({ id: 'settings.business_hours_help' })}
-                </p>
-              </div>
-              <Switch
-                id="business-hours"
-                checked={business_hours.enabled}
-                onCheckedChange={(enabled) => set_business_hours((prev) => ({ ...prev, enabled }))}
-              />
-            </div>
+          {business_hours.enabled && (
+            <div className="space-y-4 pt-1">
+              <label className="form-control w-full">
+                <span className="label">{intl.formatMessage({ id: 'settings.timezone' })}</span>
+                <select
+                  id="bh-tz"
+                  className="select w-full"
+                  value={business_hours.time_zone}
+                  onChange={(e) =>
+                    set_business_hours((prev) => ({
+                      ...prev,
+                      time_zone: e.target.value,
+                    }))
+                  }
+                >
+                  {time_zone_options.map((tz) => (
+                    <option key={tz} value={tz}>
+                      {tz}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            {business_hours.enabled && (
-              <div className="space-y-4 pt-1">
-                <div className="space-y-2">
-                  <Label htmlFor="bh-tz">{intl.formatMessage({ id: 'settings.timezone' })}</Label>
-                  <select
-                    id="bh-tz"
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    value={business_hours.time_zone}
+              <div className="space-y-2">
+                <span className="label">{intl.formatMessage({ id: 'settings.workdays' })}</span>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAY_LABELS.map(({ day, label }) => {
+                    const active = business_hours.workdays.includes(day)
+                    return (
+                      <Button
+                        key={day}
+                        type="button"
+                        className={
+                          active ? 'btn-primary btn-sm min-w-12' : 'btn-outline btn-sm min-w-12'
+                        }
+                        onClick={() =>
+                          set_business_hours((prev) => {
+                            const set = new Set(prev.workdays)
+                            if (set.has(day)) set.delete(day)
+                            else set.add(day)
+                            return { ...prev, workdays: [...set].sort() }
+                          })
+                        }
+                      >
+                        {label}
+                      </Button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="form-control w-full">
+                  <span className="label">{intl.formatMessage({ id: 'settings.start' })}</span>
+                  <Input
+                    id="bh-start"
+                    type="time"
+                    value={minutesToTimeInput(business_hours.start_minutes)}
                     onChange={(e) =>
                       set_business_hours((prev) => ({
                         ...prev,
-                        time_zone: e.target.value,
+                        start_minutes: timeInputToMinutes(e.target.value),
                       }))
                     }
-                  >
-                    {time_zone_options.map((tz) => (
-                      <option key={tz} value={tz}>
-                        {tz}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{intl.formatMessage({ id: 'settings.workdays' })}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {WEEKDAY_LABELS.map(({ day, label }) => {
-                      const active = business_hours.workdays.includes(day)
-                      return (
-                        <Button
-                          key={day}
-                          type="button"
-                          size="sm"
-                          variant={active ? 'default' : 'outline'}
-                          className="min-w-12"
-                          onClick={() =>
-                            set_business_hours((prev) => {
-                              const set = new Set(prev.workdays)
-                              if (set.has(day)) set.delete(day)
-                              else set.add(day)
-                              return { ...prev, workdays: [...set].sort() }
-                            })
-                          }
-                        >
-                          {label}
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="bh-start">{intl.formatMessage({ id: 'settings.start' })}</Label>
-                    <Input
-                      id="bh-start"
-                      type="time"
-                      value={minutesToTimeInput(business_hours.start_minutes)}
-                      onChange={(e) =>
-                        set_business_hours((prev) => ({
-                          ...prev,
-                          start_minutes: timeInputToMinutes(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bh-end">{intl.formatMessage({ id: 'settings.end' })}</Label>
-                    <Input
-                      id="bh-end"
-                      type="time"
-                      value={minutesToTimeInput(business_hours.end_minutes)}
-                      onChange={(e) =>
-                        set_business_hours((prev) => ({
-                          ...prev,
-                          end_minutes: timeInputToMinutes(e.target.value),
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
+                  />
+                </label>
+                <label className="form-control w-full">
+                  <span className="label">{intl.formatMessage({ id: 'settings.end' })}</span>
+                  <Input
+                    id="bh-end"
+                    type="time"
+                    value={minutesToTimeInput(business_hours.end_minutes)}
+                    onChange={(e) =>
+                      set_business_hours((prev) => ({
+                        ...prev,
+                        end_minutes: timeInputToMinutes(e.target.value),
+                      }))
+                    }
+                  />
+                </label>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-3 rounded-xl border border-border p-4">
-            <div>
-              <p className="font-medium text-foreground">
-                {intl.formatMessage({ id: 'settings.share.title' })}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {intl.formatMessage({ id: 'settings.share.description' })}
-              </p>
             </div>
+          )}
+        </div>
 
-            {active_repo ? (
-              <p className="text-sm">
-                {intl.formatMessage({ id: 'settings.share.active_repo' }, { repo: active_repo })}
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {intl.formatMessage({ id: 'settings.share.no_active_repo' })}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={share_busy || !active_repo}
-                onClick={() => void handle_download_snapshot()}
-              >
-                {intl.formatMessage({ id: 'settings.share.download' })}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={share_busy || !active_repo}
-                onClick={() => void handle_create_share_link()}
-              >
-                {share_busy
-                  ? intl.formatMessage({ id: 'settings.share.working' })
-                  : intl.formatMessage({ id: 'settings.share.create_link' })}
-              </Button>
-            </div>
-
-            {share_link && (
-              <div className="space-y-1">
-                <Label htmlFor="settings-share-link">
-                  {intl.formatMessage({ id: 'settings.share.link_label' })}
-                </Label>
-                <Input
-                  id="settings-share-link"
-                  readOnly
-                  value={share_link}
-                  className="font-mono text-xs"
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="settings-import-link">
-                {intl.formatMessage({ id: 'settings.share.import_label' })}
-              </Label>
-              <Input
-                id="settings-import-link"
-                value={import_link}
-                onChange={(e) => set_import_link(e.target.value)}
-                placeholder={intl.formatMessage({ id: 'settings.share.import_placeholder' })}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={share_busy || import_link.trim().length === 0}
-                onClick={() => void handle_import_snapshot()}
-              >
-                {intl.formatMessage({ id: 'settings.share.import' })}
-              </Button>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">
-              {intl.formatMessage({ id: 'settings.storage' })}
+        <div className="space-y-3 rounded-xl border border-base-300 p-4">
+          <div>
+            <p className="font-medium">{intl.formatMessage({ id: 'settings.share.title' })}</p>
+            <p className="text-base-content/60 mt-1 text-xs">
+              {intl.formatMessage({ id: 'settings.share.description' })}
             </p>
-            {storage_info ? (
-              <p className="mt-1">
-                {formatBytes(storage_info.usage)} used of {formatBytes(storage_info.quota)} (
-                {storage_info.usagePercent.toFixed(2)}%)
-              </p>
-            ) : (
-              <p className="mt-1">Storage estimate unavailable in this browser.</p>
-            )}
           </div>
 
-          {message && (
-            <Alert>
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
+          {active_repo ? (
+            <p className="text-sm">
+              {intl.formatMessage({ id: 'settings.share.active_repo' }, { repo: active_repo })}
+            </p>
+          ) : (
+            <p className="text-base-content/60 text-sm">
+              {intl.formatMessage({ id: 'settings.share.no_active_repo' })}
+            </p>
           )}
 
-          <Separator />
-
-          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={busy}
-                onClick={() => void handle_reset_data()}
-              >
-                {intl.formatMessage({ id: 'settings.reset_sync' })}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={busy}
-                onClick={() => void handle_factory_reset()}
-              >
-                {intl.formatMessage({ id: 'settings.clear_all' })}
-              </Button>
-            </div>
-            <Button type="submit" disabled={busy || current_settings.repos.length === 0}>
-              {busy
-                ? intl.formatMessage({ id: 'settings.saving' })
-                : intl.formatMessage({ id: 'settings.save' })}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              className="btn-outline"
+              disabled={share_busy || !active_repo}
+              onClick={() => void handle_download_snapshot()}
+            >
+              {intl.formatMessage({ id: 'settings.share.download' })}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Button
+              type="button"
+              className="btn-outline"
+              disabled={share_busy || !active_repo}
+              onClick={() => void handle_create_share_link()}
+            >
+              {share_busy
+                ? intl.formatMessage({ id: 'settings.share.working' })
+                : intl.formatMessage({ id: 'settings.share.create_link' })}
+            </Button>
+          </div>
+
+          {share_link && (
+            <label className="form-control w-full">
+              <span className="label">
+                {intl.formatMessage({ id: 'settings.share.link_label' })}
+              </span>
+              <Input
+                id="settings-share-link"
+                readOnly
+                value={share_link}
+                className="font-mono text-xs"
+              />
+            </label>
+          )}
+
+          <label className="form-control w-full">
+            <span className="label">
+              {intl.formatMessage({ id: 'settings.share.import_label' })}
+            </span>
+            <Input
+              id="settings-import-link"
+              value={import_link}
+              onChange={(e) => set_import_link(e.target.value)}
+              placeholder={intl.formatMessage({ id: 'settings.share.import_placeholder' })}
+            />
+          </label>
+          <Button
+            type="button"
+            className="btn-secondary"
+            disabled={share_busy || import_link.trim().length === 0}
+            onClick={() => void handle_import_snapshot()}
+          >
+            {intl.formatMessage({ id: 'settings.share.import' })}
+          </Button>
+        </div>
+
+        <div className="bg-base-200 text-base-content/60 rounded-xl p-4 text-sm">
+          <p className="font-medium text-base-content">
+            {intl.formatMessage({ id: 'settings.storage' })}
+          </p>
+          {storage_info ? (
+            <p className="mt-1">
+              {formatBytes(storage_info.usage)} used of {formatBytes(storage_info.quota)} (
+              {storage_info.usagePercent.toFixed(2)}%)
+            </p>
+          ) : (
+            <p className="mt-1">Storage estimate unavailable in this browser.</p>
+          )}
+        </div>
+
+        {message ? (
+          <div role="alert" className="alert">
+            <span>{message}</span>
+          </div>
+        ) : null}
+
+        <div className="divider" />
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              className="btn-outline"
+              disabled={busy}
+              onClick={() => void handle_reset_data()}
+            >
+              {intl.formatMessage({ id: 'settings.reset_sync' })}
+            </Button>
+            <Button
+              type="button"
+              className="btn-error"
+              disabled={busy}
+              onClick={() => void handle_factory_reset()}
+            >
+              {intl.formatMessage({ id: 'settings.clear_all' })}
+            </Button>
+          </div>
+          <Button
+            type="submit"
+            className="btn-primary"
+            disabled={busy || current_settings.repos.length === 0}
+          >
+            {busy
+              ? intl.formatMessage({ id: 'settings.saving' })
+              : intl.formatMessage({ id: 'settings.save' })}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

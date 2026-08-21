@@ -12,7 +12,7 @@ export function Wrapper({ data }: ConnectorProps) {
   if (data.mergedCount === 0) {
     return (
       <Panel title={title} help={help}>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-base-content/60">
           {intl.formatMessage({ id: 'chart.no_review_merges.empty' })}
         </p>
       </Panel>

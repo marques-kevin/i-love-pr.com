@@ -1,12 +1,9 @@
 import { FormattedMessage, useIntl } from 'react-intl'
-import { AlertCircleIcon } from '@/components/ui/alert-circle'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+import { AlertCircleIcon } from '@/components/icons/alert_circle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { MinusSignCircleIcon } from '@/components/ui/minus-sign-circle'
-import { Tick02Icon } from '@/components/ui/tick-02'
+import { MinusSignCircleIcon } from '@/components/icons/minus_sign_circle'
+import { Tick02Icon } from '@/components/icons/tick_02'
 import type { TokenScopeAnalysis } from '@/lib/github_token_scopes'
 import type { RateLimitInfo } from '@/lib/types'
 import { onboarding_scope_message_key } from '@/lib/i18n'
@@ -27,8 +24,7 @@ interface OnboardingTokenStepProps {
   can_submit: boolean
 }
 
-const ALERT_WITH_ICON =
-  'grid-cols-[auto_1fr] gap-x-2 [&>div:first-child]:row-span-2 [&>div:first-child]:translate-y-0.5'
+const ALERT_WITH_ICON = 'alert items-start'
 
 function scope_status_label(
   intl: ReturnType<typeof useIntl>,
@@ -46,7 +42,7 @@ function scope_status_label(
 
 function ScopeStatusIcon({ status }: { status: TokenScopeAnalysis['scopes'][number]['status'] }) {
   const icon: OnboardingAnimatedIcon = status === 'missing' ? MinusSignCircleIcon : Tick02Icon
-  const icon_className = status === 'granted' ? 'text-primary' : 'text-muted-foreground'
+  const icon_className = status === 'granted' ? 'text-primary' : 'text-base-content/60'
 
   return (
     <OnboardingHoverIcon
@@ -76,23 +72,23 @@ export function OnboardingTokenStep({
   return (
     <div className="space-y-8">
       <div>
-        <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+        <p className="text-[11px] font-medium tracking-[0.18em] text-base-content/60 uppercase">
           {intl.formatMessage({ id: 'onboarding.token_kicker' })}
         </p>
         <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-pretty sm:text-3xl">
           {intl.formatMessage({ id: 'onboarding.setup_title' })}
         </h2>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-base-content/60">
           {intl.formatMessage({ id: 'onboarding.tagline' })}
         </p>
       </div>
 
       <div className="space-y-3">
-        <Label htmlFor="token" className="sr-only">
+        <label htmlFor="token" className="sr-only">
           {intl.formatMessage({ id: 'onboarding.token_label' })}
-        </Label>
+        </label>
         <div className={`max-w-xl ${landing_command_box}`}>
-          <span className="hidden pl-4 font-mono text-sm text-muted-foreground sm:inline">$</span>
+          <span className="hidden pl-4 font-mono text-sm text-base-content/60 sm:inline">$</span>
           <Input
             id="token"
             type="password"
@@ -100,11 +96,11 @@ export function OnboardingTokenStep({
             value={token}
             onChange={(e) => on_token_change(e.target.value)}
             placeholder={intl.formatMessage({ id: 'onboarding.token_placeholder' })}
-            className="h-11 min-w-0 flex-1 rounded-none border-0 bg-transparent font-mono text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0"
+            className="input-ghost h-11 min-w-0 flex-1 rounded-none border-0 bg-transparent font-mono text-sm shadow-none"
           />
           <button
             type="button"
-            className={`m-1.5 h-9 shrink-0 rounded-[12px] bg-background px-4 text-sm font-medium text-foreground disabled:opacity-50 ${landing_hairline}`}
+            className={`m-1.5 h-9 shrink-0 rounded-[12px] bg-base-100 px-4 text-sm font-medium text-base-content disabled:opacity-50 ${landing_hairline}`}
             onClick={on_validate}
             disabled={!token.trim() || validating}
           >
@@ -113,12 +109,12 @@ export function OnboardingTokenStep({
               : intl.formatMessage({ id: 'onboarding.validate' })}
           </button>
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-base-content/60">
           <FormattedMessage
             id="onboarding.token_help"
             values={{
-              repo: <code className="text-foreground">repo</code>,
-              public_repo: <code className="text-foreground">public_repo</code>,
+              repo: <code className="text-base-content">repo</code>,
+              public_repo: <code className="text-base-content">public_repo</code>,
             }}
           />
         </p>
@@ -140,12 +136,12 @@ export function OnboardingTokenStep({
       </div>
 
       {scope_analysis && login && (
-        <div className="space-y-3 rounded-2xl bg-muted/40 p-4 sm:p-5">
+        <div className="space-y-3 rounded-2xl bg-base-200/40 p-4 sm:p-5">
           <div>
             <h3 className="text-sm font-medium">
               {intl.formatMessage({ id: 'onboarding.scopes.title' })}
             </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-base-content/60">
               {scope_analysis.token_type === 'fine_grained'
                 ? intl.formatMessage({ id: 'onboarding.scopes.fine_grained_help' })
                 : intl.formatMessage({ id: 'onboarding.scopes.classic_help' })}
@@ -157,25 +153,25 @@ export function OnboardingTokenStep({
               {scope_analysis.scopes.map((scope_info) => (
                 <li
                   key={scope_info.scope}
-                  className="flex items-start justify-between gap-3 rounded-xl bg-background px-3 py-2.5"
+                  className="flex items-start justify-between gap-3 rounded-xl bg-base-100 px-3 py-2.5"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <ScopeStatusIcon status={scope_info.status} />
                       <code className="text-sm">{scope_info.scope}</code>
                       {scope_info.required && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <span className="badge badge-outline text-[10px]">
                           {intl.formatMessage({ id: 'onboarding.scopes.required_badge' })}
-                        </Badge>
+                        </span>
                       )}
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-base-content/60">
                       {intl.formatMessage({
                         id: onboarding_scope_message_key(scope_info.scope),
                       })}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">
+                  <span className="shrink-0 text-xs text-base-content/60">
                     {scope_status_label(intl, scope_info.status)}
                   </span>
                 </li>
@@ -184,52 +180,52 @@ export function OnboardingTokenStep({
           )}
 
           {!scope_analysis.has_required_access && scope_analysis.token_type !== 'fine_grained' && (
-            <Alert variant="destructive" className={ALERT_WITH_ICON}>
+            <div role="alert" className={`alert alert-error ${ALERT_WITH_ICON}`}>
               <AlertCircleIcon size={16} />
-              <AlertTitle>
-                {intl.formatMessage({ id: 'onboarding.scopes.missing_title' })}
-              </AlertTitle>
-              <AlertDescription>
-                {intl.formatMessage({ id: 'onboarding.scopes.missing_description' })}
-              </AlertDescription>
-            </Alert>
+              <div>
+                <h4 className="font-medium">
+                  {intl.formatMessage({ id: 'onboarding.scopes.missing_title' })}
+                </h4>
+                <p>{intl.formatMessage({ id: 'onboarding.scopes.missing_description' })}</p>
+              </div>
+            </div>
           )}
 
           {scope_analysis.overly_permissive_scopes.length > 0 && (
-            <Alert className={ALERT_WITH_ICON}>
+            <div role="alert" className={`alert ${ALERT_WITH_ICON}`}>
               <AlertCircleIcon size={16} />
-              <AlertTitle>
-                {intl.formatMessage({ id: 'onboarding.scopes.permissive_title' })}
-              </AlertTitle>
-              <AlertDescription>
-                {intl.formatMessage(
-                  { id: 'onboarding.scopes.permissive_description' },
-                  { scopes: scope_analysis.overly_permissive_scopes.join(', ') },
-                )}
-              </AlertDescription>
-            </Alert>
+              <div>
+                <h4 className="font-medium">
+                  {intl.formatMessage({ id: 'onboarding.scopes.permissive_title' })}
+                </h4>
+                <p>
+                  {intl.formatMessage(
+                    { id: 'onboarding.scopes.permissive_description' },
+                    { scopes: scope_analysis.overly_permissive_scopes.join(', ') },
+                  )}
+                </p>
+              </div>
+            </div>
           )}
 
           {scope_analysis.can_use_more_restrictive && (
-            <Alert>
-              <AlertDescription>
-                {intl.formatMessage({ id: 'onboarding.scopes.repo_tip' })}
-              </AlertDescription>
-            </Alert>
+            <div role="alert" className="alert">
+              <span>{intl.formatMessage({ id: 'onboarding.scopes.repo_tip' })}</span>
+            </div>
           )}
         </div>
       )}
 
       {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div role="alert" className="alert alert-error">
+          <span>{error}</span>
+        </div>
       )}
 
       <div className="flex justify-start">
         <Button
           type="button"
-          className="h-10 rounded-xl px-5 shadow-none"
+          className="btn-primary h-10 rounded-xl px-5 shadow-none"
           onClick={on_submit}
           disabled={!can_submit || validating}
         >

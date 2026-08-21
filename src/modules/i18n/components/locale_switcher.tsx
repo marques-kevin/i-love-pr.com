@@ -1,6 +1,6 @@
 import { useIntl } from 'react-intl'
-import { Button } from '@/components/ui/button'
 import { APP_LOCALES, locale_message_key } from '@/lib/i18n'
+import { Button } from '@/components/ui/button'
 import { connector, type ConnectorProps } from './locale_switcher.connector'
 
 export function Wrapper({ locale, on_change_locale }: ConnectorProps) {
@@ -16,9 +16,9 @@ export function Wrapper({ locale, on_change_locale }: ConnectorProps) {
         <Button
           key={code}
           type="button"
-          size="sm"
-          variant={locale === code ? 'default' : 'outline'}
-          className="h-8 rounded-full px-2.5 shadow-none"
+          className={
+            locale === code ? 'btn-primary btn-sm rounded-full' : 'btn-outline btn-sm rounded-full'
+          }
           onClick={() => on_change_locale(code)}
         >
           {intl.formatMessage({ id: locale_message_key(code) })}

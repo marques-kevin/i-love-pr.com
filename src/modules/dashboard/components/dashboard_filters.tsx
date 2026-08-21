@@ -1,15 +1,8 @@
 import { useState } from 'react'
 import { FilterIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Modal } from '@/components/ui/modal'
 import { connector, type ConnectorProps } from './dashboard_filters.connector'
 import { MemberFilter } from './member_filter'
 import { TestFilesFilter } from './test_files_filter'
@@ -28,42 +21,41 @@ export function Wrapper(props: ConnectorProps) {
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => set_open(true)}>
+      <Button type="button" className="btn-outline btn-sm" onClick={() => set_open(true)}>
         <FilterIcon className="size-4" />
         {intl.formatMessage({ id: 'dashboard.filters' })}
-        {count > 0 && (
-          <Badge variant="secondary" className="ml-0.5 h-5 min-w-5 px-1.5">
-            {count}
-          </Badge>
-        )}
+        {count > 0 ? <span className="badge badge-sm badge-neutral">{count}</span> : null}
       </Button>
 
-      <Sheet open={open} onOpenChange={set_open}>
-        <SheetContent side="right" className="w-full gap-0 sm:max-w-md">
-          <SheetHeader className="border-b border-border">
-            <SheetTitle>{intl.formatMessage({ id: 'dashboard.filters.title' })}</SheetTitle>
-            <SheetDescription>
-              {intl.formatMessage({ id: 'dashboard.filters.description' })}
-            </SheetDescription>
-          </SheetHeader>
+      <Modal
+        open={open}
+        on_close={() => set_open(false)}
+        placement="end"
+        box_className="h-full max-h-none w-full max-w-md rounded-none"
+      >
+        <h3 className="font-display text-lg font-semibold">
+          {intl.formatMessage({ id: 'dashboard.filters.title' })}
+        </h3>
+        <p className="text-base-content/60 mt-1 text-sm">
+          {intl.formatMessage({ id: 'dashboard.filters.description' })}
+        </p>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-4">
-            <section className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground">
-                {intl.formatMessage({ id: 'dashboard.filters.members' })}
-              </h3>
-              <MemberFilter />
-            </section>
+        <div className="mt-6 flex min-h-0 flex-1 flex-col gap-8">
+          <section className="space-y-3">
+            <h4 className="text-sm font-medium">
+              {intl.formatMessage({ id: 'dashboard.filters.members' })}
+            </h4>
+            <MemberFilter />
+          </section>
 
-            <section className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground">
-                {intl.formatMessage({ id: 'dashboard.filters.test_files' })}
-              </h3>
-              <TestFilesFilter />
-            </section>
-          </div>
-        </SheetContent>
-      </Sheet>
+          <section className="space-y-3">
+            <h4 className="text-sm font-medium">
+              {intl.formatMessage({ id: 'dashboard.filters.test_files' })}
+            </h4>
+            <TestFilesFilter />
+          </section>
+        </div>
+      </Modal>
     </>
   )
 }

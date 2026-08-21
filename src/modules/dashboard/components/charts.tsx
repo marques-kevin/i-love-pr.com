@@ -312,17 +312,17 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
             const point = parse_scatter_tooltip_point(payload[0].payload ?? null)
             if (!point) return null
             return (
-              <div className="rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl">
+              <div className="rounded-lg border border-base-300/50 bg-base-100 px-2.5 py-1.5 text-xs shadow-xl">
                 <p className="font-medium">
                   #{point.number} · {point.lines} lines
                 </p>
-                <p className="text-muted-foreground">
+                <p className="text-base-content/60">
                   Request → approve: {point.timeToApproveHours.toFixed(1)}h
                   {point.timeToFirstReviewHours > 0 && (
                     <> · First review: {point.timeToFirstReviewHours.toFixed(1)}h</>
                   )}
                 </p>
-                <p className="truncate text-muted-foreground">{point.title}</p>
+                <p className="truncate text-base-content/60">{point.title}</p>
               </div>
             )
           }}

@@ -15,8 +15,16 @@ src/
   store/            # create_store, create_app_async_thunk, ThunkExtra
   repositories/
   lib/
-  components/ui/    # shadcn only
+  components/
+    ui/             # daisyUI wrappers (btn/input/modal/chart)
+    icons/          # Hugeicons Animated
 ```
+
+## UI
+
+- Design system: **daisyUI 5** (Tailwind plugin, not a Vite plugin) with a custom `ilovepr` theme in `src/index.css`
+- `src/components/ui/` holds thin 1:1 daisyUI wrappers only (`btn`, `input`, `textarea`, `modal`, Recharts helper). Prefer daisyUI classes (`btn`, `card`, `navbar`, `dropdown`, `modal`, `tabs`, `toggle`, `alert`, `badge`, `tooltip`, `menu`, `avatar`) in feature code. Do not rebuild a CVA/shadcn API.
+- Hugeicons Animated live in `src/components/icons/` (snake_case files). Add a new icon with `npx shadcn@latest add @hugeicons-animated/<name>` (registry in `components.json`), then move the generated file from `src/components/ui/` to `src/components/icons/` and rename it to snake_case.
 
 ## Naming
 

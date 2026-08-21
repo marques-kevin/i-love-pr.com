@@ -1,6 +1,4 @@
 import { useIntl } from 'react-intl'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { connector, type ConnectorProps } from './test_files_filter.connector'
 
 export function Wrapper({ hide_test_files, set_hide_test_files }: ConnectorProps) {
@@ -9,17 +7,19 @@ export function Wrapper({ hide_test_files, set_hide_test_files }: ConnectorProps
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
-        <Label htmlFor="hide-test-files">
+        <label htmlFor="hide-test-files" className="label cursor-pointer justify-start p-0">
           {intl.formatMessage({ id: 'dashboard.filters.hide_test_files' })}
-        </Label>
-        <p className="mt-1 text-xs text-muted-foreground">
+        </label>
+        <p className="text-base-content/60 mt-1 text-xs">
           {intl.formatMessage({ id: 'dashboard.filters.hide_test_files_help' })}
         </p>
       </div>
-      <Switch
+      <input
         id="hide-test-files"
+        type="checkbox"
+        className="toggle toggle-primary"
         checked={hide_test_files}
-        onCheckedChange={set_hide_test_files}
+        onChange={(event) => set_hide_test_files(event.target.checked)}
       />
     </div>
   )

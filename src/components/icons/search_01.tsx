@@ -1,5 +1,3 @@
-'use client'
-
 import { useAnimate, useReducedMotion } from 'motion/react'
 import type { HTMLAttributes, MouseEventHandler } from 'react'
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'

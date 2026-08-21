@@ -18,8 +18,22 @@ export const DEMO_TOKEN = 'demo-token'
 const DEMO_AUTHORS = ['alice', 'bob', 'carol', 'dave', 'eve'] as const
 const DEMO_REVIEWERS = ['bob', 'carol', 'frank', 'grace'] as const
 
+export function is_demo_mode_flag(value: string | undefined): boolean {
+  return value === 'true'
+}
+
 export function is_demo_mode(): boolean {
-  return import.meta.env.DEV && import.meta.env.VITE_DEMO_MODE === 'true'
+  return is_demo_mode_flag(import.meta.env.VITE_DEMO_MODE)
+}
+
+export function should_auto_enable_pages_preview_demo(
+  cf_pages: string | undefined,
+  cf_pages_branch: string | undefined,
+  vite_demo_mode: string | undefined,
+): boolean {
+  const is_pages_preview =
+    cf_pages === '1' && Boolean(cf_pages_branch) && cf_pages_branch !== 'main'
+  return is_pages_preview && vite_demo_mode == null
 }
 
 export function create_demo_account(): SavedAccount {

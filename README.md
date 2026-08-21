@@ -14,17 +14,20 @@ Self-hosted, single-user GitHub pull request analytics. A lightweight Swarmia/Li
 ## Stack
 
 - React + Vite + TypeScript
-- shadcn/ui (Radix Nova) + Tailwind CSS
+- daisyUI 5 + Tailwind CSS v4 (`@plugin "daisyui"` in `src/index.css`)
 - Dexie.js (IndexedDB)
 - GitHub GraphQL API v4
-- Recharts via shadcn Chart
+- Recharts (chart colors mapped to the daisyUI `ilovepr` theme)
+- Hugeicons Animated (`src/components/icons/`)
 - vite-plugin-pwa
 
-Add UI primitives with:
+Add a Hugeicons Animated icon with:
 
 ```bash
-npx shadcn@latest add <component>
+npx shadcn@latest add @hugeicons-animated/<name>
 ```
+
+Then move the generated file from `src/components/ui/` to `src/components/icons/` and rename it to snake_case.
 
 ## Quick start
 
@@ -39,9 +42,15 @@ npm run dev
 
 Open the app, paste a PAT with `repo` (or `public_repo`) read scope, add repositories, and start analyzing.
 
-### Demo mode (local dev)
+### Demo mode
 
-With `VITE_DEMO_MODE=true` (enabled by default via `.env.development`), the dev server boots an in-memory workspace pre-filled with sample PRs on `acme/widgets` — no PAT or GitHub account required. Set `VITE_DEMO_MODE=false` in `.env.development.local` to use the normal onboarding flow locally.
+Demo mode skips GitHub PAT / onboarding, seeds IndexedDB with the `acme/widgets` workspace (open PRs, bots, metrics), and uses `MemoryGithubClient` so dashboard / sync / settings work without a token.
+
+It is on when `VITE_DEMO_MODE=true` is inlined at **build time** (Vite). There is no runtime `DEV` gate.
+
+- **Local:** `.env.development` sets `VITE_DEMO_MODE=true`, so `npm run dev` still demos. Override with `.env.development.local` (`VITE_DEMO_MODE=false`) for a real PAT flow.
+- **Cloudflare Pages Preview** (PR / non-`main` branch): `vite.config.ts` sets `VITE_DEMO_MODE=true` when `CF_PAGES=1` and `CF_PAGES_BRANCH` is set and is not `main`, unless the flag is already set. An explicit Preview env `VITE_DEMO_MODE=false` still disables demo.
+- **Cloudflare Pages Production** (`main`): demo stays off. The live app uses onboarding + PAT.
 
 ## Build & deploy
 
@@ -53,7 +62,7 @@ Deploy the `dist/` folder to any static host.
 
 ### Cloudflare Pages
 
-Git-connected auto deploy (push to `main`).
+Git-connected auto deploy. **Production** (`main`) is the real app (onboarding + PAT). **Preview** (PR / non-`main` branch) builds auto-enable demo mode unless `VITE_DEMO_MODE` is already set — see [Demo mode](#demo-mode).
 
 Build settings in the Cloudflare dashboard:
 
