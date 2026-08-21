@@ -91,3 +91,54 @@
     animation: onboarding-tile-in 0.45s ease both;
   }
 }
+
+.dashboard-window {
+  corner-shape: round;
+}
+
+.dashboard-tab {
+  corner-shape: round;
+}
+
+@supports (corner-shape: squircle) {
+  .dashboard-window {
+    corner-shape: squircle;
+  }
+
+  .dashboard-tab--active {
+    corner-shape: squircle;
+  }
+}
+
+.dashboard-tab--active::before,
+.dashboard-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.dashboard-tab--active::before {
+  left: -12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 6px 0 0 0 var(--color-base-100);
+}
+
+.dashboard-tab--active::after {
+  right: -12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: -6px 0 0 0 var(--color-base-100);
+}
+
+@media (hover: hover) {
+  .dashboard-tab-close {
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  button.dashboard-tab:hover .dashboard-tab-close {
+    opacity: 1;
+  }
+}

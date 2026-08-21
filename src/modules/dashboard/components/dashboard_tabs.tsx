@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
-import { Delete02Icon } from '@/components/icons/delete_02'
-import { Edit02Icon } from '@/components/icons/edit_02'
-import { MoreHorizontalIcon } from '@/components/icons/more_horizontal'
+import { Cancel01Icon } from '@/components/icons/cancel_01'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
-import { close_daisy_dropdown } from '@/lib/daisy'
+import { dashboard_tab_button_class_name } from '@/lib/dashboard_tab_styles'
 import type { DashboardTab } from '@/lib/types'
-import { cn } from '@/lib/utils'
 import { connector, type ConnectorProps } from './dashboard_tabs.connector'
 
 function dashboard_tab_label(
@@ -80,84 +77,55 @@ export function Wrapper({
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <div role="tablist" className="tabs tabs-box tabs-sm">
-        {dashboards.map((tab) => {
-          const is_active = tab.id === active_dashboard_id
-          return (
-            <div key={tab.id} className="flex items-center">
+    <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 items-end gap-0.5 overflow-x-auto [scrollbar-width:thin]">
+        <div role="tablist" className="flex min-w-0 items-end">
+          {dashboards.map((tab) => {
+            const is_active = tab.id === active_dashboard_id
+            return (
               <button
+                key={tab.id}
                 type="button"
                 role="tab"
-                className={cn('tab', is_active && 'tab-active')}
+                aria-selected={is_active}
+                className={dashboard_tab_button_class_name(is_active)}
                 onClick={() => set_active_dashboard_id(tab.id)}
+                onDoubleClick={() => open_rename(tab)}
               >
-                {dashboard_tab_label(tab, intl.formatMessage)}
-              </button>
-              {is_active ? (
-                <div className="dropdown dropdown-bottom">
-                  <button
-                    type="button"
-                    tabIndex={0}
-                    className="btn btn-ghost btn-circle btn-xs"
-                    aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
-                  >
-                    <HoverIcon icon={MoreHorizontalIcon} size={14} />
-                  </button>
-                  <ul
+                <span className="max-w-40 truncate">
+                  {dashboard_tab_label(tab, intl.formatMessage)}
+                </span>
+                {can_delete_tab ? (
+                  <span
+                    role="button"
                     tabIndex={-1}
-                    className="dropdown-content menu bg-base-100 rounded-box z-50 min-w-40 p-2 shadow"
+                    aria-label={intl.formatMessage({ id: 'dashboard.delete_tab' })}
+                    className="dashboard-tab-close inline-flex shrink-0 rounded-full text-base-content/70"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      open_delete(tab)
+                    }}
                   >
-                    <li>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          open_rename(tab)
-                          close_daisy_dropdown(event.currentTarget)
-                        }}
-                      >
-                        <HoverIcon icon={Edit02Icon} size={16} />
-                        {intl.formatMessage({ id: 'dashboard.rename_tab' })}
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        disabled={!can_delete_tab}
-                        title={
-                          can_delete_tab
-                            ? undefined
-                            : intl.formatMessage({ id: 'dashboard.delete_disabled' })
-                        }
-                        className="text-error"
-                        onClick={(event) => {
-                          open_delete(tab)
-                          close_daisy_dropdown(event.currentTarget)
-                        }}
-                      >
-                        <HoverIcon icon={Delete02Icon} size={16} />
-                        {intl.formatMessage({ id: 'dashboard.delete_tab' })}
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              ) : null}
-            </div>
-          )
-        })}
-      </div>
+                    <HoverIcon icon={Cancel01Icon} size={14} />
+                  </span>
+                ) : null}
+              </button>
+            )
+          })}
+        </div>
 
-      <Button
-        type="button"
-        className="btn-outline btn-square btn-sm"
-        onClick={() => {
-          set_new_name('')
-          set_create_open(true)
-        }}
-        aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
-      >
-        <HoverIcon icon={PlusSignIcon} size={16} />
-      </Button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-circle btn-xs shrink-0"
+          aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
+          onClick={() => {
+            set_new_name('')
+            set_create_open(true)
+          }}
+        >
+          <HoverIcon icon={PlusSignIcon} size={16} />
+        </button>
+      </div>
 
       <Modal
         open={create_open}

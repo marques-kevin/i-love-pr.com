@@ -5,7 +5,7 @@ import { PeriodFilter } from './period_filter'
 
 export function Wrapper() {
   return (
-    <div className="mx-auto w-full space-y-6">
+    <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <DashboardFilters />
         <PeriodFilter />
