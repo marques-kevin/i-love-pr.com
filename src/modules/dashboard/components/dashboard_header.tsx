@@ -13,7 +13,7 @@ export function DashboardHeader({ on_close_window }: { on_close_window: () => vo
   const back_label = intl.formatMessage({ id: 'dashboard.back_to_list' })
 
   return (
-    <header className="dashboard-window-strip bg-base-200 sticky top-0 z-40 pt-2 px-2 sm:px-3">
+    <header className="dashboard-window-strip bg-base-200 pt-2 px-2 sm:px-3">
       <div className="flex min-w-0 items-end gap-1">
         <Button
           type="button"

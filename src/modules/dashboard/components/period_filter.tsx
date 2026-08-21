@@ -1,4 +1,5 @@
 import { useIntl } from 'react-intl'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { period_message_key } from '@/lib/i18n'
 import { normalize_period_key } from '@/lib/dashboard_layout'
@@ -16,18 +17,18 @@ export function Wrapper({
   const intl = useIntl()
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div role="tablist" className="tabs tabs-box tabs-sm">
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="join overflow-x-auto">
         {(['7d', '30d', '90d', 'custom'] as const).map((key) => (
-          <button
+          <Button
             key={key}
             type="button"
-            role="tab"
-            className={cn('tab', period_key === key && 'tab-active')}
+            className={cn('btn-sm join-item', period_key === key ? 'btn-primary' : 'btn-outline')}
+            aria-pressed={period_key === key}
             onClick={() => set_period_key(normalize_period_key(key))}
           >
             {intl.formatMessage({ id: period_message_key(key) })}
-          </button>
+          </Button>
         ))}
       </div>
 
