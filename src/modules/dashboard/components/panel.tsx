@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { CircleHelp } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { HelpCircleIcon } from '@/components/icons/help_circle'
 import { Button } from '@/components/ui/button'
 
 function HelpButton({ help }: { help: string }) {
@@ -13,7 +13,7 @@ function HelpButton({ help }: { help: string }) {
         className="btn-ghost btn-circle btn-xs text-base-content/60"
         aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
       >
-        <CircleHelp className="size-4" />
+        <HelpCircleIcon size={16} aria-hidden={true} />
       </Button>
       <div
         tabIndex={-1}

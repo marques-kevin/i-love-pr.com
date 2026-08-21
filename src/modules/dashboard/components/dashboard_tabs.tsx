@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { MoreHorizontal, Plus, Pencil, Trash2 } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { Delete02Icon } from '@/components/icons/delete_02'
+import { Edit02Icon } from '@/components/icons/edit_02'
+import { MoreHorizontalIcon } from '@/components/icons/more_horizontal'
+import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
@@ -98,7 +101,7 @@ export function Wrapper({
                     className="btn btn-ghost btn-circle btn-xs"
                     aria-label={intl.formatMessage({ id: 'dashboard.tab_menu' })}
                   >
-                    <MoreHorizontal className="size-3.5" />
+                    <MoreHorizontalIcon size={14} aria-hidden={true} />
                   </button>
                   <ul
                     tabIndex={-1}
@@ -112,7 +115,7 @@ export function Wrapper({
                           close_daisy_dropdown(event.currentTarget)
                         }}
                       >
-                        <Pencil className="size-4" />
+                        <Edit02Icon size={16} aria-hidden={true} />
                         {intl.formatMessage({ id: 'dashboard.rename_tab' })}
                       </button>
                     </li>
@@ -131,7 +134,7 @@ export function Wrapper({
                           close_daisy_dropdown(event.currentTarget)
                         }}
                       >
-                        <Trash2 className="size-4" />
+                        <Delete02Icon size={16} aria-hidden={true} />
                         {intl.formatMessage({ id: 'dashboard.delete_tab' })}
                       </button>
                     </li>
@@ -152,7 +155,7 @@ export function Wrapper({
         }}
         aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
       >
-        <Plus className="size-4" />
+        <PlusSignIcon size={16} aria-hidden={true} />
       </Button>
 
       <Modal

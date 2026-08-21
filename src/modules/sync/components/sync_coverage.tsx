@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { enUS, fr } from 'date-fns/locale'
-import { CalendarRangeIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { Calendar03Icon } from '@/components/icons/calendar_03'
 import { Button } from '@/components/ui/button'
 import { compute_sync_depth_progress, min_remote_oldest_created_at } from '@/lib/pr_coverage'
 import type { SyncState } from '@/lib/types'
@@ -51,7 +51,7 @@ export function Wrapper({ pr_coverage, sync_states, active_repo }: ConnectorProp
         className="btn-ghost btn-circle btn-sm text-base-content/60"
         aria-label={intl.formatMessage({ id: 'sync.coverage.trigger_aria' })}
       >
-        <CalendarRangeIcon />
+        <Calendar03Icon size={16} aria-hidden={true} />
       </Button>
       <div tabIndex={-1} className="dropdown-content bg-base-100 rounded-box z-50 w-72 p-4 shadow">
         <p className="font-medium">{intl.formatMessage({ id: 'sync.coverage.title' })}</p>

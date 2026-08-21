@@ -1,5 +1,8 @@
-import { ChevronsUpDownIcon, LogOutIcon, PlusIcon, UserRoundIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { ChevronDownIcon } from '@/components/icons/chevron_down'
+import { Logout01Icon } from '@/components/icons/logout_01'
+import { PlusSignIcon } from '@/components/icons/plus_sign'
+import { UserIcon } from '@/components/icons/user'
 import { Button } from '@/components/ui/button'
 import { close_daisy_dropdown } from '@/lib/daisy'
 import { account_display_name, account_secondary_line } from '@/lib/session'
@@ -46,7 +49,7 @@ export function Wrapper({
         disabled
         aria-label={intl.formatMessage({ id: 'account.unknown' })}
       >
-        <UserRoundIcon />
+        <UserIcon size={16} aria-hidden={true} />
       </Button>
     )
   }
@@ -67,7 +70,11 @@ export function Wrapper({
         <span className="hidden max-w-28 truncate text-sm font-medium sm:inline">
           {display_name}
         </span>
-        <ChevronsUpDownIcon className="text-base-content/60 hidden size-4 sm:block" />
+        <ChevronDownIcon
+          size={16}
+          className="text-base-content/60 hidden sm:block"
+          aria-hidden={true}
+        />
       </Button>
       <ul
         tabIndex={-1}
@@ -108,7 +115,7 @@ export function Wrapper({
               close_daisy_dropdown(event.currentTarget)
             }}
           >
-            <PlusIcon />
+            <PlusSignIcon size={16} aria-hidden={true} />
             {intl.formatMessage({ id: 'account.add' })}
           </button>
         </li>
@@ -120,7 +127,7 @@ export function Wrapper({
               close_daisy_dropdown(event.currentTarget)
             }}
           >
-            <LogOutIcon />
+            <Logout01Icon size={16} aria-hidden={true} />
             {intl.formatMessage({ id: 'account.logout' })}
           </button>
         </li>

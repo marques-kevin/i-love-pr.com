@@ -1,6 +1,10 @@
 import { useState } from 'react'
-import { CheckIcon, ChevronDownIcon, CirclePlusIcon, Loader2Icon, SettingsIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { ChevronDownIcon } from '@/components/icons/chevron_down'
+import { Loading03Icon } from '@/components/icons/loading_03'
+import { PlusSignIcon } from '@/components/icons/plus_sign'
+import { Settings01Icon } from '@/components/icons/settings_01'
+import { Tick02Icon } from '@/components/icons/tick_02'
 import { IlovePrLogo } from '@/components/ilove_pr_logo'
 import { Button } from '@/components/ui/button'
 import { close_daisy_dropdown } from '@/lib/daisy'
@@ -34,7 +38,9 @@ function sync_cue(state: SyncState | undefined): 'idle' | 'syncing' | 'error' {
 
 function RepoCue({ cue, error_label }: { cue: 'idle' | 'syncing' | 'error'; error_label: string }) {
   if (cue === 'syncing') {
-    return <Loader2Icon className="text-base-content/60 size-3 animate-spin" />
+    return (
+      <Loading03Icon size={12} className="text-base-content/60 animate-spin" aria-hidden={true} />
+    )
   }
   if (cue === 'error') {
     return <span className="bg-error size-2 rounded-full" aria-label={error_label} />
@@ -169,7 +175,11 @@ export function Wrapper({
                       </span>
                     )}
                   </span>
-                  <ChevronDownIcon className="text-base-content/60 size-4 shrink-0" />
+                  <ChevronDownIcon
+                    size={16}
+                    className="text-base-content/60 shrink-0"
+                    aria-hidden={true}
+                  />
                 </Button>
                 <ul
                   tabIndex={-1}
@@ -193,7 +203,7 @@ export function Wrapper({
                           </span>
                           <span className="min-w-0 flex-1 truncate">{repo_short_name(repo)}</span>
                           <RepoCue cue={cue} error_label={error_label} />
-                          {active ? <CheckIcon className="size-4" /> : null}
+                          {active ? <Tick02Icon size={16} aria-hidden={true} /> : null}
                         </button>
                       </li>
                     )
@@ -210,7 +220,7 @@ export function Wrapper({
               aria-label={intl.formatMessage({ id: 'app.nav.add_repository' })}
               onClick={open_add_repo}
             >
-              <CirclePlusIcon />
+              <PlusSignIcon size={16} aria-hidden={true} />
               <span className="hidden sm:inline">
                 {intl.formatMessage({ id: 'app.nav.add_repository' })}
               </span>
@@ -225,7 +235,7 @@ export function Wrapper({
                 aria-label={intl.formatMessage({ id: 'app.settings' })}
                 onClick={() => set_show_settings(true)}
               >
-                <SettingsIcon />
+                <Settings01Icon size={16} aria-hidden={true} />
               </Button>
             </div>
             <AccountMenu />

@@ -35,7 +35,6 @@
     "cuelume": "^0.2.2",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.4",
-    "lucide-react": "^1.29.0",
     "motion": "^13.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

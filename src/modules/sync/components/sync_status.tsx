@@ -1,7 +1,7 @@
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { enUS, fr } from 'date-fns/locale'
-import { RefreshCwIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { RefreshIcon } from '@/components/icons/refresh'
 import { Button } from '@/components/ui/button'
 import { SyncCoverage } from './sync_coverage'
 import { connector, type ConnectorProps } from './sync_status.connector'
@@ -82,7 +82,11 @@ export function Wrapper({
           disabled={syncing || !active_repo}
           title={intl.formatMessage({ id: 'sync.tooltip' })}
         >
-          <RefreshCwIcon className={active_syncing ? 'animate-spin' : undefined} />
+          <RefreshIcon
+            size={16}
+            className={active_syncing ? 'animate-spin' : undefined}
+            aria-hidden={true}
+          />
           {button_label}
         </Button>
       </div>
