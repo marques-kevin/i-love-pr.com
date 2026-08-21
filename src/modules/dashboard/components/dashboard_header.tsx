@@ -1,47 +1,39 @@
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
-import { ArrowLeft01Icon } from '@/components/icons/arrow_left_01'
-import { IlovePrLogo } from '@/components/ilove_pr_logo'
-import { split_repo_full_name } from '@/lib/repo_path'
+import { Cancel01Icon } from '@/components/icons/cancel_01'
+import { Button } from '@/components/ui/button'
 import { QuietSyncStatus } from '@/modules/sync/components/quiet_sync_status'
 import { DashboardTabs } from './dashboard_tabs'
 
-export function DashboardHeader() {
+export function DashboardHeader({ on_close_window }: { on_close_window: () => void }) {
   const intl = useIntl()
   const { owner, name } = useParams()
-  const repo = owner && name ? `${owner}/${name}` : ''
-  const parts = split_repo_full_name(repo)
+  const repo_label = owner && name ? `${owner}/${name}` : ''
   const back_label = intl.formatMessage({ id: 'dashboard.back_to_list' })
 
   return (
-    <header className="navbar bg-base-100/90 sticky top-0 z-40 min-h-0 w-full items-start border-b border-base-300/60 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <Link
-            to="/"
-            className="btn btn-ghost btn-circle btn-sm shrink-0"
-            aria-label={back_label}
-            title={back_label}
-          >
-            <HoverIcon icon={ArrowLeft01Icon} size={18} />
-          </Link>
-          <Link to="/" className="flex shrink-0 items-center text-base-content no-underline">
-            <IlovePrLogo className="h-7 w-auto sm:h-8" />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display truncate text-lg font-semibold tracking-tight sm:text-xl">
-              {parts.name}
-            </h1>
-            <p className="text-base-content/60 truncate text-sm">{parts.owner}</p>
-          </div>
-          <div className="min-w-0 shrink-0">
-            <QuietSyncStatus />
-          </div>
+    <header className="dashboard-window-strip bg-base-200 sticky top-0 z-40 pt-2 px-2 sm:px-3">
+      <div className="flex min-w-0 items-end gap-1">
+        <Button
+          type="button"
+          className="btn-ghost btn-circle btn-sm mb-1 shrink-0"
+          aria-label={back_label}
+          title={back_label}
+          onClick={on_close_window}
+        >
+          <HoverIcon icon={Cancel01Icon} size={18} />
+        </Button>
+
+        <div className="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
+          <DashboardTabs />
         </div>
 
-        <div className="min-w-0 overflow-x-auto [scrollbar-width:thin]">
-          <DashboardTabs />
+        <div className="mb-1 ml-auto flex min-w-0 shrink-0 items-center gap-2">
+          <span className="text-base-content/60 max-w-48 truncate text-sm" title={repo_label}>
+            {repo_label}
+          </span>
+          <QuietSyncStatus />
         </div>
       </div>
     </header>

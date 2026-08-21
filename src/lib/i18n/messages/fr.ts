@@ -181,8 +181,6 @@ export const fr_messages = define_locale_messages({
   'dashboard.remove': 'Retirer {label}',
   'dashboard.default_name': 'Par défaut',
   'dashboard.add_tab': 'Ajouter un dashboard',
-  'dashboard.tab_menu': 'Actions du dashboard',
-  'dashboard.rename_tab': 'Renommer',
   'dashboard.delete_tab': 'Supprimer',
   'dashboard.rename_title': 'Renommer le dashboard',
   'dashboard.rename_description': 'Choisissez un nouveau nom pour ce dashboard.',
@@ -191,7 +189,6 @@ export const fr_messages = define_locale_messages({
   'dashboard.delete_description':
     'Cela supprime « {name} » et ses graphiques. Cette action est irréversible.',
   'dashboard.delete_confirm': 'Supprimer',
-  'dashboard.delete_disabled': 'Gardez au moins un dashboard',
   'dashboard.create_title': 'Nouveau dashboard',
   'dashboard.create_description':
     'Donnez un nom à ce dashboard. Teams, période et graphiques sont enregistrés par dashboard.',

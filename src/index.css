@@ -91,3 +91,75 @@
     animation: onboarding-tile-in 0.45s ease both;
   }
 }
+
+.dashboard-window {
+  border-radius: 1.75rem;
+}
+
+.dashboard-window-strip {
+  border-top-left-radius: 1.75rem;
+  border-top-right-radius: 1.75rem;
+}
+
+.dashboard-chrome-tab {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+.dashboard-chrome-tab--active {
+  z-index: 1;
+}
+
+.dashboard-chrome-tab--active::before,
+.dashboard-chrome-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  background: transparent;
+}
+
+.dashboard-chrome-tab--active::before {
+  left: -12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 6px 6px 0 6px var(--color-base-100);
+}
+
+.dashboard-chrome-tab--active::after {
+  right: -12px;
+  border-bottom-left-radius: 12px;
+  box-shadow: -6px 6px 0 6px var(--color-base-100);
+}
+
+.dashboard-chrome-tab__close {
+  opacity: 0;
+}
+
+.dashboard-chrome-tab:hover .dashboard-chrome-tab__close,
+.dashboard-chrome-tab:focus-within .dashboard-chrome-tab__close {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .dashboard-chrome-tab__close {
+    opacity: 1;
+  }
+}
+
+@supports (corner-shape: squircle) {
+  .dashboard-window {
+    corner-shape: squircle;
+  }
+
+  .dashboard-window-strip {
+    corner-top-left-shape: squircle;
+    corner-top-right-shape: squircle;
+  }
+
+  .dashboard-chrome-tab {
+    corner-top-left-shape: squircle;
+    corner-top-right-shape: squircle;
+  }
+}

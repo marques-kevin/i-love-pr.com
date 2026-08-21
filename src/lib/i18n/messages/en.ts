@@ -176,8 +176,6 @@ export const en_messages = {
   'dashboard.remove': 'Remove {label}',
   'dashboard.default_name': 'Default',
   'dashboard.add_tab': 'Add dashboard',
-  'dashboard.tab_menu': 'Dashboard actions',
-  'dashboard.rename_tab': 'Rename',
   'dashboard.delete_tab': 'Delete',
   'dashboard.rename_title': 'Rename dashboard',
   'dashboard.rename_description': 'Choose a new name for this dashboard.',
@@ -185,7 +183,6 @@ export const en_messages = {
   'dashboard.delete_title': 'Delete dashboard?',
   'dashboard.delete_description': 'This removes “{name}” and its charts. This cannot be undone.',
   'dashboard.delete_confirm': 'Delete',
-  'dashboard.delete_disabled': 'Keep at least one dashboard',
   'dashboard.create_title': 'New dashboard',
   'dashboard.create_description':
     'Name this dashboard. Teams, date range, and charts are saved per dashboard.',
