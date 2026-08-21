@@ -40,20 +40,6 @@
   --noise: 0;
 }
 
-@supports (corner-shape: squircle) {
-  * {
-    corner-shape: squircle;
-  }
-
-  .btn-circle,
-  .btn-circle::before,
-  .avatar,
-  .avatar > *,
-  .avatar img {
-    corner-shape: round;
-  }
-}
-
 @theme inline {
   --font-sans:
     'Lexend', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
@@ -159,5 +145,19 @@
 @media (hover: none) {
   .dashboard-chrome-tab__close {
     opacity: 1;
+  }
+}
+
+@supports (corner-shape: squircle) {
+  * {
+    corner-shape: squircle;
+  }
+
+  .btn-circle,
+  .btn-circle::before,
+  .avatar,
+  .avatar > *,
+  .avatar img {
+    corner-shape: round;
   }
 }
