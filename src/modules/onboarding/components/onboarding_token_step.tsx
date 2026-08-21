@@ -44,9 +44,7 @@ function ScopeStatusIcon({ status }: { status: TokenScopeAnalysis['scopes'][numb
   const icon: AnimatedIcon = status === 'missing' ? MinusSignCircleIcon : Tick02Icon
   const icon_className = status === 'granted' ? 'text-primary' : 'text-base-content/60'
 
-  return (
-    <HoverIcon icon={icon} size={16} className="shrink-0" icon_className={icon_className} />
-  )
+  return <HoverIcon icon={icon} size={16} className="shrink-0" icon_className={icon_className} />
 }
 
 export function OnboardingTokenStep({
