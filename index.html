@@ -11,6 +11,16 @@
     />
     <link rel="apple-touch-icon" href="/pwa-192.png" />
     <title>iLovePR — GitHub PR analytics</title>
+    <script>
+      try {
+        var theme = localStorage.getItem('ilovepr.theme')
+        var allowed =
+          ' ilovepr light dark cupcake bumblebee emerald corporate synthwave retro cyberpunk valentine halloween garden forest aqua lofi pastel fantasy wireframe black luxury dracula cmyk autumn business acid lemonade night coffee winter dim nord sunset caramellatte abyss silk '
+        if (theme && allowed.indexOf(' ' + theme + ' ') !== -1) {
+          document.documentElement.setAttribute('data-theme', theme)
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

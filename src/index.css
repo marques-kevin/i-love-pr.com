@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Lexend:wght@300..800&display=swap');
 @import 'tailwindcss';
 @plugin "daisyui" {
-  themes: false;
+  themes: all;
 }
 @plugin "daisyui/theme" {
   name: 'ilovepr';

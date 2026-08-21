@@ -8,9 +8,11 @@ import { App } from '@/modules/app'
 import { IntlShell } from '@/modules/i18n'
 import { init_cuelume } from '@/lib/cuelume'
 import { session_manager } from '@/lib/session'
+import { init_theme } from '@/lib/theme'
 
 registerSW({ immediate: true })
 init_cuelume()
+init_theme()
 
 function SessionRoot() {
   const session = useSyncExternalStore(
