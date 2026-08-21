@@ -124,16 +124,16 @@ export function Wrapper({
                   {intl.formatMessage({ id: 'home.empty_body' })}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" className="btn-primary" onClick={request_add_repository}>
+                    <HoverIcon icon={PlusSignIcon} size={16} />
+                    {intl.formatMessage({ id: 'app.nav.add_repository' })}
+                  </Button>
                   <Button
                     type="button"
                     className="btn-ghost"
                     onClick={() => request_import_repository()}
                   >
                     {intl.formatMessage({ id: 'app.nav.import_repository' })}
-                  </Button>
-                  <Button type="button" className="btn-primary" onClick={request_add_repository}>
-                    <HoverIcon icon={PlusSignIcon} size={16} />
-                    {intl.formatMessage({ id: 'app.nav.add_repository' })}
                   </Button>
                 </div>
               </div>
