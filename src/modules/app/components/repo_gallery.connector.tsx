@@ -4,6 +4,7 @@ import type { AppDispatch, RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
   repos: state.settings.settings?.repos ?? [],
+  imported_repos: state.settings.settings?.imported_repos ?? [],
   sync_states: state.sync.sync_states,
 })
 

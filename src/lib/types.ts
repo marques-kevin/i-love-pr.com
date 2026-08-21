@@ -67,6 +67,8 @@ export interface AppSettings {
   id: 'settings'
   token: string
   repos: string[]
+  /** Repos added via snapshot import; omitted in older saves. */
+  imported_repos?: string[]
   /** Currently focused repo in the app shell (`owner/name`). */
   active_repo: string | null
   sync_interval_hours: number

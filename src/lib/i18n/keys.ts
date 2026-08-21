@@ -118,4 +118,7 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   'onboarding.hero.grid.insights',
   'sync.coverage.oldest',
   'sync.coverage.oldest_remote',
+  'home.my_repositories',
+  'home.imported_repositories',
+  'home.imported_badge',
 ]
