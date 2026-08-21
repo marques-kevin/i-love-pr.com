@@ -47,9 +47,13 @@ const DAISYUI_DOCS_ORDER = [
   'silk',
 ] as const
 
+type ThemeDataset = {
+  theme?: string
+}
+
 function stub_storage_and_document() {
   const store = new Map<string, string>()
-  const dataset: { theme?: string } = {}
+  const dataset: ThemeDataset = {}
   vi.stubGlobal('localStorage', {
     getItem(key: string): string | null {
       return store.get(key) ?? null
