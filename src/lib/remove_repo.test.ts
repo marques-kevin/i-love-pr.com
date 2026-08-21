@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { build_settings_after_remove_repo } from '@/lib/remove_repo'
+import {
+  build_settings_after_remove_repo,
+  should_navigate_home_after_remove_repo,
+} from '@/lib/remove_repo'
 import type { AppSettings } from '@/lib/types'
 
 function base_settings(overrides: Partial<AppSettings> = {}): AppSettings {
@@ -76,5 +79,24 @@ describe('build_settings_after_remove_repo', () => {
     )
     expect(next.repos).toEqual([])
     expect(next.active_repo).toBeNull()
+  })
+
+  it('removes the repo from imported_repos', () => {
+    const next = build_settings_after_remove_repo(
+      base_settings({
+        repos: ['acme/app', 'acme/imported'],
+        imported_repos: ['acme/imported'],
+      }),
+      'acme/imported',
+    )
+
+    expect(next.repos).toEqual(['acme/app'])
+    expect(next.imported_repos).toEqual([])
+  })
+
+  it('detects when delete should navigate home from a repo dashboard path', () => {
+    expect(should_navigate_home_after_remove_repo('/r/acme/app', 'acme/app')).toBe(true)
+    expect(should_navigate_home_after_remove_repo('/r/acme/other', 'acme/app')).toBe(false)
+    expect(should_navigate_home_after_remove_repo('/', 'acme/app')).toBe(false)
   })
 })

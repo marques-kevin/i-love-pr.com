@@ -1,4 +1,5 @@
 import { normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { parse_repo_dashboard_path } from '@/lib/repo_path'
 import type { AppSettings } from '@/lib/types'
 
 export function build_settings_after_remove_repo(
@@ -24,4 +25,11 @@ export function build_settings_after_remove_repo(
     repos: next_repos,
     ...dashboards_fields,
   }
+}
+
+export function should_navigate_home_after_remove_repo(
+  pathname: string,
+  repo_full_name: string,
+): boolean {
+  return parse_repo_dashboard_path(pathname) === repo_full_name
 }

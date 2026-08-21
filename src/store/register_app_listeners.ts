@@ -14,7 +14,8 @@ import {
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
-import { active_repo_from_url_or_settings, parse_repo_dashboard_path } from '@/lib/repo_path'
+import { active_repo_from_url_or_settings } from '@/lib/repo_path'
+import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import {
@@ -170,7 +171,7 @@ export function register_app_listeners(
       const settings = action.payload
       const deleted_repo = action.meta.arg.repo_full_name
       const pathname = current_pathname()
-      if (parse_repo_dashboard_path(pathname) === deleted_repo) {
+      if (should_navigate_home_after_remove_repo(pathname, deleted_repo)) {
         window.history.replaceState({}, '', '/')
       }
       apply_active_repo_from_url_or_settings(api)

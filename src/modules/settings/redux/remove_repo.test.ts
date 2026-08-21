@@ -81,4 +81,24 @@ describe('remove_repo thunk', () => {
     expect(store2.getState().settings.settings?.repos).toEqual(['acme/other'])
     expect(store2.getState().settings.settings?.business_hours).toEqual(DEFAULT_BUSINESS_HOURS)
   })
+
+  it('removes the repo from imported_repos', async () => {
+    const repositories = create_memory_repositories()
+    const store = create_store({
+      repositories,
+      session: create_mock_session({ get_active_login: () => 'testuser' }),
+    })
+
+    await repositories.settings.save({
+      token: 'ghp_x',
+      repos: ['acme/app', 'acme/imported'],
+      imported_repos: ['acme/imported'],
+    })
+
+    await store.dispatch(load_settings())
+    await store.dispatch(remove_repo({ repo_full_name: 'acme/imported' }))
+
+    expect(store.getState().settings.settings?.repos).toEqual(['acme/app'])
+    expect(store.getState().settings.settings?.imported_repos).toEqual([])
+  })
 })
