@@ -46,6 +46,11 @@ export function has_browser_local_storage(): boolean {
   return (globalThis as { localStorage?: unknown }).localStorage !== undefined
 }
 
+export function has_browser_document(): boolean {
+  // SAFETY: Workers lib has no DOM Document; optional presence is checked without assuming the DOM type.
+  return (globalThis as { document?: unknown }).document !== undefined
+}
+
 export function has_intl(): boolean {
   return globalThis.Intl !== undefined
 }

@@ -6,13 +6,5 @@ export function Button({
   type = 'button',
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type={type}
-      className={cn('btn', className)}
-      data-cuelume-press=""
-      data-cuelume-release=""
-      {...props}
-    />
-  )
+  return <button type={type} className={cn('btn', className)} {...props} />
 }
