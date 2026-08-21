@@ -63,7 +63,7 @@ export function StatCard({ label, value, help }: { label: string; value: string;
           <h2 className="text-base-content/60 text-sm font-medium">{label}</h2>
           {help ? <HelpButton help={help} /> : null}
         </div>
-        <p className="font-pixel text-3xl font-bold tracking-tight">{value}</p>
+        <p className="font-display text-3xl font-bold tracking-tight">{value}</p>
       </div>
     </section>
   )

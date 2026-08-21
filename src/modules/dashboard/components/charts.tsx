@@ -279,7 +279,7 @@ export function SizeReviewScatterChart({ data }: { data: MetricsSnapshot['sizeRe
             const point = parse_scatter_tooltip_point(payload[0].payload ?? null)
             if (!point) return null
             return (
-              <div className="rounded-lg border border-base-300/50 bg-base-100 px-2.5 py-1.5 font-pixel text-xs shadow-xl">
+              <div className="rounded-lg border border-base-300/50 bg-base-100 px-2.5 py-1.5 text-xs shadow-xl">
                 <p className="font-medium">
                   #{point.number} · {point.lines} lines
                 </p>
