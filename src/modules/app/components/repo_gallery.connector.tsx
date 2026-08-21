@@ -1,20 +1,34 @@
 import { connect, type ConnectedProps } from 'react-redux'
+import { partition_gallery_repos } from '@/lib/repo_gallery'
 import { request_add_repository as request_add_repository_action } from '@/modules/dashboard/redux/dashboard_slice'
 import {
   create_repo_share_link,
   download_repo_snapshot_file,
   remove_repository,
 } from '@/modules/settings/redux/settings_slice'
-import type { AppDispatch, RootState } from '@/store'
+import {
+  request_import_repo as request_import_repo_action,
+  type AppDispatch,
+  type RootState,
+} from '@/store'
 
-export const map_state_to_props = (state: RootState) => ({
-  repos: state.settings.settings?.repos ?? [],
-  sync_states: state.sync.sync_states,
-})
+export const map_state_to_props = (state: RootState) => {
+  const repos = state.settings.settings?.repos ?? []
+  const imported_repos = state.settings.settings?.imported_repos ?? []
+  const { own, imported } = partition_gallery_repos(repos, imported_repos)
+  return {
+    own_repositories: own,
+    imported_repositories: imported,
+    sync_states: state.sync.sync_states,
+  }
+}
 
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   request_add_repository: () => {
     dispatch(request_add_repository_action())
+  },
+  request_import_repository: () => {
+    dispatch(request_import_repo_action(null))
   },
   remove_repository: (repo_full_name: string) => {
     dispatch(remove_repository({ repo_full_name }))

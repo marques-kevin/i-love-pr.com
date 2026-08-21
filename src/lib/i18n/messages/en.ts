@@ -13,7 +13,21 @@ export const en_messages = {
   'app.nav.add_repository_confirm': 'Add',
   'app.nav.add_repository_saving': 'Saving…',
   'app.nav.add_repository_failed': 'Failed to add repository',
+  'app.nav.import': 'Import',
+  'app.nav.import_repository': 'Import repository',
+  'app.nav.import_repository_title': 'Import a shared repository',
+  'app.nav.import_repository_description':
+    'Paste a share link to import PR metrics without syncing from GitHub.',
+  'app.nav.import_repository_label': 'Share link',
+  'app.nav.import_repository_placeholder': 'https://…/?import=…',
+  'app.nav.import_repository_cancel': 'Cancel',
+  'app.nav.import_repository_confirm': 'Import',
+  'app.nav.import_repository_importing': 'Importing…',
+  'app.nav.import_repository_failed': 'Import failed',
   'home.empty_body': 'Add a GitHub repository to open its dashboard.',
+  'home.my_repositories': 'My repositories',
+  'home.imported_repositories': 'Imported',
+  'home.imported_badge': 'Imported',
   'home.open_repo': 'Open {repo}',
   'gallery.repo_menu': 'Actions for {repo}',
   'gallery.view': 'View',
@@ -385,23 +399,15 @@ export const en_messages = {
   'settings.clear_all': 'Erase this account',
   'settings.clear_all_confirm':
     'Delete this GitHub account’s local workspace and remove it from saved accounts? You can add it again later with a token.',
-  'settings.share.import_section_title': 'Import shared repository',
-  'settings.share.import_section_description':
-    'Paste a share link to import PR snapshot data into your workspace.',
   'settings.share.description':
     'Export synced PR data as JSON (no GitHub token). Upload to Cloudflare R2 via a presigned URL so teammates can import dashboards without syncing from GitHub.',
   'settings.share.download': 'Download snapshot',
   'settings.share.create_link': 'Create share link',
   'settings.share.working': 'Sharing…',
   'settings.share.link_label': 'Share link (copied to clipboard)',
-  'settings.share.import_label': 'Import from share link',
-  'settings.share.import_placeholder': 'https://…/?import=…',
-  'settings.share.import': 'Import snapshot',
   'settings.share.download_done': 'Snapshot downloaded.',
   'settings.share.link_ready': 'Share link copied ({count} PRs).',
-  'settings.share.import_done': 'Imported {count} PRs into {repo}.',
   'settings.share.failed': 'Share failed',
-  'settings.share.import_failed': 'Import failed',
 } as const
 
 export type MessageKey = keyof typeof en_messages

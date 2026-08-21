@@ -2,13 +2,11 @@ import { connect, type ConnectedProps } from 'react-redux'
 import type { RootState } from '@/store'
 import {
   clear_all_data,
-  import_repo_snapshot_from_link,
   load_settings,
   refresh_metrics,
   reset_sync_data,
   run_sync,
   save_settings,
-  set_active_repo,
   set_bootstrapped,
   set_show_settings,
 } from '@/store'
@@ -27,8 +25,6 @@ export const map_dispatch_to_props = {
   set_bootstrapped,
   refresh_metrics,
   run_sync,
-  import_repo_snapshot_from_link,
-  set_active_repo,
 }
 
 export const connector = connect(map_state_to_props, map_dispatch_to_props)

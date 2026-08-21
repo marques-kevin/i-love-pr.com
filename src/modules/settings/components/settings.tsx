@@ -44,8 +44,6 @@ export function Wrapper({
   set_bootstrapped,
   refresh_metrics,
   run_sync,
-  import_repo_snapshot_from_link,
-  set_active_repo,
 }: ConnectorProps) {
   const intl = useIntl()
   const [token, set_token] = useState(settings?.token ?? '')
@@ -72,8 +70,6 @@ export function Wrapper({
   const [message, set_message] = useState<string | null>(null)
   const [busy, set_busy] = useState(false)
   const [sound_enabled, set_sound_enabled_state] = useState(is_sound_enabled)
-  const [import_link, set_import_link] = useState('')
-  const [share_busy, set_share_busy] = useState(false)
 
   const time_zone_options = Array.from(
     new Set([business_hours.time_zone, DEFAULT_BUSINESS_HOURS.time_zone, ...COMMON_TIMEZONES]),
@@ -88,21 +84,6 @@ export function Wrapper({
     set_test_file_globs(settings.test_file_globs.join('\n'))
     set_business_hours(normalizeBusinessHours(settings.business_hours))
     set_message(null)
-    set_import_link('')
-    const params = new URLSearchParams(window.location.search)
-    const import_param = params.get('import') ?? params.get('share')
-    if (import_param) {
-      set_import_link(
-        import_param.includes('://')
-          ? import_param
-          : `${window.location.origin}/?import=${import_param}`,
-      )
-      params.delete('import')
-      params.delete('share')
-      const next_search = params.toString()
-      const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
-      window.history.replaceState({}, '', next_url)
-    }
     void estimateStorage().then(set_storage_info)
   }, [open, settings])
 
@@ -165,34 +146,6 @@ export function Wrapper({
       void load_settings()
     } finally {
       set_busy(false)
-    }
-  }
-
-  async function handle_import_snapshot() {
-    const link = import_link.trim()
-    if (!link) return
-    set_share_busy(true)
-    set_message(null)
-    try {
-      const result = await import_repo_snapshot_from_link({ share_link: link }).unwrap()
-      await set_active_repo(result.repo_full_name)
-      set_import_link('')
-      set_message(
-        intl.formatMessage(
-          { id: 'settings.share.import_done' },
-          { repo: result.repo_full_name, count: result.pr_count },
-        ),
-      )
-      void refresh_metrics()
-      void run_sync({ force: false })
-    } catch (err) {
-      set_message(
-        err instanceof Error
-          ? err.message
-          : intl.formatMessage({ id: 'settings.share.import_failed' }),
-      )
-    } finally {
-      set_share_busy(false)
     }
   }
 
@@ -428,37 +381,6 @@ export function Wrapper({
               </div>
             </div>
           )}
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-base-300 p-4">
-          <div>
-            <p className="font-medium">
-              {intl.formatMessage({ id: 'settings.share.import_section_title' })}
-            </p>
-            <p className="text-base-content/60 mt-1 text-xs">
-              {intl.formatMessage({ id: 'settings.share.import_section_description' })}
-            </p>
-          </div>
-
-          <label className="form-control w-full">
-            <span className="label">
-              {intl.formatMessage({ id: 'settings.share.import_label' })}
-            </span>
-            <Input
-              id="settings-import-link"
-              value={import_link}
-              onChange={(e) => set_import_link(e.target.value)}
-              placeholder={intl.formatMessage({ id: 'settings.share.import_placeholder' })}
-            />
-          </label>
-          <Button
-            type="button"
-            className="btn-secondary"
-            disabled={share_busy || import_link.trim().length === 0}
-            onClick={() => void handle_import_snapshot()}
-          >
-            {intl.formatMessage({ id: 'settings.share.import' })}
-          </Button>
         </div>
 
         <div className="bg-base-200 text-base-content/60 rounded-xl p-4 text-sm">
