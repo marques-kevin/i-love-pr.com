@@ -1,15 +1,15 @@
-import { Dashboard } from '@/modules/dashboard'
-import { Settings } from '@/modules/settings'
-import { AppTopBar } from './app_top_bar'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { RepoDashboardPage } from '@/modules/dashboard/components/repo_dashboard_page'
+import { HomePage } from './home_page'
 
 export function AppShell() {
   return (
     <div className="bg-base-200 min-h-screen overflow-x-hidden">
-      <AppTopBar />
-      <main className="mx-auto w-full max-w-[90rem] px-4 py-6 sm:px-6 lg:px-8">
-        <Dashboard />
-      </main>
-      <Settings />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/r/:owner/:name" element={<RepoDashboardPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   )
 }

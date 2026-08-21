@@ -1,0 +1,2 @@
+# SPA fallback for BrowserRouter deep links. Pages Functions under /api/* take precedence.
+/*    /index.html   200
