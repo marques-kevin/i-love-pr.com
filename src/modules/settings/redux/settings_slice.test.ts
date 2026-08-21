@@ -81,4 +81,23 @@ describe('settings thunks with memory repositories', () => {
     expect(store.getState().settings.settings?.repos).toEqual(['acme/imported'])
     expect(store.getState().settings.settings?.imported_repos).toEqual([])
   })
+
+  it('does not add newly PAT-added repos to imported_repos', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({ token: 'ghp_x', repos: [] })
+    const store = create_store({
+      repositories,
+      session: create_mock_session({ get_active_login: () => 'testuser' }),
+    })
+
+    await store.dispatch(
+      save_settings({
+        token: 'ghp_x',
+        repos: ['acme/new'],
+      }),
+    )
+
+    expect(store.getState().settings.settings?.repos).toEqual(['acme/new'])
+    expect(store.getState().settings.settings?.imported_repos).toEqual([])
+  })
 })

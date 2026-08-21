@@ -15,6 +15,7 @@ export const fr_messages = define_locale_messages({
   'app.nav.add_repository_confirm': 'Ajouter',
   'app.nav.add_repository_saving': 'Enregistrement…',
   'app.nav.add_repository_failed': 'Échec de l’ajout du dépôt',
+  'app.nav.import': 'Importer',
   'app.nav.import_repository': 'Importer un dépôt',
   'app.nav.import_repository_title': 'Importer un dépôt partagé',
   'app.nav.import_repository_description':

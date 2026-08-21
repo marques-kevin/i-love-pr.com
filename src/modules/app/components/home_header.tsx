@@ -63,9 +63,7 @@ export function Wrapper({
             onClick={open_import_repo}
           >
             <HoverIcon icon={Download01Icon} size={16} />
-            <span className="hidden sm:inline">
-              {intl.formatMessage({ id: 'app.nav.import_repository' })}
-            </span>
+            <span className="hidden sm:inline">{intl.formatMessage({ id: 'app.nav.import' })}</span>
           </Button>
           <Button
             type="button"

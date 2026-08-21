@@ -13,6 +13,7 @@ export const en_messages = {
   'app.nav.add_repository_confirm': 'Add',
   'app.nav.add_repository_saving': 'Saving…',
   'app.nav.add_repository_failed': 'Failed to add repository',
+  'app.nav.import': 'Import',
   'app.nav.import_repository': 'Import repository',
   'app.nav.import_repository_title': 'Import a shared repository',
   'app.nav.import_repository_description':
