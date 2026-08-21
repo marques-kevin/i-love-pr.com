@@ -7,9 +7,11 @@ import './index.css'
 import { App } from '@/modules/app'
 import { IntlShell } from '@/modules/i18n'
 import { init_cuelume } from '@/lib/cuelume'
+import { init_theme } from '@/lib/theme'
 import { session_manager } from '@/lib/session'
 
 registerSW({ immediate: true })
+init_theme()
 init_cuelume()
 
 function SessionRoot() {
