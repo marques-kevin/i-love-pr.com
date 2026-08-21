@@ -288,6 +288,7 @@ export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name:
     const next = await extra.repositories.settings.save({
       token: existing.token,
       repos: next_settings.repos,
+      imported_repos: next_settings.imported_repos,
       dashboards: next_settings.dashboards,
       active_repo: next_settings.active_repo,
       active_dashboard_id: next_settings.active_dashboard_id,

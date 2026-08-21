@@ -23,6 +23,7 @@ export function build_settings_after_remove_repo(
   return {
     ...settings,
     repos: next_repos,
+    imported_repos: settings.imported_repos?.filter((repo) => repo !== repo_full_name),
     ...dashboards_fields,
   }
 }
