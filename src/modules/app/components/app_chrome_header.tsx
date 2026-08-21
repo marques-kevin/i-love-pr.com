@@ -1,4 +1,4 @@
-import { GitHubMark } from '@/components/github_mark'
+import { GithubIcon } from '@/components/icons/github'
 import { IlovePrLogo } from '@/components/ilove_pr_logo'
 import { APP_GITHUB_URL, APP_VERSION } from '@/lib/app_meta'
 import { LocaleSwitcher } from '@/modules/i18n'
@@ -22,7 +22,7 @@ export function AppChromeHeader() {
             aria-label="GitHub"
             className="btn btn-ghost btn-sm rounded-full"
           >
-            <GitHubMark className="size-4" />
+            <GithubIcon size={16} aria-hidden={true} />
             <span className="hidden sm:inline">GitHub</span>
           </a>
           <LocaleSwitcher />

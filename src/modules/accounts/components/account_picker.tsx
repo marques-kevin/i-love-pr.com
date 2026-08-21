@@ -1,5 +1,5 @@
 import { useIntl } from 'react-intl'
-import { PlusIcon } from 'lucide-react'
+import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { account_display_name, account_secondary_line } from '@/lib/session'
 import { connector, type ConnectorProps } from './account_picker.connector'
@@ -60,7 +60,7 @@ export function Wrapper({ accounts, switch_account, start_add_account }: Connect
         className="btn-outline mt-4 w-full"
         onClick={() => void start_add_account()}
       >
-        <PlusIcon />
+        <PlusSignIcon size={16} aria-hidden={true} />
         {intl.formatMessage({ id: 'account.add' })}
       </Button>
     </div>

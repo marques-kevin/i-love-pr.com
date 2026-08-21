@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { CheckIcon, ChevronsUpDownIcon, Loader2Icon, XIcon } from 'lucide-react'
+import { Cancel01Icon } from '@/components/icons/cancel_01'
+import { ChevronDownIcon } from '@/components/icons/chevron_down'
+import { Loading03Icon } from '@/components/icons/loading_03'
+import { Tick02Icon } from '@/components/icons/tick_02'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { close_daisy_dropdown } from '@/lib/daisy'
 import { GitHubClient, parseRepoFullName, type GitHubRepoOption } from '@/lib/github-client'
-import { cn } from '@/lib/utils'
-
 interface RepoPickerProps {
   availableRepos: GitHubRepoOption[]
   selected: string[]
@@ -121,9 +122,9 @@ export function RepoPicker({
         >
           <span className="text-base-content/60 truncate">{combobox_placeholder}</span>
           {loading ? (
-            <Loader2Icon className="size-4 animate-spin opacity-60" />
+            <Loading03Icon size={16} className="animate-spin opacity-60" aria-hidden={true} />
           ) : (
-            <ChevronsUpDownIcon className="size-4 opacity-60" />
+            <ChevronDownIcon size={16} className="opacity-60" aria-hidden={true} />
           )}
         </Button>
         <div
@@ -154,8 +155,10 @@ export function RepoPicker({
                         close_daisy_dropdown(event.currentTarget)
                       }}
                     >
-                      <CheckIcon
-                        className={cn('size-4', isSelected ? 'opacity-100' : 'opacity-0')}
+                      <Tick02Icon
+                        size={16}
+                        className={isSelected ? 'opacity-100' : 'opacity-0'}
+                        aria-hidden={true}
                       />
                       <span className="flex-1 truncate">{repo.fullName}</span>
                       {repo.isPrivate ? (
@@ -208,7 +211,7 @@ export function RepoPicker({
           >
             {adding_manual ? (
               <>
-                <Loader2Icon className="animate-spin" />
+                <Loading03Icon size={16} className="animate-spin" aria-hidden={true} />
                 {intl.formatMessage({ id: 'repo_picker.checking' })}
               </>
             ) : (
@@ -230,7 +233,7 @@ export function RepoPicker({
                 onClick={() => removeRepo(repo)}
                 className="hover:bg-base-content/10 rounded-full p-0.5"
               >
-                <XIcon className="size-3" />
+                <Cancel01Icon size={12} aria-hidden={true} />
               </button>
             </span>
           ))}

@@ -1,6 +1,11 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, Plus, Pencil, Trash2, X } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { ArrowDown02Icon } from '@/components/icons/arrow_down_02'
+import { ArrowUp02Icon } from '@/components/icons/arrow_up_02'
+import { Cancel01Icon } from '@/components/icons/cancel_01'
+import { Delete02Icon } from '@/components/icons/delete_02'
+import { Edit02Icon } from '@/components/icons/edit_02'
+import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
@@ -54,7 +59,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
         <div className="flex flex-wrap gap-2">
           {editing && (
             <Button type="button" className="btn-outline btn-sm" onClick={open_picker}>
-              <Plus className="size-4" />
+              <PlusSignIcon size={16} aria-hidden={true} />
               {intl.formatMessage({ id: 'dashboard.add_chart' })}
             </Button>
           )}
@@ -65,12 +70,12 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           >
             {editing ? (
               <>
-                <X className="size-4" />
+                <Cancel01Icon size={16} aria-hidden={true} />
                 {intl.formatMessage({ id: 'dashboard.done' })}
               </>
             ) : (
               <>
-                <Pencil className="size-4" />
+                <Edit02Icon size={16} aria-hidden={true} />
                 {intl.formatMessage({ id: 'dashboard.customize' })}
               </>
             )}
@@ -94,7 +99,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
               open_picker()
             }}
           >
-            <Plus className="size-4" />
+            <PlusSignIcon size={16} aria-hidden={true} />
             {intl.formatMessage({ id: 'dashboard.add_chart' })}
           </Button>
         </div>
@@ -117,7 +122,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => save_layout(move_item(layout, item.instance_id, -1))}
                         aria-label={intl.formatMessage({ id: 'dashboard.move_up' })}
                       >
-                        <ArrowUp className="size-4" />
+                        <ArrowUp02Icon size={16} aria-hidden={true} />
                       </Button>
                       <Button
                         type="button"
@@ -126,7 +131,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => save_layout(move_item(layout, item.instance_id, 1))}
                         aria-label={intl.formatMessage({ id: 'dashboard.move_down' })}
                       >
-                        <ArrowDown className="size-4" />
+                        <ArrowDown02Icon size={16} aria-hidden={true} />
                       </Button>
                       <Button
                         type="button"
@@ -134,7 +139,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                         onClick={() => remove_widget(item.instance_id)}
                         aria-label={intl.formatMessage({ id: 'dashboard.remove' }, { label })}
                       >
-                        <Trash2 className="size-4" />
+                        <Delete02Icon size={16} aria-hidden={true} />
                       </Button>
                     </div>
                   </div>
@@ -219,7 +224,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             className="btn-primary"
             onClick={() => add_widget(preview_widget_id)}
           >
-            <Plus className="size-4" />
+            <PlusSignIcon size={16} aria-hidden={true} />
             {intl.formatMessage({ id: 'dashboard.add_confirm' })}
           </Button>
         </div>

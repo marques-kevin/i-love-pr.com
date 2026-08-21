@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FilterIcon } from 'lucide-react'
 import { useIntl } from 'react-intl'
+import { FilterIcon } from '@/components/icons/filter'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { connector, type ConnectorProps } from './dashboard_filters.connector'
@@ -22,7 +22,7 @@ export function Wrapper(props: ConnectorProps) {
   return (
     <>
       <Button type="button" className="btn-outline btn-sm" onClick={() => set_open(true)}>
-        <FilterIcon className="size-4" />
+        <FilterIcon size={16} aria-hidden={true} />
         {intl.formatMessage({ id: 'dashboard.filters' })}
         {count > 0 ? <span className="badge badge-sm badge-neutral">{count}</span> : null}
       </Button>
