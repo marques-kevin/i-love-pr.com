@@ -17,6 +17,16 @@ export const fr_messages = define_locale_messages({
   'app.nav.add_repository_failed': 'Échec de l’ajout du dépôt',
   'home.empty_body': 'Ajoutez un dépôt GitHub pour ouvrir son tableau de bord.',
   'home.open_repo': 'Ouvrir {repo}',
+  'gallery.repo_menu': 'Actions pour {repo}',
+  'gallery.view': 'Voir',
+  'gallery.share': 'Partager',
+  'gallery.delete': 'Supprimer',
+  'gallery.share_title': 'Partager {repo}',
+  'gallery.delete_confirm_title': 'Retirer {repo} ?',
+  'gallery.delete_confirm_body':
+    'Retirer ce dépôt du workspace et supprimer ses données PR synchronisées sur cet appareil. Votre token GitHub et les autres dépôts restent inchangés.',
+  'gallery.delete_confirm': 'Retirer le dépôt',
+  'gallery.delete_cancel': 'Annuler',
   'dashboard.back_to_list': 'Retour aux dépôts',
   'app.language': 'Langue',
   'app.locale.en': 'English',
@@ -389,11 +399,11 @@ export const fr_messages = define_locale_messages({
   'settings.clear_all': 'Effacer ce compte',
   'settings.clear_all_confirm':
     'Supprimer le workspace local de ce compte GitHub et le retirer des comptes enregistrés ? Vous pourrez le rajouter plus tard avec un token.',
-  'settings.share.title': 'Partager un dépôt',
+  'settings.share.import_section_title': 'Importer un dépôt partagé',
+  'settings.share.import_section_description':
+    'Collez un lien de partage pour importer les données PR snapshot dans votre workspace.',
   'settings.share.description':
     'Exporter les données PR synchronisées en JSON (sans token GitHub). Envoi sur Cloudflare R2 via URL présignée pour que l’équipe importe les dashboards sans sync GitHub.',
-  'settings.share.active_repo': 'Dépôt actif : {repo}',
-  'settings.share.no_active_repo': 'Ouvrez un dépôt depuis la galerie avant de le partager.',
   'settings.share.download': 'Télécharger le snapshot',
   'settings.share.create_link': 'Créer un lien de partage',
   'settings.share.working': 'Partage…',

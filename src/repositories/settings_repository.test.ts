@@ -80,4 +80,65 @@ describe('create_memory_repositories settings', () => {
       /last dashboard/i,
     )
   })
+
+  it('removes a repository and its local data', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({ token: 't', repos: ['acme/app', 'acme/other'] })
+    await repositories.pull_requests.put_many([
+      {
+        id: 'pr-1',
+        repo_full_name: 'acme/app',
+        number: 1,
+        title: 'One',
+        author: 'alice',
+        state: 'MERGED',
+        created_at: '2024-01-01T00:00:00.000Z',
+        updated_at: '2024-01-02T00:00:00.000Z',
+        closed_at: '2024-01-02T00:00:00.000Z',
+        merged_at: '2024-01-02T00:00:00.000Z',
+        ready_for_review_at: null,
+        first_review_requested_at: null,
+        additions: 1,
+        deletions: 0,
+        changed_files: 1,
+        commits_count: 1,
+        comments_count: 0,
+        labels: [],
+      },
+    ])
+    await repositories.pr_facts.put_many([
+      {
+        _version: 1,
+        pr_id: 'pr-1',
+        repo_full_name: 'acme/app',
+        author: 'alice',
+        state: 'MERGED',
+        created_at: '2024-01-01T00:00:00.000Z',
+        merged_at: '2024-01-02T00:00:00.000Z',
+        pr_number: 1,
+        title: 'One',
+        request_review_at: '2024-01-01T00:00:00.000Z',
+        first_approved_at: null,
+        is_bot: false,
+        lines_added: 1,
+        lines_deleted: 0,
+        lines_changed: 1,
+        review_rounds: 0,
+        cycle: {
+          time_from_creation_to_asked_for_review: null,
+          time_from_creation_to_merged: 1,
+          time_from_creation_to_approved: null,
+          time_from_asked_for_review_to_approved: null,
+          time_from_asked_for_review_to_first_review: null,
+        },
+      },
+    ])
+
+    const next = await repositories.settings.remove_repository('acme/app')
+    expect(next.repos).toEqual(['acme/other'])
+    expect(next.active_repo).toBe('acme/other')
+    expect(await repositories.pull_requests.count_by_repo('acme/app')).toBe(0)
+    expect(await repositories.pr_facts.list_by_repos(['acme/app'])).toEqual([])
+    expect(repositories.sync_state.get('acme/app')).resolves.toBeUndefined()
+  })
 })

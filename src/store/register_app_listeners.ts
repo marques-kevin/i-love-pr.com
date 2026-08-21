@@ -21,6 +21,7 @@ import {
   delete_dashboard,
   load_available_repos,
   load_settings,
+  remove_repository,
   save_dashboard_filters,
   save_settings,
   set_active_dashboard,
@@ -143,6 +144,18 @@ export function register_app_listeners(
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(run_sync({ force: false }))
       }
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: remove_repository.fulfilled,
+    effect: async (action, api) => {
+      const settings = action.payload
+      api.dispatch(clamp_active_repo_to_settings(settings.repos))
+      hydrate_filters_from_active_dashboard(api)
+      dispatch_refresh_pr_coverage(api)
+      void api.dispatch(refresh_sync_states())
+      void api.dispatch(refresh_metrics())
     },
   })
 

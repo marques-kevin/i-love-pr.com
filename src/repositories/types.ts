@@ -34,6 +34,7 @@ export interface SettingsRepository {
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>
+  remove_repository: (repo_full_name: string) => Promise<AppSettings>
   clear_all_data: () => Promise<void>
   reset_sync_data: () => Promise<void>
 }

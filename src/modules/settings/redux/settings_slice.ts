@@ -218,6 +218,13 @@ export const set_active_repo = create_app_async_thunk<AppSettings, string>(
   },
 )
 
+export const remove_repository = create_app_async_thunk<AppSettings, { repo_full_name: string }>(
+  'settings/remove_repository',
+  async ({ repo_full_name }, { extra }) => {
+    return extra.repositories.settings.remove_repository(repo_full_name)
+  },
+)
+
 export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
   async (_, { extra }) => {
@@ -357,6 +364,9 @@ const settings_slice = createSlice({
         state.settings = action.payload
       })
       .addCase(set_active_repo.fulfilled, (state, action) => {
+        state.settings = action.payload
+      })
+      .addCase(remove_repository.fulfilled, (state, action) => {
         state.settings = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {

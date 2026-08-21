@@ -304,6 +304,52 @@ export function create_memory_repositories(seed?: {
         }
       }
     },
+    remove_repository: async (repo_full_name) => {
+      if (!bag.settings) throw new Error('Settings not initialized')
+      if (!bag.settings.repos.includes(repo_full_name)) {
+        throw new Error('Repo not configured')
+      }
+
+      const repos = bag.settings.repos.filter((repo) => repo !== repo_full_name)
+      const dashboards = bag.settings.dashboards.filter(
+        (tab) => tab.repo_full_name !== repo_full_name,
+      )
+      const active_dashboard_by_repo = { ...bag.settings.active_dashboard_by_repo }
+      delete active_dashboard_by_repo[repo_full_name]
+
+      const active_repo =
+        bag.settings.active_repo === repo_full_name ? (repos[0] ?? null) : bag.settings.active_repo
+      const dashboards_fields = normalize_settings_dashboards({
+        repos,
+        active_repo,
+        dashboards,
+        active_dashboard_id: bag.settings.active_dashboard_id,
+        active_dashboard_by_repo,
+      })
+
+      bag.settings = { ...bag.settings, repos, ...dashboards_fields }
+
+      const pr_ids = [...bag.pull_requests.values()]
+        .filter((pr) => pr.repo_full_name === repo_full_name)
+        .map((pr) => pr.id)
+
+      bag.sync_states.delete(repo_full_name)
+
+      for (const id of pr_ids) {
+        bag.pull_requests.delete(id)
+      }
+      for (const [id, review] of [...bag.reviews.entries()]) {
+        if (review.repo_full_name === repo_full_name) bag.reviews.delete(id)
+      }
+      for (const [pr_id, fact] of [...bag.pr_facts.entries()]) {
+        if (fact.repo_full_name === repo_full_name) bag.pr_facts.delete(pr_id)
+      }
+      for (const [id, file] of [...bag.pr_changed_files.entries()]) {
+        if (pr_ids.includes(file.pr_id)) bag.pr_changed_files.delete(id)
+      }
+
+      return normalize_settings(structuredClone(bag.settings))
+    },
     clear_all_data: async () => {
       bag.settings = undefined
       bag.pull_requests.clear()

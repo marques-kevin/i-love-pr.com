@@ -329,6 +329,62 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
         }
       })
     },
+    remove_repository: async (repo_full_name) => {
+      const existing = await get()
+      if (!existing) throw new Error('Settings not initialized')
+      if (!existing.repos.includes(repo_full_name)) {
+        throw new Error('Repo not configured')
+      }
+
+      const repos = existing.repos.filter((repo) => repo !== repo_full_name)
+      const dashboards = existing.dashboards.filter((tab) => tab.repo_full_name !== repo_full_name)
+      const active_dashboard_by_repo = { ...existing.active_dashboard_by_repo }
+      delete active_dashboard_by_repo[repo_full_name]
+
+      const active_repo =
+        existing.active_repo === repo_full_name ? (repos[0] ?? null) : existing.active_repo
+      const dashboards_fields = normalize_settings_dashboards({
+        repos,
+        active_repo,
+        dashboards,
+        active_dashboard_id: existing.active_dashboard_id,
+        active_dashboard_by_repo,
+      })
+
+      const next: AppSettings = { ...existing, repos, ...dashboards_fields }
+      await database.settings.put(next)
+
+      await database.transaction(
+        'rw',
+        [
+          database.repos,
+          database.sync_state,
+          database.pull_requests,
+          database.reviews,
+          database.pr_facts,
+          database.pr_changed_files,
+        ],
+        async () => {
+          await database.repos.delete(repo_full_name)
+          await database.sync_state.delete(repo_full_name)
+
+          const prs = await database.pull_requests
+            .where('repo_full_name')
+            .equals(repo_full_name)
+            .toArray()
+          const pr_ids = prs.map((pr) => pr.id)
+
+          if (pr_ids.length > 0) {
+            await database.pr_changed_files.where('pr_id').anyOf(pr_ids).delete()
+          }
+          await database.pull_requests.where('repo_full_name').equals(repo_full_name).delete()
+          await database.reviews.where('repo_full_name').equals(repo_full_name).delete()
+          await database.pr_facts.where('repo_full_name').equals(repo_full_name).delete()
+        },
+      )
+
+      return next
+    },
     clear_all_data: async () => {
       await database.transaction(
         'rw',

@@ -15,6 +15,16 @@ export const en_messages = {
   'app.nav.add_repository_failed': 'Failed to add repository',
   'home.empty_body': 'Add a GitHub repository to open its dashboard.',
   'home.open_repo': 'Open {repo}',
+  'gallery.repo_menu': 'Actions for {repo}',
+  'gallery.view': 'View',
+  'gallery.share': 'Share',
+  'gallery.delete': 'Delete',
+  'gallery.share_title': 'Share {repo}',
+  'gallery.delete_confirm_title': 'Remove {repo}?',
+  'gallery.delete_confirm_body':
+    'Remove this repository from your workspace and delete its synced PR data on this device. Your GitHub token and other repositories stay intact.',
+  'gallery.delete_confirm': 'Remove repository',
+  'gallery.delete_cancel': 'Cancel',
   'dashboard.back_to_list': 'Back to repositories',
   'app.language': 'Language',
   'app.locale.en': 'English',
@@ -375,11 +385,11 @@ export const en_messages = {
   'settings.clear_all': 'Erase this account',
   'settings.clear_all_confirm':
     'Delete this GitHub account’s local workspace and remove it from saved accounts? You can add it again later with a token.',
-  'settings.share.title': 'Share repository',
+  'settings.share.import_section_title': 'Import shared repository',
+  'settings.share.import_section_description':
+    'Paste a share link to import PR snapshot data into your workspace.',
   'settings.share.description':
     'Export synced PR data as JSON (no GitHub token). Upload to Cloudflare R2 via a presigned URL so teammates can import dashboards without syncing from GitHub.',
-  'settings.share.active_repo': 'Active repository: {repo}',
-  'settings.share.no_active_repo': 'Open a repository from the gallery before sharing it.',
   'settings.share.download': 'Download snapshot',
   'settings.share.create_link': 'Create share link',
   'settings.share.working': 'Sharing…',
