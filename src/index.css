@@ -110,6 +110,10 @@
   border-radius: 1.75rem;
 }
 
+html:has(.dashboard-window) {
+  overflow: hidden;
+}
+
 .dashboard-window-strip {
   border-top-left-radius: 1.75rem;
   border-top-right-radius: 1.75rem;

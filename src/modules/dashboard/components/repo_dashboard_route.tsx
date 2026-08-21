@@ -35,21 +35,21 @@ export function Wrapper({
   }
 
   return (
-    <div className="p-3 sm:p-5">
+    <div className="flex h-svh flex-col overflow-hidden p-3 sm:p-5">
       <AnimatePresence onExitComplete={() => void navigate('/')}>
         {close_pending ? null : (
           <motion.div
             key="dashboard-window"
-            className="dashboard-window mx-auto flex min-h-[calc(100svh-1.5rem)] w-full max-w-[90rem] flex-col rounded-[1.75rem] bg-base-100 shadow-sm ring-1 ring-base-content/10 sm:min-h-[calc(100svh-2.5rem)]"
+            className="dashboard-window mx-auto flex min-h-0 w-full max-w-[90rem] flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-base-100 shadow-sm ring-1 ring-base-content/10"
             initial={window_motion.initial}
             animate={window_motion.animate}
             exit={window_motion.exit}
           >
-            <div className="sticky top-0 z-40">
+            <div className="shrink-0">
               <DashboardHeader on_close_window={() => set_close_pending(true)} />
               <DashboardToolbar />
             </div>
-            <div className="bg-base-100 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 lg:px-8">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={active_dashboard_id}
