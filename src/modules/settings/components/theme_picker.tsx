@@ -44,7 +44,7 @@ function ThemeOption({
       <span className="min-w-0 flex-1 truncate text-left">{name}</span>
       {show_default_badge ? (
         <span className="badge badge-ghost badge-xs">
-          {intl.formatMessage({ id: 'settings.theme_default' })}
+          {intl.formatMessage({ id: 'settings.theme.default' })}
         </span>
       ) : null}
       {selected ? <HoverIcon icon={Tick02Icon} size={16} /> : null}
@@ -68,7 +68,7 @@ export function ThemePicker() {
         tabIndex={0}
         className="btn-outline w-full justify-between font-normal"
         aria-haspopup="true"
-        aria-label={intl.formatMessage({ id: 'settings.theme_select' }, { name: theme })}
+        aria-label={intl.formatMessage({ id: 'settings.theme.select' }, { name: theme })}
       >
         <span className="flex min-w-0 items-center gap-2">
           <ThemeSwatch />
@@ -79,7 +79,7 @@ export function ThemePicker() {
       <div
         tabIndex={-1}
         role="radiogroup"
-        aria-label={intl.formatMessage({ id: 'settings.theme_options' })}
+        aria-label={intl.formatMessage({ id: 'settings.theme' })}
         className="dropdown-content bg-base-100 rounded-box z-50 w-full max-h-72 overflow-y-auto p-1.5 shadow-lg ring-1 ring-base-content/10"
       >
         <ThemeOption
