@@ -68,11 +68,6 @@
   --font-heading: var(--font-sans);
   --font-display: var(--font-sans);
   --color-heart: #e5322d;
-  --color-foreground: var(--color-base-content);
-  --color-muted-foreground: color-mix(in oklab, var(--color-base-content) 60%, transparent);
-  --color-popover: var(--color-base-100);
-  --color-popover-foreground: var(--color-base-content);
-  --color-border: var(--color-base-300);
 }
 
 :root {

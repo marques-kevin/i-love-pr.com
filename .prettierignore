@@ -5,4 +5,3 @@ dev-dist
 coverage
 *.min.js
 package-lock.json
-src/components/dither-kit
