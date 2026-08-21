@@ -8,6 +8,7 @@ import {
 } from '@/modules/dashboard/lib/window_chrome'
 import { Dashboard } from './dashboard'
 import { DashboardHeader } from './dashboard_header'
+import { DashboardToolbar } from './dashboard_toolbar'
 import { connector, type ConnectorProps } from './repo_dashboard_route.connector'
 
 export function Wrapper({
@@ -44,7 +45,10 @@ export function Wrapper({
             animate={window_motion.animate}
             exit={window_motion.exit}
           >
-            <DashboardHeader on_close_window={() => set_close_pending(true)} />
+            <div className="sticky top-0 z-40">
+              <DashboardHeader on_close_window={() => set_close_pending(true)} />
+              <DashboardToolbar />
+            </div>
             <div className="bg-base-100 flex-1 px-4 py-6 sm:px-6 lg:px-8">
               <AnimatePresence mode="wait">
                 <motion.div
