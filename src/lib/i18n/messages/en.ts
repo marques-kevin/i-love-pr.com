@@ -13,6 +13,9 @@ export const en_messages = {
   'app.nav.add_repository_confirm': 'Add',
   'app.nav.add_repository_saving': 'Saving…',
   'app.nav.add_repository_failed': 'Failed to add repository',
+  'home.empty_body': 'Add a GitHub repository to open its dashboard.',
+  'home.open_repo': 'Open {repo}',
+  'dashboard.back_to_list': 'Back to repositories',
   'app.language': 'Language',
   'app.locale.en': 'English',
   'app.locale.fr': 'Français',
@@ -376,7 +379,7 @@ export const en_messages = {
   'settings.share.description':
     'Export synced PR data as JSON (no GitHub token). Upload to Cloudflare R2 via a presigned URL so teammates can import dashboards without syncing from GitHub.',
   'settings.share.active_repo': 'Active repository: {repo}',
-  'settings.share.no_active_repo': 'Select a repository in the sidebar to share it.',
+  'settings.share.no_active_repo': 'Open a repository from the gallery before sharing it.',
   'settings.share.download': 'Download snapshot',
   'settings.share.create_link': 'Create share link',
   'settings.share.working': 'Sharing…',

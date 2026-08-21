@@ -67,7 +67,7 @@ export function Wrapper({
 
       <div className="mt-4">
         <RepoPicker
-          id="sidebar-add-repo"
+          id="home-add-repo"
           availableRepos={available_repos}
           selected={draft_repos}
           onChange={set_draft_repos}

@@ -11,7 +11,9 @@ import {
   clamp_active_repo_to_settings,
   refresh_metrics,
 } from '@/modules/dashboard/redux/dashboard_slice'
+import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
+import { active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import {
@@ -32,6 +34,7 @@ import {
   refresh_pr_coverage,
 } from '@/modules/sync/redux/sync_slice'
 import {
+  dashboards_for_repo,
   get_active_dashboard,
   normalize_dashboard_filters,
   normalize_settings_dashboards,
@@ -49,13 +52,21 @@ function dispatch_refresh_pr_coverage(api: { getState: () => RootState; dispatch
   void api.dispatch(refresh_pr_coverage({ repos: active_repo_list(api.getState()) }))
 }
 
-function apply_active_repo_from_settings(api: {
+function current_pathname(): string {
+  return has_browser_navigator() ? window.location.pathname : ''
+}
+
+function apply_active_repo_from_url_or_settings(api: {
   getState: () => RootState
   dispatch: AppDispatch
 }) {
   const settings = api.getState().settings.settings
   if (!settings) return
-  const { active_repo } = normalize_settings_dashboards(settings)
+  const active_repo = active_repo_from_url_or_settings(
+    current_pathname(),
+    settings.repos,
+    settings.active_repo,
+  )
   api.dispatch(hydrate_active_repo(active_repo))
 }
 
@@ -65,8 +76,16 @@ function hydrate_filters_from_active_dashboard(api: {
 }) {
   const settings = api.getState().settings.settings
   if (!settings) return
-  const { dashboards, active_dashboard_id } = normalize_settings_dashboards(settings)
-  const active = get_active_dashboard(dashboards, active_dashboard_id)
+  const normalized = normalize_settings_dashboards(settings)
+  const active_repo = api.getState().dashboard.active_repo ?? normalized.active_repo
+  const repo_tabs = dashboards_for_repo(normalized.dashboards, active_repo)
+  const dashboard_id =
+    (active_repo ? normalized.active_dashboard_by_repo[active_repo] : null) ??
+    normalized.active_dashboard_id
+  const active = get_active_dashboard(
+    repo_tabs.length > 0 ? repo_tabs : normalized.dashboards,
+    dashboard_id,
+  )
   api.dispatch(hydrate_dashboard_filters(normalize_dashboard_filters(active)))
 }
 
@@ -88,7 +107,7 @@ export function register_app_listeners(
       if (!settings) return
 
       await ensure_pr_facts(api.extra.repositories)
-      apply_active_repo_from_settings(api)
+      apply_active_repo_from_url_or_settings(api)
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
@@ -114,7 +133,7 @@ export function register_app_listeners(
       play_sound('success')
       const settings = action.payload
       api.dispatch(hydrate_locale_from_settings(settings))
-      apply_active_repo_from_settings(api)
+      apply_active_repo_from_url_or_settings(api)
       api.dispatch(clamp_active_repo_to_settings(settings.repos))
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)

@@ -15,6 +15,9 @@ export const fr_messages = define_locale_messages({
   'app.nav.add_repository_confirm': 'Ajouter',
   'app.nav.add_repository_saving': 'Enregistrement…',
   'app.nav.add_repository_failed': 'Échec de l’ajout du dépôt',
+  'home.empty_body': 'Ajoutez un dépôt GitHub pour ouvrir son tableau de bord.',
+  'home.open_repo': 'Ouvrir {repo}',
+  'dashboard.back_to_list': 'Retour aux dépôts',
   'app.language': 'Langue',
   'app.locale.en': 'English',
   'app.locale.fr': 'Français',
@@ -390,7 +393,7 @@ export const fr_messages = define_locale_messages({
   'settings.share.description':
     'Exporter les données PR synchronisées en JSON (sans token GitHub). Envoi sur Cloudflare R2 via URL présignée pour que l’équipe importe les dashboards sans sync GitHub.',
   'settings.share.active_repo': 'Dépôt actif : {repo}',
-  'settings.share.no_active_repo': 'Sélectionnez un dépôt dans la barre latérale pour le partager.',
+  'settings.share.no_active_repo': 'Ouvrez un dépôt depuis la galerie avant de le partager.',
   'settings.share.download': 'Télécharger le snapshot',
   'settings.share.create_link': 'Créer un lien de partage',
   'settings.share.working': 'Partage…',

@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useSyncExternalStore } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
+import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import { App } from '@/modules/app'
@@ -41,6 +42,8 @@ function SessionRoot() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <SessionRoot />
+    <BrowserRouter>
+      <SessionRoot />
+    </BrowserRouter>
   </StrictMode>,
 )
