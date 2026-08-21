@@ -28,6 +28,16 @@ const package_version = read_package_version(
   readFileSync(path.join(root_dir, 'package.json'), 'utf8'),
 )
 
+const is_pages_preview =
+  process.env.CF_PAGES === '1' &&
+  Boolean(process.env.CF_PAGES_BRANCH) &&
+  process.env.CF_PAGES_BRANCH !== 'main'
+
+// Keep in sync with should_auto_enable_pages_preview_demo in src/lib/demo_mode.ts
+if (is_pages_preview && process.env.VITE_DEMO_MODE == null) {
+  process.env.VITE_DEMO_MODE = 'true'
+}
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(package_version),
