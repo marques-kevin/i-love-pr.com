@@ -138,4 +138,7 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   'repo_gallery.delete_title',
   'repo_gallery.delete_confirm',
   'repo_gallery.delete_cancel',
+  'settings.theme',
+  'settings.theme.default',
+  'settings.theme.select',
 ]

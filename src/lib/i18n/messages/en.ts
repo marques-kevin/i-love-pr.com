@@ -402,6 +402,9 @@ export const en_messages = {
   'settings.share.download_done': 'Snapshot downloaded.',
   'settings.share.link_ready': 'Share link copied ({count} PRs).',
   'settings.share.failed': 'Share failed',
+  'settings.theme': 'Theme',
+  'settings.theme.default': 'Default',
+  'settings.theme.select': 'Theme: {name}',
 } as const
 
 export type MessageKey = keyof typeof en_messages

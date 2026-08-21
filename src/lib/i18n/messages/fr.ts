@@ -416,4 +416,7 @@ export const fr_messages = define_locale_messages({
   'settings.share.download_done': 'Snapshot téléchargé.',
   'settings.share.link_ready': 'Lien de partage copié ({count} PR).',
   'settings.share.failed': 'Échec du partage',
+  'settings.theme': 'Thème',
+  'settings.theme.default': 'Par défaut',
+  'settings.theme.select': 'Thème : {name}',
 })
