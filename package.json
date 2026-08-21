@@ -54,6 +54,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "@vitest/coverage-v8": "^4.1.10",
     "daisyui": "^5.7.20",
+    "happy-dom": "^20.11.6",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "oxlint": "^1.78.0",
