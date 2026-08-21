@@ -19,6 +19,7 @@ import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import { is_sound_enabled, set_sound_enabled } from '@/lib/cuelume'
 import { LocaleSwitcher } from '@/modules/i18n'
 import { connector, type ConnectorProps } from './settings.connector'
+import { ThemePicker } from './theme_picker'
 
 const COMMON_TIMEZONES = [
   'Europe/Paris',
@@ -166,6 +167,11 @@ export function Wrapper({
         <div className="space-y-2">
           <span className="label">{intl.formatMessage({ id: 'settings.language' })}</span>
           <LocaleSwitcher />
+        </div>
+
+        <div className="space-y-2">
+          <span className="label">{intl.formatMessage({ id: 'settings.theme' })}</span>
+          <ThemePicker />
         </div>
 
         <div className="flex items-center justify-between gap-4">
