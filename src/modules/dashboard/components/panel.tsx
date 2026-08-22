@@ -38,19 +38,17 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <section className="card bg-base-100 ring-base-content/10 shadow-none ring-1">
-      <div className="card-body gap-4 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="card-title font-display text-lg">{title}</h2>
-            {description ? (
-              <p className="text-base-content/60 text-sm font-normal">{description}</p>
-            ) : null}
-          </div>
-          {help ? <HelpButton help={help} /> : null}
+    <section className="card overflow-hidden border border-base-content/20 bg-base-100 shadow-none">
+      <div className="flex items-start justify-between gap-3 border-b border-base-content/20 bg-base-200 px-4 py-2.5">
+        <div className="min-w-0">
+          <h2 className="text-sm font-medium">{title}</h2>
+          {description ? (
+            <p className="truncate text-xs text-base-content/60">{description}</p>
+          ) : null}
         </div>
-        <div>{children}</div>
+        {help ? <HelpButton help={help} /> : null}
       </div>
+      <div className="bg-base-100 p-4">{children}</div>
     </section>
   )
 }
