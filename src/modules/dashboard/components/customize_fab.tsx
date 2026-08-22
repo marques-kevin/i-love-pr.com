@@ -11,7 +11,13 @@ const ADD_SPRING = { type: 'spring' as const, stiffness: 420, damping: 28 }
 const ICON_CROSSFADE_S = 0.12
 const ADD_ENTER_DELAY_S = 0.04
 
-const dock_btn_class = cn(
+const dock_chip_class = cn(
+  'btn btn-xs btn-ghost h-7 min-h-7 gap-1 px-2 whitespace-nowrap',
+  'bg-base-200 text-base-content/60 shadow-none',
+  '[--radius-field:0]',
+)
+
+const dock_icon_btn_class = cn(
   'btn btn-square btn-xs btn-ghost h-7 w-7 min-h-7 p-0',
   'bg-base-200 text-base-content/60 shadow-none',
   '[--radius-field:0] tooltip tooltip-left',
@@ -25,6 +31,7 @@ export function CustomizeFab() {
   const customize_label = intl.formatMessage({ id: 'dashboard.customize' })
   const done_label = intl.formatMessage({ id: 'dashboard.done' })
   const add_label = intl.formatMessage({ id: 'dashboard.add_chart' })
+  const edit_label = editing ? done_label : customize_label
 
   const tap_motion = reduce_motion ? undefined : { scale: 0.96 }
 
@@ -34,7 +41,7 @@ export function CustomizeFab() {
         {editing && (
           <motion.button
             type="button"
-            className={cn(dock_btn_class, 'rounded-none rounded-tl-md')}
+            className={cn(dock_icon_btn_class, 'rounded-none rounded-tl-md')}
             aria-label={add_label}
             data-tip={add_label}
             onClick={open_picker}
@@ -53,9 +60,7 @@ export function CustomizeFab() {
 
       <motion.button
         type="button"
-        className={cn(dock_btn_class, editing ? 'rounded-none' : 'rounded-none rounded-tl-md')}
-        aria-label={editing ? done_label : customize_label}
-        data-tip={editing ? done_label : customize_label}
+        className={cn(dock_chip_class, editing ? 'rounded-none' : 'rounded-none rounded-tl-md')}
         onClick={() => set_editing((value) => !value)}
         whileTap={tap_motion}
       >
@@ -86,6 +91,7 @@ export function CustomizeFab() {
             )}
           </AnimatePresence>
         </span>
+        {edit_label}
       </motion.button>
     </div>
   )
