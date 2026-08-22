@@ -48,9 +48,7 @@ export function Panel({
         </div>
         {help ? <HelpButton help={help} /> : null}
       </div>
-      <div className="mx-2 mb-2 rounded-lg border border-base-content/20 bg-base-100 p-3">
-        {children}
-      </div>
+      <div className="mx-2 mb-2 rounded-lg bg-base-100 p-3">{children}</div>
     </section>
   )
 }
