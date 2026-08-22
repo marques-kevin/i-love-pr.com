@@ -132,7 +132,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
         </div>
 
         <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(14rem,18rem)_1fr]">
-          <ul className="menu max-h-[40vh] w-full rounded-none border-b border-base-300 p-3 md:max-h-none md:border-r md:border-b-0">
+          <ul className="menu max-h-[40vh] min-h-0 w-full overflow-y-auto overscroll-contain rounded-none border-b border-base-300 p-3 md:h-full md:max-h-none md:border-r md:border-b-0">
             {DASHBOARD_WIDGET_CATALOG.map((widget) => {
               const selected = widget.widget_id === preview_widget_id
               return (
