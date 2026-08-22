@@ -4,7 +4,6 @@ import type { TooltipValueType } from 'recharts'
 
 import { is_number_value, is_string_value } from '@/lib/boundary_parse'
 import {
-  CHART_BAR_GRADIENT_END_OPACITY,
   CHART_BAR_RADIUS,
   CHART_GRID_STROKE,
   CHART_STRIPPED_BODY_OPACITY,
@@ -12,10 +11,8 @@ import {
   CHART_TOOLTIP_DURATION_MS,
   CHART_TOOLTIP_SURFACE_CLASS,
   chart_bar_color,
-  chart_bar_gradient_id,
-  chart_bar_gradient_stops,
-  chart_gradient_axis,
   chart_grid_lines,
+  resolve_stripped_fill,
   stripped_bar_body,
   stripped_bar_body_radius,
   stripped_bar_cap,
@@ -88,7 +85,7 @@ function ChartContainer({
         data-slot="chart"
         data-chart={chart_id}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-grid_line]:stroke-base-content/15 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-transparent [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-transparent [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-grid_line]:stroke-base-content/15 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-transparent [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-transparent [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:overflow-visible [&_.recharts-surface]:outline-hidden",
           className,
         )}
         {...props}
@@ -120,9 +117,7 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme_key] ?? itemConfig.color
-    return color
-      ? `  --color-${key}: ${color};\n  --fill-${key}: url(#${chart_bar_gradient_id(id, key)});`
-      : null
+    return color ? `  --color-${key}: ${color};` : null
   })
   .join('\n')}
 }
@@ -203,6 +198,15 @@ function read_bar_data_key(
   return undefined
 }
 
+function read_bar_fill(
+  fill: React.ComponentProps<typeof RechartsPrimitive.Bar>['fill'],
+): string | undefined {
+  if (fill === undefined || fill === null) return undefined
+  const tag = Object.prototype.toString.call(fill)
+  if (tag === '[object String]') return String(fill)
+  return undefined
+}
+
 function radius_px(radius: number | [number, number, number, number] | undefined): number {
   if (radius === undefined) return CHART_BAR_RADIUS
   if (is_number_value(radius)) return radius
@@ -267,7 +271,7 @@ function ChartBar({
   stripped_cap?: boolean
 }) {
   const series_key = read_bar_data_key(dataKey)
-  const series_fill = fill ?? (series_key ? chart_bar_color(series_key) : undefined)
+  const series_fill = resolve_stripped_fill(series_key, read_bar_fill(fill))
   const cap_fill = series_key ? chart_bar_color(series_key) : series_fill
   const resolved_radius = radius ?? CHART_BAR_RADIUS
 
@@ -284,7 +288,7 @@ function ChartBar({
 
   const render_paint = (input: BarPaintInput) => {
     const box = parse_bar_paint_box(input)
-    const paint_fill = series_fill ?? parse_bar_paint_fill(input)
+    const paint_fill = series_fill ?? resolve_stripped_fill(undefined, parse_bar_paint_fill(input))
     if (!box || !paint_fill) return null
     return (
       <ChartStrippedBar
@@ -306,31 +310,6 @@ function ChartBar({
       {...props}
       {...{ ['shape']: render_paint, activeBar: render_paint }}
     />
-  )
-}
-
-function ChartSeriesGradients({ layout = 'vertical' }: { layout?: 'vertical' | 'horizontal' }) {
-  const { config, chart_id } = useChart()
-  const axis = chart_gradient_axis(layout)
-
-  return (
-    <defs>
-      {Object.keys(config).map((key) => {
-        const color = `var(--color-${key})`
-        return (
-          <linearGradient key={key} id={chart_bar_gradient_id(chart_id, key)} {...axis}>
-            {chart_bar_gradient_stops(color, CHART_BAR_GRADIENT_END_OPACITY).map((stop) => (
-              <stop
-                key={stop.offset}
-                offset={stop.offset}
-                stopColor={stop.color}
-                stopOpacity={stop.opacity}
-              />
-            ))}
-          </linearGradient>
-        )
-      })}
-    </defs>
   )
 }
 
@@ -659,7 +638,6 @@ export {
   ChartBar,
   ChartContainer,
   ChartGrid,
-  ChartSeriesGradients,
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
@@ -673,6 +651,6 @@ export {
   CHART_INTRO_DURATION_MS,
   CHART_LINE_ACTIVE_DOT,
   CHART_VERTICAL_BAR_RADIUS,
-  chart_bar_fill,
+  chart_bar_color,
   chart_is_animation_active,
 } from '@/lib/chart_chrome'
