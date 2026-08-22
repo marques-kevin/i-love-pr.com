@@ -3,6 +3,17 @@ import * as RechartsPrimitive from 'recharts'
 import type { TooltipValueType } from 'recharts'
 
 import { is_number_value, is_string_value } from '@/lib/boundary_parse'
+import {
+  CHART_BAR_GRADIENT_END_OPACITY,
+  CHART_GRID_STROKE,
+  CHART_TOOLTIP_DURATION_MS,
+  CHART_TOOLTIP_SURFACE_CLASS,
+  chart_bar_gradient_id,
+  chart_bar_gradient_stops,
+  chart_gradient_axis,
+  chart_grid_lines,
+  type ChartGridLayout,
+} from '@/lib/chart_chrome'
 import type { ExternalObject, ExternalValue } from '@/lib/json_value'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +39,7 @@ export type ChartConfig = Record<
 
 type ChartContextProps = {
   config: ChartConfig
+  chart_id: string
 }
 
 const ChartContext = React.createContext<ChartContextProps | null>(null)
@@ -58,20 +70,20 @@ function ChartContainer({
   }
 }) {
   const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, '')}`
+  const chart_id = `chart-${id ?? uniqueId.replace(/:/g, '')}`
 
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext.Provider value={{ config, chart_id }}>
       <div
         data-slot="chart"
-        data-chart={chartId}
+        data-chart={chart_id}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-base-300/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-base-300 [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-300 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-base-200 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-300 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-base-content/60 [&_.recharts-cartesian-grid_line]:stroke-base-content/15 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-transparent [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-radial-bar-background-sector]:fill-base-200 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-transparent [&_.recharts-reference-line_[stroke='#ccc']]:stroke-base-content/15 [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
           className,
         )}
         {...props}
       >
-        <ChartStyle id={chartId} config={config} />
+        <ChartStyle id={chart_id} config={config} />
         <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
           {children}
         </RechartsPrimitive.ResponsiveContainer>
@@ -98,7 +110,9 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme_key] ?? itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    return color
+      ? `  --color-${key}: ${color};\n  --fill-${key}: url(#${chart_bar_gradient_id(id, key)});`
+      : null
   })
   .join('\n')}
 }
@@ -110,7 +124,60 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+function ChartTooltip({
+  cursor = false,
+  animationDuration = CHART_TOOLTIP_DURATION_MS,
+  ...props
+}: React.ComponentProps<typeof RechartsPrimitive.Tooltip>) {
+  return (
+    <RechartsPrimitive.Tooltip cursor={cursor} animationDuration={animationDuration} {...props} />
+  )
+}
+
+function ChartGrid({
+  layout = 'vertical',
+  strokeDasharray = '3 3',
+  stroke = CHART_GRID_STROKE,
+  ...props
+}: Omit<React.ComponentProps<typeof RechartsPrimitive.CartesianGrid>, 'vertical' | 'horizontal'> & {
+  layout?: ChartGridLayout
+}) {
+  const lines = chart_grid_lines(layout)
+  return (
+    <RechartsPrimitive.CartesianGrid
+      strokeDasharray={strokeDasharray}
+      stroke={stroke}
+      vertical={lines.vertical}
+      horizontal={lines.horizontal}
+      {...props}
+    />
+  )
+}
+
+function ChartSeriesGradients({ layout = 'vertical' }: { layout?: 'vertical' | 'horizontal' }) {
+  const { config, chart_id } = useChart()
+  const axis = chart_gradient_axis(layout)
+
+  return (
+    <defs>
+      {Object.keys(config).map((key) => {
+        const color = `var(--color-${key})`
+        return (
+          <linearGradient key={key} id={chart_bar_gradient_id(chart_id, key)} {...axis}>
+            {chart_bar_gradient_stops(color, CHART_BAR_GRADIENT_END_OPACITY).map((stop) => (
+              <stop
+                key={stop.offset}
+                offset={stop.offset}
+                stopColor={stop.color}
+                stopOpacity={stop.opacity}
+              />
+            ))}
+          </linearGradient>
+        )
+      })}
+    </defs>
+  )
+}
 
 function ChartTooltipContent({
   active,
@@ -174,10 +241,7 @@ function ChartTooltipContent({
 
   return (
     <div
-      className={cn(
-        'bg-base-100 grid min-w-32 items-start gap-1.5 rounded-lg border border-base-300/50 px-2.5 py-1.5 text-xs shadow-xl',
-        className,
-      )}
+      className={cn(CHART_TOOLTIP_SURFACE_CLASS, 'grid min-w-32 items-start gap-1.5', className)}
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
@@ -438,9 +502,21 @@ function getLegendConfigFromPayload(
 
 export {
   ChartContainer,
+  ChartGrid,
+  ChartSeriesGradients,
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  CHART_TOOLTIP_SURFACE_CLASS,
 }
+
+export {
+  CHART_BAR_RADIUS,
+  CHART_INTRO_DURATION_MS,
+  CHART_LINE_ACTIVE_DOT,
+  CHART_VERTICAL_BAR_RADIUS,
+  chart_bar_fill,
+  chart_is_animation_active,
+} from '@/lib/chart_chrome'
