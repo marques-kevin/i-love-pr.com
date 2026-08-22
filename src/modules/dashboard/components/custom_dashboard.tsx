@@ -131,37 +131,39 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           </p>
         </div>
 
-        <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(14rem,18rem)_1fr]">
-          <ul className="menu min-h-0 max-h-[40vh] w-full overflow-y-auto overscroll-contain rounded-none border-b border-base-300 p-3 md:h-full md:max-h-none md:border-r md:border-b-0">
-            {DASHBOARD_WIDGET_CATALOG.map((widget) => {
-              const selected = widget.widget_id === preview_widget_id
-              return (
-                <li key={widget.widget_id}>
-                  <button
-                    type="button"
-                    className={selected ? 'menu-active' : undefined}
-                    onClick={() => set_preview_widget_id(widget.widget_id)}
-                    aria-pressed={selected}
-                  >
-                    <span className="flex flex-col items-start gap-0.5">
-                      <span className="text-sm font-medium">
-                        {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
+        <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[minmax(14rem,18rem)_1fr]">
+          <div className="min-h-0 max-h-[40vh] overflow-y-auto overscroll-contain md:h-full md:max-h-none">
+            <ul className="menu w-full rounded-none border-b border-base-300 p-3 md:border-r md:border-b-0">
+              {DASHBOARD_WIDGET_CATALOG.map((widget) => {
+                const selected = widget.widget_id === preview_widget_id
+                return (
+                  <li key={widget.widget_id}>
+                    <button
+                      type="button"
+                      className={selected ? 'menu-active' : undefined}
+                      onClick={() => set_preview_widget_id(widget.widget_id)}
+                      aria-pressed={selected}
+                    >
+                      <span className="flex flex-col items-start gap-0.5">
+                        <span className="text-sm font-medium">
+                          {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
+                        </span>
+                        <span
+                          className={
+                            selected
+                              ? 'text-primary-content/80 text-xs'
+                              : 'text-base-content/60 text-xs'
+                          }
+                        >
+                          {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
+                        </span>
                       </span>
-                      <span
-                        className={
-                          selected
-                            ? 'text-primary-content/80 text-xs'
-                            : 'text-base-content/60 text-xs'
-                        }
-                      >
-                        {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
-                      </span>
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
 
           <div className="flex min-h-0 flex-col">
             <div className="flex items-center justify-between gap-2 border-b border-base-300 px-4 py-2">
