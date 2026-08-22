@@ -38,8 +38,8 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <section className="card overflow-hidden border border-base-content/20 bg-base-200 shadow-none">
-      <div className="flex items-start justify-between gap-3 px-4 pt-2.5 pb-2">
+    <section className="card overflow-hidden bg-base-200 shadow-none">
+      <div className="flex items-start justify-between gap-3 px-3 pt-2 pb-1.5">
         <div className="min-w-0">
           <h2 className="text-sm font-medium">{title}</h2>
           {description ? (
@@ -48,7 +48,9 @@ export function Panel({
         </div>
         {help ? <HelpButton help={help} /> : null}
       </div>
-      <div className="mx-3 mb-3 rounded-lg bg-base-100 p-4">{children}</div>
+      <div className="mx-2 mb-2 rounded-lg border border-base-content/20 bg-base-100 p-3">
+        {children}
+      </div>
     </section>
   )
 }
