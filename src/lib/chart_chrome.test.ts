@@ -6,14 +6,12 @@ import {
   CHART_TOOLTIP_DURATION_MS,
   CHART_VERTICAL_BAR_RADIUS,
   chart_animation_active,
-  chart_animation_active_from_media,
   chart_bar_fill,
   chart_bar_gradient_id,
   chart_bar_gradient_stops,
   chart_gradient_axis,
   chart_grid_lines,
   prefers_reduced_motion,
-  read_prefers_reduced_motion,
 } from './chart_chrome'
 
 describe('chart_grid_lines', () => {
@@ -56,13 +54,10 @@ describe('prefers_reduced_motion', () => {
     expect(prefers_reduced_motion(undefined)).toBe(false)
     expect(prefers_reduced_motion(null)).toBe(false)
     expect(prefers_reduced_motion({ matches: false })).toBe(false)
-    expect(read_prefers_reduced_motion(undefined)).toBe(false)
-    expect(read_prefers_reduced_motion(() => ({ matches: false }))).toBe(false)
   })
 
   it('is true only when the reduce-motion query matches', () => {
     expect(prefers_reduced_motion({ matches: true })).toBe(true)
-    expect(read_prefers_reduced_motion(() => ({ matches: true }))).toBe(true)
   })
 })
 
@@ -70,8 +65,6 @@ describe('chart_animation_active', () => {
   it('disables Recharts intro animation when motion is reduced', () => {
     expect(chart_animation_active(true)).toBe(false)
     expect(chart_animation_active(false)).toBe(true)
-    expect(chart_animation_active_from_media(() => ({ matches: true }))).toBe(false)
-    expect(chart_animation_active_from_media(() => ({ matches: false }))).toBe(true)
   })
 
   it('keeps intro and tooltip timings cheap', () => {

@@ -10,6 +10,11 @@ export const CHART_TOOLTIP_SURFACE_CLASS =
 
 export type ChartGridLayout = 'vertical' | 'horizontal' | 'both'
 
+export type ChartGridLines = {
+  vertical: boolean
+  horizontal: boolean
+}
+
 export type ChartGradientAxis = {
   x1: string
   y1: string
@@ -23,14 +28,14 @@ export type ChartGradientStop = {
   opacity: number
 }
 
-export function chart_grid_lines(layout: ChartGridLayout): {
-  vertical: boolean
-  horizontal: boolean
-} {
-  return {
-    vertical: layout === 'horizontal' || layout === 'both',
-    horizontal: layout === 'vertical' || layout === 'both',
-  }
+export type MediaQueryMatch = {
+  matches: boolean
+}
+
+export function chart_grid_lines(layout: ChartGridLayout): ChartGridLines {
+  if (layout === 'horizontal') return { vertical: true, horizontal: false }
+  if (layout === 'both') return { vertical: true, horizontal: true }
+  return { vertical: false, horizontal: true }
 }
 
 export function chart_bar_gradient_id(chart_id: string, key: string): string {
@@ -58,7 +63,7 @@ export function chart_bar_gradient_stops(
   ]
 }
 
-export function prefers_reduced_motion(media: { matches: boolean } | null | undefined): boolean {
+export function prefers_reduced_motion(media: MediaQueryMatch | null | undefined): boolean {
   return media?.matches === true
 }
 
@@ -66,24 +71,16 @@ export function chart_animation_active(reduce_motion: boolean): boolean {
   return !reduce_motion
 }
 
-export function read_prefers_reduced_motion(
-  match_media: ((query: string) => { matches: boolean }) | undefined,
-): boolean {
-  if (typeof match_media !== 'function') return false
-  return prefers_reduced_motion(match_media('(prefers-reduced-motion: reduce)'))
-}
-
-export function chart_animation_active_from_media(
-  match_media: ((query: string) => { matches: boolean }) | undefined,
-): boolean {
-  return chart_animation_active(read_prefers_reduced_motion(match_media))
-}
-
-export function window_match_media(): ((query: string) => { matches: boolean }) | undefined {
-  const media = (globalThis as { matchMedia?: (query: string) => { matches: boolean } }).matchMedia
-  return typeof media === 'function' ? (query) => media.call(globalThis, query) : undefined
+function has_browser_match_media(): boolean {
+  // SAFETY: Workers lib has no DOM matchMedia; optional presence is checked without assuming the DOM type.
+  return (globalThis as { matchMedia?: unknown }).matchMedia !== undefined
 }
 
 export function chart_is_animation_active(): boolean {
-  return chart_animation_active_from_media(window_match_media())
+  if (!has_browser_match_media()) return false
+  // SAFETY: has_browser_match_media confirmed matchMedia exists on this globalThis.
+  const match_media = (globalThis as { matchMedia: (query: string) => MediaQueryMatch }).matchMedia
+  return chart_animation_active(
+    prefers_reduced_motion(match_media('(prefers-reduced-motion: reduce)')),
+  )
 }
