@@ -1,24 +1,14 @@
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Scatter,
-  ScatterChart,
-  XAxis,
-  YAxis,
-  ZAxis,
-} from 'recharts'
+import { BarChart, Line, LineChart, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts'
 import { useIntl } from 'react-intl'
 import { is_external_object, is_number_value, is_string_value } from '@/lib/boundary_parse'
 import type { ExternalValue } from '@/lib/json_value'
 import {
   type ChartConfig,
+  ChartBar,
   ChartContainer,
   ChartGrid,
   ChartLegend,
   ChartLegendContent,
-  ChartSeriesGradients,
   ChartTooltip,
   ChartTooltipContent,
   CHART_BAR_RADIUS,
@@ -26,7 +16,7 @@ import {
   CHART_LINE_ACTIVE_DOT,
   CHART_TOOLTIP_SURFACE_CLASS,
   CHART_VERTICAL_BAR_RADIUS,
-  chart_bar_fill,
+  chart_bar_color,
   chart_is_animation_active,
 } from '@/components/ui/chart'
 import type { MetricsSnapshot } from '@/lib/types'
@@ -173,14 +163,13 @@ export function PRSizeChart({ data }: { data: MetricsSnapshot['prSizeBuckets'] }
   return (
     <ChartContainer config={sizeConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
-          fill={chart_bar_fill('count')}
+          fill={chart_bar_color('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -193,7 +182,6 @@ export function ReviewerChart({ data }: { data: MetricsSnapshot['reviewerLoad'] 
   return (
     <ChartContainer config={reviewerConfig} className="aspect-auto h-80 w-full">
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients layout="horizontal" />
         <ChartGrid layout="horizontal" />
         <XAxis
           type="number"
@@ -212,15 +200,17 @@ export function ReviewerChart({ data }: { data: MetricsSnapshot['reviewerLoad'] 
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="given"
-          fill={chart_bar_fill('given')}
+          layout="horizontal"
+          fill={chart_bar_color('given')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="received"
-          fill={chart_bar_fill('received')}
+          layout="horizontal"
+          fill={chart_bar_color('received')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -241,14 +231,13 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
   return (
     <ChartContainer config={throughputConfig} className="aspect-auto h-72 w-full">
       <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
-          fill={chart_bar_fill('count')}
+          fill={chart_bar_color('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -283,21 +272,20 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
   return (
     <ChartContainer config={config} className="aspect-auto h-72 w-full">
       <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgTimeToFirstReviewHours"
-          fill={chart_bar_fill('avgTimeToFirstReviewHours')}
+          fill={chart_bar_color('avgTimeToFirstReviewHours')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="avgTimeToApproveHours"
-          fill={chart_bar_fill('avgTimeToApproveHours')}
+          fill={chart_bar_color('avgTimeToApproveHours')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -317,15 +305,14 @@ export function SizeVsReviewCostChart({ data }: { data: MetricsSnapshot['sizeVsR
   return (
     <ChartContainer config={sizeVsReviewCostConfig} className="aspect-auto h-72 w-full">
       <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgHoursPerHundredLines"
-          fill={chart_bar_fill('avgHoursPerHundredLines')}
+          fill={chart_bar_color('avgHoursPerHundredLines')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -404,37 +391,39 @@ export function CycleBreakdownChart({ data }: { data: MetricsSnapshot['cycleBrea
   return (
     <ChartContainer config={cycleBreakdownConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="createToAskHours"
           stackId="cycle"
-          fill={chart_bar_fill('createToAskHours')}
+          fill={chart_bar_color('createToAskHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="askToFirstReviewHours"
           stackId="cycle"
-          fill={chart_bar_fill('askToFirstReviewHours')}
+          fill={chart_bar_color('askToFirstReviewHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="firstReviewToApproveHours"
           stackId="cycle"
-          fill={chart_bar_fill('firstReviewToApproveHours')}
+          fill={chart_bar_color('firstReviewToApproveHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="approveToMergeHours"
           stackId="cycle"
-          fill={chart_bar_fill('approveToMergeHours')}
+          fill={chart_bar_color('approveToMergeHours')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -515,14 +504,13 @@ export function ReviewRoundsChart({ data }: { data: MetricsSnapshot['reviewRound
   return (
     <ChartContainer config={reviewRoundsConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="rounds" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
-          fill={chart_bar_fill('count')}
+          fill={chart_bar_color('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -535,14 +523,13 @@ export function OpenPrAgeChart({ data }: { data: MetricsSnapshot['openPrAgeBucke
   return (
     <ChartContainer config={openPrAgeConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
-          fill={chart_bar_fill('count')}
+          fill={chart_bar_color('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -555,21 +542,20 @@ export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSer
   return (
     <ChartContainer config={flowVolumeConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="opened"
-          fill={chart_bar_fill('opened')}
+          fill={chart_bar_color('opened')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="merged"
-          fill={chart_bar_fill('merged')}
+          fill={chart_bar_color('merged')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -631,7 +617,6 @@ export function RepoComparisonChart({ data }: { data: MetricsSnapshot['repoCompa
   return (
     <ChartContainer config={repoComparisonConfig} className="aspect-auto h-80 w-full">
       <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients layout="horizontal" />
         <ChartGrid layout="horizontal" />
         <XAxis
           type="number"
@@ -649,9 +634,10 @@ export function RepoComparisonChart({ data }: { data: MetricsSnapshot['repoCompa
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="mergedCount"
-          fill={chart_bar_fill('mergedCount')}
+          layout="horizontal"
+          fill={chart_bar_color('mergedCount')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -664,7 +650,6 @@ export function AuthorCycleRankingChart({ data }: { data: MetricsSnapshot['autho
   return (
     <ChartContainer config={authorCycleConfig} className="aspect-auto h-80 w-full">
       <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients layout="horizontal" />
         <ChartGrid layout="horizontal" />
         <XAxis type="number" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis
@@ -676,9 +661,10 @@ export function AuthorCycleRankingChart({ data }: { data: MetricsSnapshot['autho
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgCycleTimeHours"
-          fill={chart_bar_fill('avgCycleTimeHours')}
+          layout="horizontal"
+          fill={chart_bar_color('avgCycleTimeHours')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -694,7 +680,6 @@ export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBala
   return (
     <ChartContainer config={reviewBalanceConfig} className="aspect-auto h-80 w-full">
       <BarChart data={chart_data} layout="vertical" margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients layout="horizontal" />
         <ChartGrid layout="horizontal" />
         <XAxis type="number" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis
@@ -706,9 +691,10 @@ export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBala
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="ratio"
-          fill={chart_bar_fill('ratio')}
+          layout="horizontal"
+          fill={chart_bar_color('ratio')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -721,30 +707,31 @@ export function ReviewStateMixChart({ data }: { data: MetricsSnapshot['reviewSta
   return (
     <ChartContainer config={reviewStateMixConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="approved"
           stackId="state"
-          fill={chart_bar_fill('approved')}
+          fill={chart_bar_color('approved')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="changesRequested"
           stackId="state"
-          fill={chart_bar_fill('changesRequested')}
+          fill={chart_bar_color('changesRequested')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="commented"
           stackId="state"
-          fill={chart_bar_fill('commented')}
+          fill={chart_bar_color('commented')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -761,21 +748,20 @@ export function AdditionsDeletionsChart({
   return (
     <ChartContainer config={additionsDeletionsConfig} className="aspect-auto h-72 w-full">
       <BarChart data={data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="additions"
-          fill={chart_bar_fill('additions')}
+          fill={chart_bar_color('additions')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="deletions"
-          fill={chart_bar_fill('deletions')}
+          fill={chart_bar_color('deletions')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
@@ -793,14 +779,13 @@ export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSiz
   return (
     <ChartContainer config={roundsVsSizeConfig} className="aspect-auto h-72 w-full">
       <BarChart data={chart_data} margin={{ left: 8, right: 8 }}>
-        <ChartSeriesGradients />
         <ChartGrid />
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgReviewRounds"
-          fill={chart_bar_fill('avgReviewRounds')}
+          fill={chart_bar_color('avgReviewRounds')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
