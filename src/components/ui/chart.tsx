@@ -5,13 +5,23 @@ import type { TooltipValueType } from 'recharts'
 import { is_number_value, is_string_value } from '@/lib/boundary_parse'
 import {
   CHART_BAR_GRADIENT_END_OPACITY,
+  CHART_BAR_RADIUS,
   CHART_GRID_STROKE,
+  CHART_STRIPPED_BODY_OPACITY,
+  CHART_STRIPPED_CAP_RADIUS,
   CHART_TOOLTIP_DURATION_MS,
   CHART_TOOLTIP_SURFACE_CLASS,
+  chart_bar_color,
   chart_bar_gradient_id,
   chart_bar_gradient_stops,
   chart_gradient_axis,
   chart_grid_lines,
+  stripped_bar_body,
+  stripped_bar_body_radius,
+  stripped_bar_cap,
+  type BarPaintBox,
+  type ChartBarLayout,
+  type ChartBarVariant,
   type ChartGridLayout,
 } from '@/lib/chart_chrome'
 import type { ExternalObject, ExternalValue } from '@/lib/json_value'
@@ -150,6 +160,151 @@ function ChartGrid({
       vertical={lines.vertical}
       horizontal={lines.horizontal}
       {...props}
+    />
+  )
+}
+
+type BarPaintInput = {
+  x: ExternalValue
+  y: ExternalValue
+  width: ExternalValue
+  height: ExternalValue
+  fill?: ExternalValue
+}
+
+function parse_bar_paint_box(input: BarPaintInput): BarPaintBox | null {
+  const x = input.x
+  const y = input.y
+  const width = input.width
+  const height = input.height
+  if (
+    !is_number_value(x) ||
+    !is_number_value(y) ||
+    !is_number_value(width) ||
+    !is_number_value(height)
+  ) {
+    return null
+  }
+  return { x, y, width, height }
+}
+
+function parse_bar_paint_fill(input: BarPaintInput): string | undefined {
+  const fill = input.fill
+  if (fill === undefined) return undefined
+  return is_string_value(fill) ? fill : undefined
+}
+
+function read_bar_data_key(
+  dataKey: React.ComponentProps<typeof RechartsPrimitive.Bar>['dataKey'],
+): string | undefined {
+  if (dataKey === undefined || dataKey === null) return undefined
+  const tag = Object.prototype.toString.call(dataKey)
+  if (tag === '[object String]') return String(dataKey)
+  return undefined
+}
+
+function radius_px(radius: number | [number, number, number, number] | undefined): number {
+  if (radius === undefined) return CHART_BAR_RADIUS
+  if (is_number_value(radius)) return radius
+  return radius[0]
+}
+
+function ChartStrippedBar({
+  box,
+  fill,
+  cap_fill,
+  layout,
+  show_cap,
+  radius,
+}: {
+  box: BarPaintBox
+  fill: string
+  cap_fill: string | undefined
+  layout: ChartBarLayout
+  show_cap: boolean
+  radius: number | [number, number, number, number] | undefined
+}) {
+  const body = show_cap ? stripped_bar_body(box, layout) : box
+  const cap = show_cap ? stripped_bar_cap(box, layout) : null
+  const body_radius = stripped_bar_body_radius(radius_px(radius), layout)
+
+  return (
+    <g>
+      <RechartsPrimitive.Rectangle
+        x={body.x}
+        y={body.y}
+        width={body.width}
+        height={body.height}
+        radius={body_radius}
+        fill={fill}
+        fillOpacity={CHART_STRIPPED_BODY_OPACITY}
+      />
+      {cap ? (
+        <RechartsPrimitive.Rectangle
+          x={cap.x}
+          y={cap.y}
+          width={cap.width}
+          height={cap.height}
+          radius={CHART_STRIPPED_CAP_RADIUS}
+          fill={cap_fill ?? fill}
+        />
+      ) : null}
+    </g>
+  )
+}
+
+function ChartBar({
+  variant = 'stripped',
+  layout = 'vertical',
+  stripped_cap = true,
+  dataKey,
+  fill,
+  radius,
+  ...props
+}: React.ComponentProps<typeof RechartsPrimitive.Bar> & {
+  variant?: ChartBarVariant
+  layout?: ChartBarLayout
+  stripped_cap?: boolean
+}) {
+  const series_key = read_bar_data_key(dataKey)
+  const series_fill = fill ?? (series_key ? chart_bar_color(series_key) : undefined)
+  const cap_fill = series_key ? chart_bar_color(series_key) : series_fill
+  const resolved_radius = radius ?? CHART_BAR_RADIUS
+
+  if (variant !== 'stripped') {
+    return (
+      <RechartsPrimitive.Bar
+        dataKey={dataKey}
+        fill={series_fill}
+        radius={resolved_radius}
+        {...props}
+      />
+    )
+  }
+
+  const render_paint = (input: BarPaintInput) => {
+    const box = parse_bar_paint_box(input)
+    const paint_fill = series_fill ?? parse_bar_paint_fill(input)
+    if (!box || !paint_fill) return null
+    return (
+      <ChartStrippedBar
+        box={box}
+        fill={paint_fill}
+        cap_fill={cap_fill}
+        layout={layout}
+        show_cap={stripped_cap}
+        radius={resolved_radius}
+      />
+    )
+  }
+
+  return (
+    <RechartsPrimitive.Bar
+      dataKey={dataKey}
+      fill={series_fill}
+      radius={resolved_radius}
+      {...props}
+      {...{ ['shape']: render_paint, activeBar: render_paint }}
     />
   )
 }
@@ -501,6 +656,7 @@ function getLegendConfigFromPayload(
 }
 
 export {
+  ChartBar,
   ChartContainer,
   ChartGrid,
   ChartSeriesGradients,

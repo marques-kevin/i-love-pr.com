@@ -1,5 +1,10 @@
 export const CHART_BAR_RADIUS = 2
 export const CHART_VERTICAL_BAR_RADIUS: [number, number, number, number] = [2, 2, 0, 0]
+export const CHART_STRIPPED_BODY_INSET = 3
+export const CHART_STRIPPED_CAP_SIZE = 2
+export const CHART_STRIPPED_CAP_OFFSET = 4
+export const CHART_STRIPPED_BODY_OPACITY = 0.2
+export const CHART_STRIPPED_CAP_RADIUS = 1
 export const CHART_GRID_STROKE = 'color-mix(in oklab, var(--color-base-content) 15%, transparent)'
 export const CHART_TOOLTIP_DURATION_MS = 200
 export const CHART_INTRO_DURATION_MS = 400
@@ -8,7 +13,16 @@ export const CHART_LINE_ACTIVE_DOT = { r: 3, strokeWidth: 0 } as const
 export const CHART_TOOLTIP_SURFACE_CLASS =
   'rounded-lg border border-base-content/10 bg-base-100 px-2.5 py-1.5 text-xs shadow-xl duration-200'
 
+export type ChartBarLayout = 'vertical' | 'horizontal'
+export type ChartBarVariant = 'default' | 'stripped'
 export type ChartGridLayout = 'vertical' | 'horizontal' | 'both'
+
+export type BarPaintBox = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
 
 export type ChartGridLines = {
   vertical: boolean
@@ -44,6 +58,52 @@ export function chart_bar_gradient_id(chart_id: string, key: string): string {
 
 export function chart_bar_fill(key: string): string {
   return `var(--fill-${key})`
+}
+
+export function chart_bar_color(key: string): string {
+  return `var(--color-${key})`
+}
+
+export function stripped_bar_body(box: BarPaintBox, layout: ChartBarLayout): BarPaintBox {
+  if (layout === 'horizontal') {
+    return {
+      x: box.x,
+      y: box.y,
+      width: Math.max(0, box.width - CHART_STRIPPED_BODY_INSET),
+      height: box.height,
+    }
+  }
+  return {
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: Math.max(0, box.height - CHART_STRIPPED_BODY_INSET),
+  }
+}
+
+export function stripped_bar_cap(box: BarPaintBox, layout: ChartBarLayout): BarPaintBox {
+  if (layout === 'horizontal') {
+    return {
+      x: box.x + box.width + CHART_STRIPPED_CAP_OFFSET - CHART_STRIPPED_CAP_SIZE,
+      y: box.y,
+      width: CHART_STRIPPED_CAP_SIZE,
+      height: box.height,
+    }
+  }
+  return {
+    x: box.x,
+    y: box.y - CHART_STRIPPED_CAP_OFFSET,
+    width: box.width,
+    height: CHART_STRIPPED_CAP_SIZE,
+  }
+}
+
+export function stripped_bar_body_radius(
+  radius: number,
+  layout: ChartBarLayout,
+): [number, number, number, number] {
+  if (layout === 'horizontal') return [0, radius, radius, 0]
+  return [radius, radius, 0, 0]
 }
 
 export function chart_gradient_axis(layout: 'vertical' | 'horizontal'): ChartGradientAxis {

@@ -3,15 +3,22 @@ import {
   CHART_BAR_GRADIENT_END_OPACITY,
   CHART_BAR_RADIUS,
   CHART_INTRO_DURATION_MS,
+  CHART_STRIPPED_BODY_INSET,
+  CHART_STRIPPED_CAP_OFFSET,
+  CHART_STRIPPED_CAP_SIZE,
   CHART_TOOLTIP_DURATION_MS,
   CHART_VERTICAL_BAR_RADIUS,
   chart_animation_active,
+  chart_bar_color,
   chart_bar_fill,
   chart_bar_gradient_id,
   chart_bar_gradient_stops,
   chart_gradient_axis,
   chart_grid_lines,
   prefers_reduced_motion,
+  stripped_bar_body,
+  stripped_bar_body_radius,
+  stripped_bar_cap,
 } from './chart_chrome'
 
 describe('chart_grid_lines', () => {
@@ -37,6 +44,37 @@ describe('chart bar recipe', () => {
   it('builds gradient ids and CSS fill vars from the series key', () => {
     expect(chart_bar_gradient_id('chart-abc', 'count')).toBe('chart-abc-bar-count')
     expect(chart_bar_fill('count')).toBe('var(--fill-count)')
+    expect(chart_bar_color('count')).toBe('var(--color-count)')
+  })
+
+  it('shrinks the painted body and floats a solid cap at the value end', () => {
+    const box = { x: 10, y: 20, width: 16, height: 40 }
+    expect(stripped_bar_body(box, 'vertical')).toEqual({
+      x: 10,
+      y: 20,
+      width: 16,
+      height: 40 - CHART_STRIPPED_BODY_INSET,
+    })
+    expect(stripped_bar_cap(box, 'vertical')).toEqual({
+      x: 10,
+      y: 20 - CHART_STRIPPED_CAP_OFFSET,
+      width: 16,
+      height: CHART_STRIPPED_CAP_SIZE,
+    })
+    expect(stripped_bar_body(box, 'horizontal')).toEqual({
+      x: 10,
+      y: 20,
+      width: 16 - CHART_STRIPPED_BODY_INSET,
+      height: 40,
+    })
+    expect(stripped_bar_cap(box, 'horizontal')).toEqual({
+      x: 10 + 16 + CHART_STRIPPED_CAP_OFFSET - CHART_STRIPPED_CAP_SIZE,
+      y: 20,
+      width: CHART_STRIPPED_CAP_SIZE,
+      height: 40,
+    })
+    expect(stripped_bar_body_radius(CHART_BAR_RADIUS, 'vertical')).toEqual([2, 2, 0, 0])
+    expect(stripped_bar_body_radius(CHART_BAR_RADIUS, 'horizontal')).toEqual([0, 2, 2, 0])
   })
 
   it('fades the existing series color top to bottom', () => {

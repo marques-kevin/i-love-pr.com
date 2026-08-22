@@ -1,19 +1,10 @@
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Scatter,
-  ScatterChart,
-  XAxis,
-  YAxis,
-  ZAxis,
-} from 'recharts'
+import { BarChart, Line, LineChart, Scatter, ScatterChart, XAxis, YAxis, ZAxis } from 'recharts'
 import { useIntl } from 'react-intl'
 import { is_external_object, is_number_value, is_string_value } from '@/lib/boundary_parse'
 import type { ExternalValue } from '@/lib/json_value'
 import {
   type ChartConfig,
+  ChartBar,
   ChartContainer,
   ChartGrid,
   ChartLegend,
@@ -178,7 +169,7 @@ export function PRSizeChart({ data }: { data: MetricsSnapshot['prSizeBuckets'] }
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
           fill={chart_bar_fill('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -212,14 +203,16 @@ export function ReviewerChart({ data }: { data: MetricsSnapshot['reviewerLoad'] 
         />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="given"
+          layout="horizontal"
           fill={chart_bar_fill('given')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="received"
+          layout="horizontal"
           fill={chart_bar_fill('received')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
@@ -246,7 +239,7 @@ export function ThroughputChart({ data }: { data: MetricsSnapshot['throughput'] 
         <XAxis dataKey="period" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
           fill={chart_bar_fill('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -289,13 +282,13 @@ export function SizeVsReviewTimeChart({ data }: { data: MetricsSnapshot['sizeVsR
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgTimeToFirstReviewHours"
           fill={chart_bar_fill('avgTimeToFirstReviewHours')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="avgTimeToApproveHours"
           fill={chart_bar_fill('avgTimeToApproveHours')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -323,7 +316,7 @@ export function SizeVsReviewCostChart({ data }: { data: MetricsSnapshot['sizeVsR
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgHoursPerHundredLines"
           fill={chart_bar_fill('avgHoursPerHundredLines')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -410,28 +403,31 @@ export function CycleBreakdownChart({ data }: { data: MetricsSnapshot['cycleBrea
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="createToAskHours"
           stackId="cycle"
           fill={chart_bar_fill('createToAskHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="askToFirstReviewHours"
           stackId="cycle"
           fill={chart_bar_fill('askToFirstReviewHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="firstReviewToApproveHours"
           stackId="cycle"
           fill={chart_bar_fill('firstReviewToApproveHours')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="approveToMergeHours"
           stackId="cycle"
           fill={chart_bar_fill('approveToMergeHours')}
@@ -520,7 +516,7 @@ export function ReviewRoundsChart({ data }: { data: MetricsSnapshot['reviewRound
         <XAxis dataKey="rounds" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
           fill={chart_bar_fill('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -540,7 +536,7 @@ export function OpenPrAgeChart({ data }: { data: MetricsSnapshot['openPrAgeBucke
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="count"
           fill={chart_bar_fill('count')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -561,13 +557,13 @@ export function FlowVolumeChart({ data }: { data: MetricsSnapshot['flowVolumeSer
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="opened"
           fill={chart_bar_fill('opened')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="merged"
           fill={chart_bar_fill('merged')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -649,8 +645,9 @@ export function RepoComparisonChart({ data }: { data: MetricsSnapshot['repoCompa
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="mergedCount"
+          layout="horizontal"
           fill={chart_bar_fill('mergedCount')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
@@ -676,8 +673,9 @@ export function AuthorCycleRankingChart({ data }: { data: MetricsSnapshot['autho
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgCycleTimeHours"
+          layout="horizontal"
           fill={chart_bar_fill('avgCycleTimeHours')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
@@ -706,8 +704,9 @@ export function ReviewBalanceChart({ data }: { data: MetricsSnapshot['reviewBala
           tickMargin={8}
         />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="ratio"
+          layout="horizontal"
           fill={chart_bar_fill('ratio')}
           radius={CHART_BAR_RADIUS}
           {...bar_motion_props()}
@@ -727,21 +726,23 @@ export function ReviewStateMixChart({ data }: { data: MetricsSnapshot['reviewSta
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={32} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="approved"
           stackId="state"
           fill={chart_bar_fill('approved')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="changesRequested"
           stackId="state"
           fill={chart_bar_fill('changesRequested')}
           radius={0}
+          stripped_cap={false}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="commented"
           stackId="state"
           fill={chart_bar_fill('commented')}
@@ -767,13 +768,13 @@ export function AdditionsDeletionsChart({
         <YAxis allowDecimals={false} tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
         <ChartLegend content={<ChartLegendContent />} />
-        <Bar
+        <ChartBar
           dataKey="additions"
           fill={chart_bar_fill('additions')}
           radius={CHART_VERTICAL_BAR_RADIUS}
           {...bar_motion_props()}
         />
-        <Bar
+        <ChartBar
           dataKey="deletions"
           fill={chart_bar_fill('deletions')}
           radius={CHART_VERTICAL_BAR_RADIUS}
@@ -798,7 +799,7 @@ export function RoundsVsSizeChart({ data }: { data: MetricsSnapshot['roundsVsSiz
         <XAxis dataKey="bucket" tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis tickLine={false} axisLine={false} tickMargin={8} width={40} />
         <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar
+        <ChartBar
           dataKey="avgReviewRounds"
           fill={chart_bar_fill('avgReviewRounds')}
           radius={CHART_VERTICAL_BAR_RADIUS}
