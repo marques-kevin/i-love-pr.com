@@ -38,8 +38,8 @@ export function Panel({
   children: ReactNode
 }) {
   return (
-    <section className="card overflow-hidden border border-base-content/20 bg-base-100 shadow-none">
-      <div className="flex items-start justify-between gap-3 border-b border-base-content/20 bg-base-200 px-4 py-2.5">
+    <section className="card overflow-hidden border border-base-content/20 bg-base-200 shadow-none">
+      <div className="flex items-start justify-between gap-3 px-4 pt-2.5 pb-2">
         <div className="min-w-0">
           <h2 className="text-sm font-medium">{title}</h2>
           {description ? (
@@ -48,21 +48,15 @@ export function Panel({
         </div>
         {help ? <HelpButton help={help} /> : null}
       </div>
-      <div className="bg-base-100 p-4">{children}</div>
+      <div className="mx-3 mb-3 rounded-lg bg-base-100 p-4">{children}</div>
     </section>
   )
 }
 
 export function StatCard({ label, value, help }: { label: string; value: string; help?: string }) {
   return (
-    <section className="card bg-base-100 ring-base-content/10 shadow-none ring-1">
-      <div className="card-body gap-2 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="text-base-content/60 text-sm font-medium">{label}</h2>
-          {help ? <HelpButton help={help} /> : null}
-        </div>
-        <p className="font-display text-3xl font-bold tracking-tight">{value}</p>
-      </div>
-    </section>
+    <Panel title={label} help={help}>
+      <p className="font-display text-3xl font-bold tracking-tight">{value}</p>
+    </Panel>
   )
 }
