@@ -11,8 +11,11 @@ const ADD_SPRING = { type: 'spring' as const, stiffness: 420, damping: 28 }
 const ICON_CROSSFADE_S = 0.12
 const ADD_ENTER_DELAY_S = 0.04
 
-const dock_btn_class =
-  'btn btn-square btn-ghost size-12 bg-base-200 text-base-content/70 tooltip tooltip-left'
+const dock_btn_class = cn(
+  'btn btn-square btn-xs btn-ghost h-7 w-7 min-h-7 p-0',
+  'bg-base-200 text-base-content/60 shadow-none',
+  '[--radius-field:0] tooltip tooltip-left',
+)
 
 export function CustomizeFab() {
   const intl = useIntl()
@@ -31,7 +34,7 @@ export function CustomizeFab() {
         {editing && (
           <motion.button
             type="button"
-            className={cn(dock_btn_class, 'rounded-none rounded-tl-lg')}
+            className={cn(dock_btn_class, 'rounded-none rounded-tl-md')}
             aria-label={add_label}
             data-tip={add_label}
             onClick={open_picker}
@@ -43,20 +46,20 @@ export function CustomizeFab() {
             }
             whileTap={tap_motion}
           >
-            <HoverIcon icon={PlusSignIcon} size={20} />
+            <HoverIcon icon={PlusSignIcon} size={16} />
           </motion.button>
         )}
       </AnimatePresence>
 
       <motion.button
         type="button"
-        className={cn(dock_btn_class, editing ? 'rounded-none' : 'rounded-none rounded-tl-lg')}
+        className={cn(dock_btn_class, editing ? 'rounded-none' : 'rounded-none rounded-tl-md')}
         aria-label={editing ? done_label : customize_label}
         data-tip={editing ? done_label : customize_label}
         onClick={() => set_editing((value) => !value)}
         whileTap={tap_motion}
       >
-        <span className="relative inline-flex size-[22px] items-center justify-center">
+        <span className="relative inline-flex size-4 items-center justify-center">
           <AnimatePresence mode="wait" initial={false}>
             {editing ? (
               <motion.span
@@ -67,7 +70,7 @@ export function CustomizeFab() {
                 exit={reduce_motion ? undefined : { opacity: 0 }}
                 transition={{ duration: reduce_motion ? 0 : ICON_CROSSFADE_S }}
               >
-                <HoverIcon icon={Cancel01Icon} size={22} />
+                <HoverIcon icon={Cancel01Icon} size={16} />
               </motion.span>
             ) : (
               <motion.span
@@ -78,7 +81,7 @@ export function CustomizeFab() {
                 exit={reduce_motion ? undefined : { opacity: 0 }}
                 transition={{ duration: reduce_motion ? 0 : ICON_CROSSFADE_S }}
               >
-                <HoverIcon icon={Edit02Icon} size={22} />
+                <HoverIcon icon={Edit02Icon} size={16} />
               </motion.span>
             )}
           </AnimatePresence>

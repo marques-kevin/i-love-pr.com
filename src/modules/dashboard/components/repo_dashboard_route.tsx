@@ -52,7 +52,7 @@ export function Wrapper({
                 <DashboardHeader on_close_window={() => set_close_pending(true)} />
                 <DashboardToolbar />
               </div>
-              <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-20 px-4 pt-6 pb-20 sm:px-6 lg:px-8">
+              <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-10 px-4 pt-6 pb-10 sm:px-6 lg:px-8">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={active_dashboard_id}
