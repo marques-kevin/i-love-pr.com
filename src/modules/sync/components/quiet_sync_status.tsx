@@ -4,6 +4,7 @@ import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { RefreshIcon } from '@/components/icons/refresh'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { connector, type ConnectorProps } from './quiet_sync_status.connector'
 
 export function Wrapper({
@@ -49,27 +50,29 @@ export function Wrapper({
     <div className="flex flex-col items-end gap-1">
       <div className="text-base-content/60 flex items-center gap-2 text-sm">
         <span className="hidden max-w-56 truncate sm:inline">{status_label}</span>
-        <div className="tooltip tooltip-bottom" data-tip={status_label}>
-          <Button
-            type="button"
-            className="btn-ghost btn-circle btn-sm"
-            onClick={() =>
-              void run_sync({
-                force: true,
-                repos: active_repo ? [active_repo] : [],
-              })
-            }
-            disabled={syncing || !active_repo}
-            aria-label={intl.formatMessage({ id: 'sync.tooltip' })}
-            title={intl.formatMessage({ id: 'sync.tooltip' })}
-          >
-            <HoverIcon
-              icon={RefreshIcon}
-              size={16}
-              icon_className={active_syncing ? 'animate-spin' : undefined}
-            />
-          </Button>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              className="btn-ghost btn-circle btn-sm"
+              onClick={() =>
+                void run_sync({
+                  force: true,
+                  repos: active_repo ? [active_repo] : [],
+                })
+              }
+              disabled={syncing || !active_repo}
+              aria-label={intl.formatMessage({ id: 'sync.tooltip' })}
+            >
+              <HoverIcon
+                icon={RefreshIcon}
+                size={16}
+                icon_className={active_syncing ? 'animate-spin' : undefined}
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{status_label}</TooltipContent>
+        </Tooltip>
       </div>
       {error ? (
         <div role="alert" className="alert alert-error max-w-xs py-1 text-xs">

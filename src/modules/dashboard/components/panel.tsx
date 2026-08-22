@@ -3,26 +3,25 @@ import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { HelpCircleIcon } from '@/components/icons/help_circle'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 function HelpButton({ help }: { help: string }) {
   const intl = useIntl()
   return (
-    <div className="dropdown dropdown-end">
-      <Button
-        type="button"
-        tabIndex={0}
-        className="btn-ghost btn-circle btn-xs text-base-content/60"
-        aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
-      >
-        <HoverIcon icon={HelpCircleIcon} size={16} />
-      </Button>
-      <div
-        tabIndex={-1}
-        className="dropdown-content bg-base-100 rounded-box z-50 w-80 max-w-[calc(100vw-2rem)] p-3 shadow"
-      >
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          className="btn-ghost btn-circle btn-xs text-base-content/60"
+          aria-label={intl.formatMessage({ id: 'chart.help_aria' })}
+        >
+          <HoverIcon icon={HelpCircleIcon} size={16} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="left" className="w-80 max-w-[calc(100vw-2rem)]">
         <p className="text-sm leading-relaxed whitespace-pre-line">{help}</p>
-      </div>
-    </div>
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

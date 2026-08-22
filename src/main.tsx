@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { App } from '@/modules/app'
 import { IntlShell } from '@/modules/i18n'
 import { init_cuelume } from '@/lib/cuelume'
@@ -36,7 +37,9 @@ function SessionRoot() {
   return (
     <Provider store={session.store} key={session.login ?? `guest-${session.adding_account}`}>
       <IntlShell>
-        <App />
+        <TooltipProvider delayDuration={250}>
+          <App />
+        </TooltipProvider>
       </IntlShell>
     </Provider>
   )
