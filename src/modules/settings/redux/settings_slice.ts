@@ -25,6 +25,8 @@ import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SettingsState = {
   settings: AppSettings | null
+  repo_settings_by_repo: Record<string, RepoSettings>
+  repo_settings_loading_repo: string | null
   loading: boolean
   error: string | null
   available_repos: GitHubRepoOption[]
@@ -35,6 +37,8 @@ export type SettingsState = {
 
 const initial_state: SettingsState = {
   settings: null,
+  repo_settings_by_repo: {},
+  repo_settings_loading_repo: null,
   loading: true,
   error: null,
   available_repos: [],
@@ -391,6 +395,19 @@ const settings_slice = createSlice({
         state.settings = action.payload
         state.loading = false
       })
+      .addCase(load_repo_settings.pending, (state, action) => {
+        state.repo_settings_loading_repo = action.meta.arg.repo_full_name
+      })
+      .addCase(load_repo_settings.fulfilled, (state, action) => {
+        state.repo_settings_by_repo[action.payload.repo_full_name] = action.payload
+        state.repo_settings_loading_repo = null
+      })
+      .addCase(load_repo_settings.rejected, (state) => {
+        state.repo_settings_loading_repo = null
+      })
+      .addCase(save_repo_settings.fulfilled, (state, action) => {
+        state.repo_settings_by_repo[action.payload.repo_full_name] = action.payload
+      })
       .addCase(upsert_team.fulfilled, (state, action) => {
         state.settings = action.payload
       })
@@ -420,9 +437,12 @@ const settings_slice = createSlice({
       })
       .addCase(remove_repo.fulfilled, (state, action) => {
         state.settings = action.payload
+        delete state.repo_settings_by_repo[action.meta.arg.repo_full_name]
       })
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
+        state.repo_settings_by_repo = {}
+        state.repo_settings_loading_repo = null
         state.loading = false
         state.available_repos = []
         state.available_repos_loading = false

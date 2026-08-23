@@ -1,13 +1,23 @@
 import { connect, type ConnectedProps } from 'react-redux'
+import type { RootState } from '@/store'
 import type { BusinessHoursConfig } from '@/lib/types'
-import { load_repo_settings, save_repo_settings } from '@/store'
+import { save_repo_settings } from '@/store'
 import type { AppDispatch } from '@/store'
 
-export const map_state_to_props = () => ({})
+export const map_state_to_props = (
+  state: RootState,
+  own_props: { repo_full_name: string | null },
+) => ({
+  repo_settings:
+    own_props.repo_full_name != null
+      ? state.settings.repo_settings_by_repo[own_props.repo_full_name]
+      : undefined,
+  repo_settings_loading:
+    own_props.repo_full_name != null &&
+    state.settings.repo_settings_loading_repo === own_props.repo_full_name,
+})
 
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
-  load_repo_settings: (repo_full_name: string) =>
-    dispatch(load_repo_settings({ repo_full_name })).unwrap(),
   save_repo_settings: (input: {
     repo_full_name: string
     ignored_bots: string[]
