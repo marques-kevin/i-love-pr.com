@@ -9,7 +9,7 @@ export function Wrapper({ hide_test_files, set_hide_test_files }: ConnectorProps
       <div className="min-w-0 flex-1">
         <label
           htmlFor="hide-test-files"
-          className="label min-w-0 cursor-pointer justify-start p-0 whitespace-normal"
+          className="label flex w-full min-w-0 cursor-pointer justify-start p-0 whitespace-normal"
         >
           {intl.formatMessage({ id: 'dashboard.filters.hide_test_files' })}
         </label>
