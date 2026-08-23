@@ -28,12 +28,7 @@ export function Wrapper(props: ConnectorProps) {
         {count > 0 ? <span className="badge badge-sm badge-neutral">{count}</span> : null}
       </Button>
 
-      <Modal
-        open={open}
-        on_close={() => set_open(false)}
-        placement="end"
-        box_className="h-full max-h-none w-full max-w-md rounded-none"
-      >
+      <Modal open={open} on_close={() => set_open(false)} box_className="max-w-xl">
         <h3 className="font-display text-lg font-semibold">
           {intl.formatMessage({ id: 'dashboard.filters.title' })}
         </h3>
@@ -41,7 +36,7 @@ export function Wrapper(props: ConnectorProps) {
           {intl.formatMessage({ id: 'dashboard.filters.description' })}
         </p>
 
-        <div className="mt-6 flex min-h-0 flex-1 flex-col gap-8">
+        <div className="mt-6 flex flex-col gap-6">
           <section className="space-y-3">
             <h4 className="text-sm font-medium">
               {intl.formatMessage({ id: 'dashboard.filters.members' })}
