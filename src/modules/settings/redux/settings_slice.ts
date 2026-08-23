@@ -8,8 +8,9 @@ import {
   import_repo_snapshot,
   parse_share_id_from_url,
 } from '@/lib/repo_snapshot'
-import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
+import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 import { build_settings_after_remove_repo } from '@/lib/remove_repo'
+import { normalize_repo_settings } from '@/lib/repo_settings'
 import {
   build_share_page_url,
   encode_share_snapshot,
@@ -19,7 +20,7 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
+import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
@@ -31,6 +32,7 @@ export type SettingsState = {
   available_repos_loading: boolean
   available_repos_error: string | null
   available_repos_token: string | null
+  repo_settings_by_repo: Record<string, RepoSettings>
 }
 
 const initial_state: SettingsState = {
@@ -41,6 +43,7 @@ const initial_state: SettingsState = {
   available_repos_loading: false,
   available_repos_error: null,
   available_repos_token: null,
+  repo_settings_by_repo: {},
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -59,9 +62,6 @@ export const save_settings = create_app_async_thunk<
     repos: string[]
     sync_interval_hours?: number
     backfill_limit?: number
-    ignored_bots?: string[]
-    test_file_globs?: string[]
-    business_hours?: BusinessHoursConfig
     locale?: AppSettings['locale']
   }
 >('settings/save', async (input, { extra }) => {
@@ -81,9 +81,6 @@ export const save_settings = create_app_async_thunk<
     imported_repos,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
-    ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
-    test_file_globs: input.test_file_globs,
-    business_hours: input.business_hours,
     locale: input.locale,
   }
   const next = await extra.repositories.settings.save(payload)
@@ -111,14 +108,6 @@ export const save_settings = create_app_async_thunk<
         token,
       })
     }
-  }
-
-  const bots_changed =
-    JSON.stringify(previous?.ignored_bots ?? []) !== JSON.stringify(next.ignored_bots)
-  const hours_changed =
-    JSON.stringify(previous?.business_hours ?? null) !== JSON.stringify(next.business_hours)
-  if (bots_changed || hours_changed) {
-    await rebuild_all_pr_facts(extra.repositories)
   }
 
   if (previous?.token !== next.token && next.token) {
@@ -225,6 +214,36 @@ export const set_active_repo = create_app_async_thunk<AppSettings, string>(
   },
 )
 
+export const load_repo_settings = create_app_async_thunk<
+  Record<string, RepoSettings>,
+  string[] | void
+>('settings/load_repo_settings', async (repos, { extra, getState }) => {
+  const repo_full_names = repos ?? getState().settings.settings?.repos ?? []
+  if (repo_full_names.length === 0) return {}
+  return extra.repositories.repo_settings.get_many(repo_full_names)
+})
+
+export const save_repo_settings = create_app_async_thunk<
+  RepoSettings,
+  {
+    repo_full_name: string
+    ignored_bots: string[]
+    test_file_globs: string[]
+    business_hours: BusinessHoursConfig
+  }
+>('settings/save_repo_settings', async (input, { extra }) => {
+  const next = await extra.repositories.repo_settings.save(
+    normalize_repo_settings(input.repo_full_name, {
+      repo_full_name: input.repo_full_name,
+      ignored_bots: input.ignored_bots,
+      test_file_globs: input.test_file_globs,
+      business_hours: input.business_hours,
+    }),
+  )
+  await rebuild_pr_facts_for_repos(extra.repositories, [next.repo_full_name])
+  return next
+})
+
 export const reset_sync_data = create_app_async_thunk<void, void>(
   'settings/reset_sync_data',
   async (_, { extra }) => {
@@ -301,6 +320,7 @@ export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name:
     await extra.repositories.reviews.delete_by_repos(repos)
     await extra.repositories.pr_changed_files.delete_by_repos(repos)
     await extra.repositories.sync_state.delete_by_repos(repos)
+    await extra.repositories.repo_settings.delete(repo_full_name)
     await extra.repositories.settings.delete_repo(repo_full_name)
 
     return next
@@ -400,6 +420,13 @@ const settings_slice = createSlice({
       })
       .addCase(remove_repo.fulfilled, (state, action) => {
         state.settings = action.payload
+        delete state.repo_settings_by_repo[action.meta.arg.repo_full_name]
+      })
+      .addCase(load_repo_settings.fulfilled, (state, action) => {
+        state.repo_settings_by_repo = { ...state.repo_settings_by_repo, ...action.payload }
+      })
+      .addCase(save_repo_settings.fulfilled, (state, action) => {
+        state.repo_settings_by_repo[action.payload.repo_full_name] = action.payload
       })
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
@@ -408,6 +435,7 @@ const settings_slice = createSlice({
         state.available_repos_loading = false
         state.available_repos_error = null
         state.available_repos_token = null
+        state.repo_settings_by_repo = {}
       })
       .addCase(load_available_repos.pending, (state) => {
         state.available_repos_loading = true

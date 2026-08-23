@@ -8,6 +8,7 @@ import {
 } from 'date-fns'
 import { isBotLogin } from './bots'
 import { apply_test_file_line_filter } from './pr_line_adjustment'
+import { default_repo_settings } from './repo_settings'
 import { DEFAULT_TEST_FILE_GLOBS } from './test_file_patterns'
 import type {
   MetricsSnapshot,
@@ -76,8 +77,7 @@ export async function compute_metrics(options: {
   const { repositories, repos, members, period, hide_test_files = false } = options
   const member_set = new Set(members)
   const has_member_filter = member_set.size > 0
-  const settings = await repositories.settings.get()
-  const ignored_bots = settings?.ignored_bots ?? []
+  const settings_by_repo = await repositories.repo_settings.get_many(repos)
 
   let prs: PrFactRecord[] = await repositories.pr_facts.list_by_repos(repos)
   prs = prs.filter((pr) => !pr.is_bot)
@@ -86,7 +86,6 @@ export async function compute_metrics(options: {
   }
 
   if (hide_test_files && prs.length > 0) {
-    const test_file_globs = settings?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS
     const changed_files = await repositories.pr_changed_files.list_by_pr_ids(
       prs.map((pr) => pr.pr_id),
     )
@@ -99,15 +98,21 @@ export async function compute_metrics(options: {
     prs = prs.map((pr) => {
       const files = files_by_pr.get(pr.pr_id) ?? []
       if (files.length === 0) return pr
+      const test_file_globs =
+        settings_by_repo[pr.repo_full_name]?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS
       return apply_test_file_line_filter(pr, files, test_file_globs)
     })
   }
 
   const pr_by_id = new Map(prs.map((pr) => [pr.pr_id, pr]))
   const all_reviews = await repositories.reviews.list_by_pr_ids([...pr_by_id.keys()])
-  const reviews = all_reviews.filter(
-    (r) => pr_by_id.has(r.pr_id) && !isBotLogin(r.author, ignored_bots),
-  )
+  const reviews = all_reviews.filter((r) => {
+    if (!pr_by_id.has(r.pr_id)) return false
+    const ignored_bots =
+      settings_by_repo[r.repo_full_name]?.ignored_bots ??
+      default_repo_settings(r.repo_full_name).ignored_bots
+    return !isBotLogin(r.author, ignored_bots)
+  })
 
   const merged_in_period = prs.filter(
     (pr) => pr.state === 'MERGED' && in_period(pr.merged_at, period),
@@ -577,8 +582,7 @@ export async function list_contributors(
   repositories: Repositories,
   repos: string[],
 ): Promise<string[]> {
-  const settings = await repositories.settings.get()
-  const ignored_bots = settings?.ignored_bots ?? []
+  const settings_by_repo = await repositories.repo_settings.get_many(repos)
 
   const facts = repos.length > 0 ? await repositories.pr_facts.list_by_repos(repos) : []
   const set = new Set<string>()
@@ -587,6 +591,9 @@ export async function list_contributors(
   }
   const reviews = repos.length === 0 ? [] : await repositories.reviews.list_by_repos(repos)
   for (const r of reviews) {
+    const ignored_bots =
+      settings_by_repo[r.repo_full_name]?.ignored_bots ??
+      default_repo_settings(r.repo_full_name).ignored_bots
     if (!isBotLogin(r.author, ignored_bots)) set.add(r.author)
   }
   return [...set].sort((a, b) => a.localeCompare(b))

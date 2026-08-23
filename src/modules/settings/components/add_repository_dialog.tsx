@@ -38,9 +38,6 @@ export function Wrapper({
         repos: draft_repos,
         sync_interval_hours: settings.sync_interval_hours,
         backfill_limit: settings.backfill_limit,
-        ignored_bots: settings.ignored_bots,
-        test_file_globs: settings.test_file_globs,
-        business_hours: settings.business_hours,
         locale: settings.locale,
       })
       void set_active_repo(added_repos[0])

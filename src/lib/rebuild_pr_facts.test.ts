@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { rebuild_pr_facts_for_prs, ensure_pr_facts } from '@/lib/rebuild_pr_facts'
+import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
+import {
+  rebuild_pr_facts_for_prs,
+  rebuild_pr_facts_for_repos,
+  ensure_pr_facts,
+} from '@/lib/rebuild_pr_facts'
 import { create_memory_repositories } from '@/repositories'
 import {
   PR_FACTS_VERSION,
@@ -131,5 +136,67 @@ describe('rebuild_pr_facts', () => {
     await ensure_pr_facts(repositories)
     const facts = await repositories.pr_facts.list_by_repos(['org/repo'])
     expect(facts[0]._version).toBe(PR_FACTS_VERSION)
+  })
+
+  it('uses each repo settings when rebuilding mixed repos', async () => {
+    const pr_a = sample_pr({
+      id: 'acme/a#1',
+      repo_full_name: 'acme/a',
+      author: 'dependabot',
+    })
+    const pr_b = sample_pr({
+      id: 'acme/b#1',
+      repo_full_name: 'acme/b',
+      author: 'dependabot',
+    })
+    const repositories = create_memory_repositories({
+      settings: { ...sample_settings, repos: ['acme/a', 'acme/b'], ignored_bots: [] },
+      pull_requests: [pr_a, pr_b],
+      repo_settings: [
+        {
+          repo_full_name: 'acme/a',
+          ignored_bots: ['dependabot'],
+          test_file_globs: [],
+          business_hours: DEFAULT_BUSINESS_HOURS,
+        },
+        {
+          repo_full_name: 'acme/b',
+          ignored_bots: [],
+          test_file_globs: [],
+          business_hours: DEFAULT_BUSINESS_HOURS,
+        },
+      ],
+    })
+
+    await rebuild_pr_facts_for_prs(repositories, [pr_a, pr_b])
+    const facts_a = await repositories.pr_facts.list_by_repos(['acme/a'])
+    const facts_b = await repositories.pr_facts.list_by_repos(['acme/b'])
+    expect(facts_a[0].is_bot).toBe(true)
+    expect(facts_b[0].is_bot).toBe(false)
+  })
+
+  it('rebuilding repo A does not change repo B facts', async () => {
+    const pr_a = sample_pr({ id: 'acme/a#1', repo_full_name: 'acme/a', author: 'alice' })
+    const pr_b = sample_pr({ id: 'acme/b#1', repo_full_name: 'acme/b', author: 'dependabot' })
+    const repositories = create_memory_repositories({
+      settings: { ...sample_settings, repos: ['acme/a', 'acme/b'] },
+      pull_requests: [pr_a, pr_b],
+    })
+
+    await rebuild_pr_facts_for_prs(repositories, [pr_a, pr_b])
+    const before_b = await repositories.pr_facts.list_by_repos(['acme/b'])
+
+    await repositories.repo_settings.save({
+      repo_full_name: 'acme/a',
+      ignored_bots: ['alice'],
+      test_file_globs: [],
+      business_hours: DEFAULT_BUSINESS_HOURS,
+    })
+    await rebuild_pr_facts_for_repos(repositories, ['acme/a'])
+
+    const after_a = await repositories.pr_facts.list_by_repos(['acme/a'])
+    const after_b = await repositories.pr_facts.list_by_repos(['acme/b'])
+    expect(after_a[0].is_bot).toBe(true)
+    expect(after_b).toEqual(before_b)
   })
 })

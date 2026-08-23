@@ -22,9 +22,11 @@ import {
   create_dashboard,
   delete_dashboard,
   load_available_repos,
+  load_repo_settings,
   load_settings,
   remove_repo,
   save_dashboard_filters,
+  save_repo_settings,
   save_settings,
   set_active_dashboard,
   set_active_repo,
@@ -110,6 +112,7 @@ export function register_app_listeners(
       if (!settings) return
 
       await ensure_pr_facts(api.extra.repositories)
+      await api.dispatch(load_repo_settings(settings.repos))
       apply_active_repo_from_url_or_settings(api)
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(refresh_sync_states())
@@ -155,6 +158,7 @@ export function register_app_listeners(
       apply_active_repo_from_url_or_settings(api)
       api.dispatch(clamp_active_repo_to_settings(settings.repos))
       hydrate_filters_from_active_dashboard(api)
+      void api.dispatch(load_repo_settings(settings.repos))
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(load_available_repos({ token: settings.token }))
 
@@ -189,6 +193,14 @@ export function register_app_listeners(
       api.dispatch(hydrate_active_repo(action.payload.active_repo))
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)
+      void api.dispatch(refresh_metrics())
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: save_repo_settings.fulfilled,
+    effect: async (_action, api) => {
+      play_sound('success')
       void api.dispatch(refresh_metrics())
     },
   })

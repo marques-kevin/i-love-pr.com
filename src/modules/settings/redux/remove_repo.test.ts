@@ -64,6 +64,12 @@ describe('remove_repo thunk', () => {
     await repositories.pull_requests.put_many([pr])
     await repositories.reviews.replace_for_pr('pr-1', [review])
     await repositories.sync_state.put(sync_state)
+    await repositories.repo_settings.save({
+      repo_full_name: 'acme/app',
+      ignored_bots: ['custom-bot'],
+      test_file_globs: ['**/*.app.ts'],
+      business_hours: { ...DEFAULT_BUSINESS_HOURS, enabled: true },
+    })
 
     await store.dispatch(remove_repo({ repo_full_name: 'acme/app' }))
 
@@ -72,6 +78,9 @@ describe('remove_repo thunk', () => {
     expect(await repositories.pull_requests.list_by_repos(['acme/app'])).toEqual([])
     expect(await repositories.reviews.list_by_repos(['acme/app'])).toEqual([])
     expect(await repositories.sync_state.get('acme/app')).toBeUndefined()
+    expect((await repositories.repo_settings.get('acme/app')).ignored_bots).not.toContain(
+      'custom-bot',
+    )
 
     const store2 = create_store({
       repositories,

@@ -2,6 +2,7 @@ export type {
   PrFactsRepository,
   PullRequestRepository,
   Repositories,
+  RepoSettingsRepository,
   ReviewRepository,
   SaveSettingsInput,
   SettingsRepository,

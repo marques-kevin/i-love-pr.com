@@ -15,6 +15,7 @@ export const en_messages = {
   'repo_gallery.menu_label': 'Actions for {repo}',
   'repo_gallery.view': 'View',
   'repo_gallery.share': 'Share',
+  'repo_gallery.settings': 'Settings',
   'repo_gallery.delete': 'Delete',
   'repo_gallery.delete_title': 'Remove repository',
   'repo_gallery.delete_confirm': 'Remove {repo} from this workspace?',
@@ -364,7 +365,12 @@ export const en_messages = {
   'period.custom': 'Custom',
 
   'settings.title': 'Settings',
-  'settings.description': 'Token, repos, sync cadence, and local data controls.',
+  'settings.description': 'Token, sync cadence, and local data controls.',
+  'settings.reset_defaults': 'Reset to defaults',
+  'repo_settings.title': 'Settings for {repo}',
+  'repo_settings.description':
+    'Ignored bots, test-file patterns, and business hours for this repository.',
+  'repo_settings.cancel': 'Cancel',
   'settings.language': 'Language',
   'settings.sound': 'Interaction sounds',
   'settings.sound_help': 'Play soft cues for clicks, sync, and confirmations.',

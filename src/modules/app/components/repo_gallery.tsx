@@ -5,6 +5,7 @@ import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import type { SyncState } from '@/lib/types'
+import { RepoSettingsDialog } from '@/modules/settings/components/repo_settings_dialog'
 import { ShareRepoDialog } from '@/modules/settings/components/share_repo_dialog'
 import { RepoGalleryCard } from './repo_gallery_card'
 import { connector, type ConnectorProps } from './repo_gallery.connector'
@@ -16,6 +17,7 @@ function RepoGrid({
   error_label,
   syncing_label,
   on_share,
+  on_settings,
   on_delete,
 }: {
   repos: string[]
@@ -24,6 +26,7 @@ function RepoGrid({
   error_label: string
   syncing_label: string
   on_share: (repo: string) => void
+  on_settings: (repo: string) => void
   on_delete: (repo: string) => void
 }) {
   return (
@@ -37,6 +40,7 @@ function RepoGrid({
           error_label={error_label}
           syncing_label={syncing_label}
           on_share={on_share}
+          on_settings={on_settings}
           on_delete={on_delete}
         />
       ))}
@@ -56,6 +60,7 @@ export function Wrapper({
   const error_label = intl.formatMessage({ id: 'app.nav.sync_error' })
   const syncing_label = intl.formatMessage({ id: 'sync.syncing' })
   const [share_repo, set_share_repo] = useState<string | null>(null)
+  const [settings_repo, set_settings_repo] = useState<string | null>(null)
   const [delete_repo, set_delete_repo] = useState<string | null>(null)
   const [delete_busy, set_delete_busy] = useState(false)
 
@@ -119,6 +124,7 @@ export function Wrapper({
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}
+                on_settings={set_settings_repo}
                 on_delete={set_delete_repo}
               />
             </div>
@@ -138,6 +144,7 @@ export function Wrapper({
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}
+                on_settings={set_settings_repo}
                 on_delete={set_delete_repo}
               />
             </div>
@@ -149,6 +156,12 @@ export function Wrapper({
         open={share_repo !== null}
         repo_full_name={share_repo}
         on_close={() => set_share_repo(null)}
+      />
+
+      <RepoSettingsDialog
+        open={settings_repo !== null}
+        repo_full_name={settings_repo}
+        on_close={() => set_settings_repo(null)}
       />
 
       <Modal

@@ -5,6 +5,7 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoSettings,
   ReviewRecord,
   SyncState,
   DashboardLayoutItem,
@@ -75,6 +76,13 @@ export interface PrFactsRepository {
   clear: () => Promise<void>
 }
 
+export interface RepoSettingsRepository {
+  get: (repo_full_name: string) => Promise<RepoSettings>
+  get_many: (repo_full_names: string[]) => Promise<Record<string, RepoSettings>>
+  save: (settings: RepoSettings) => Promise<RepoSettings>
+  delete: (repo_full_name: string) => Promise<void>
+}
+
 export interface PrChangedFilesRepository {
   list_by_pr_ids: (pr_ids: string[]) => Promise<PrChangedFileRecord[]>
   replace_for_pr: (pr_id: string, files: PrChangedFileRecord[]) => Promise<void>
@@ -85,6 +93,7 @@ export interface PrChangedFilesRepository {
 
 export interface Repositories {
   settings: SettingsRepository
+  repo_settings: RepoSettingsRepository
   pull_requests: PullRequestRepository
   reviews: ReviewRepository
   sync_state: SyncStateRepository

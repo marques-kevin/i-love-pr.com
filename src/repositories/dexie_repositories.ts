@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
+import { normalize_repo_settings } from '@/lib/repo_settings'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import type {
   AppSettings,
@@ -24,6 +25,7 @@ import type {
   PrChangedFilesRepository,
   PrFactsRepository,
   Repositories,
+  RepoSettingsRepository,
   ReviewRepository,
   SaveSettingsInput,
   SettingsRepository,
@@ -348,6 +350,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
           database.pr_facts,
           database.pr_changed_files,
           database.chart_specs,
+          database.repo_settings,
         ],
         async () => {
           await Promise.all([
@@ -359,6 +362,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
             database.pr_facts.clear(),
             database.pr_changed_files.clear(),
             database.chart_specs.clear(),
+            database.repo_settings.clear(),
           ])
         },
       )
@@ -538,6 +542,34 @@ export function create_dexie_pr_facts_repository(database: IlovePrDatabase): PrF
   }
 }
 
+export function create_dexie_repo_settings_repository(
+  database: IlovePrDatabase,
+): RepoSettingsRepository {
+  const get = async (repo_full_name: string) => {
+    const row = await database.repo_settings.get(repo_full_name)
+    return normalize_repo_settings(repo_full_name, row)
+  }
+
+  return {
+    get,
+    get_many: async (repo_full_names) => {
+      const unique = [...new Set(repo_full_names)]
+      const entries = await Promise.all(
+        unique.map(async (repo_full_name) => [repo_full_name, await get(repo_full_name)] as const),
+      )
+      return Object.fromEntries(entries)
+    },
+    save: async (settings) => {
+      const next = normalize_repo_settings(settings.repo_full_name, settings)
+      await database.repo_settings.put(next)
+      return next
+    },
+    delete: async (repo_full_name) => {
+      await database.repo_settings.delete(repo_full_name)
+    },
+  }
+}
+
 export function create_dexie_pr_changed_files_repository(
   database: IlovePrDatabase,
 ): PrChangedFilesRepository {
@@ -584,6 +616,7 @@ export function create_dexie_pr_changed_files_repository(
 export function create_dexie_repositories(database: IlovePrDatabase): Repositories {
   return {
     settings: create_dexie_settings_repository(database),
+    repo_settings: create_dexie_repo_settings_repository(database),
     pull_requests: create_dexie_pull_request_repository(database),
     reviews: create_dexie_review_repository(database),
     sync_state: create_dexie_sync_state_repository(database),

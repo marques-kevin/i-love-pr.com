@@ -74,11 +74,13 @@ export interface AppSettings {
   sync_interval_hours: number
   /** Max PRs to pull per repo during a backfill (most recently updated first) */
   backfill_limit: number
+  /** @deprecated leftover account field — metrics read `RepoSettings` instead. */
   ignored_bots: string[]
-  /** Glob patterns for test files (one per line in settings UI). */
+  /** @deprecated leftover account field — metrics read `RepoSettings` instead. */
   test_file_globs: string[]
   /** Saved member filter presets (teams) */
   teams: MemberTeam[]
+  /** @deprecated leftover account field — metrics read `RepoSettings` instead. */
   business_hours: BusinessHoursConfig
   /** Named dashboard tabs (scoped by `repo_full_name`). */
   dashboards: DashboardTab[]
@@ -120,6 +122,14 @@ export interface RepoRecord {
   owner: string
   name: string
   added_at: string
+}
+
+/** Per-repository bots, test-file globs, and business hours (`owner/name`). */
+export interface RepoSettings {
+  repo_full_name: string
+  ignored_bots: string[]
+  test_file_globs: string[]
+  business_hours: BusinessHoursConfig
 }
 
 export interface SyncState {

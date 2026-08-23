@@ -17,6 +17,7 @@ export const fr_messages = define_locale_messages({
   'repo_gallery.menu_label': 'Actions pour {repo}',
   'repo_gallery.view': 'Voir',
   'repo_gallery.share': 'Partager',
+  'repo_gallery.settings': 'Paramètres',
   'repo_gallery.delete': 'Supprimer',
   'repo_gallery.delete_title': 'Retirer le dépôt',
   'repo_gallery.delete_confirm': 'Retirer {repo} de cet espace de travail ?',
@@ -375,7 +376,12 @@ export const fr_messages = define_locale_messages({
   'period.custom': 'Perso',
 
   'settings.title': 'Paramètres',
-  'settings.description': 'Token, dépôts, cadence de sync et données locales.',
+  'settings.description': 'Token, cadence de sync et données locales.',
+  'settings.reset_defaults': 'Réinitialiser les valeurs par défaut',
+  'repo_settings.title': 'Paramètres de {repo}',
+  'repo_settings.description':
+    'Bots ignorés, motifs de fichiers de tests et heures ouvrées pour ce dépôt.',
+  'repo_settings.cancel': 'Annuler',
   'settings.language': 'Langue',
   'settings.sound': 'Sons d’interaction',
   'settings.sound_help': 'Jouer de discrets sons pour les clics, la sync et les confirmations.',

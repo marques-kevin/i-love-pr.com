@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
+import { normalize_repo_settings } from '@/lib/repo_settings'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import {
   create_dashboard_tab,
@@ -17,6 +18,7 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoSettings,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
@@ -25,6 +27,7 @@ import type {
   PrFactsRepository,
   PullRequestRepository,
   Repositories,
+  RepoSettingsRepository,
   ReviewRepository,
   SettingsRepository,
   SyncStateRepository,
@@ -80,6 +83,7 @@ type MemoryBag = {
   sync_states: Map<string, SyncState>
   pr_facts: Map<string, PrFactRecord>
   pr_changed_files: Map<string, PrChangedFileRecord>
+  repo_settings: Map<string, RepoSettings>
 }
 
 export function create_memory_repositories(seed?: {
@@ -89,6 +93,7 @@ export function create_memory_repositories(seed?: {
   sync_states?: SyncState[]
   pr_facts?: PrFactRecord[]
   pr_changed_files?: PrChangedFileRecord[]
+  repo_settings?: RepoSettings[]
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
@@ -100,6 +105,12 @@ export function create_memory_repositories(seed?: {
     pr_facts: new Map((seed?.pr_facts ?? []).map((f) => [f.pr_id, structuredClone(f)])),
     pr_changed_files: new Map(
       (seed?.pr_changed_files ?? []).map((file) => [file.id, structuredClone(file)]),
+    ),
+    repo_settings: new Map(
+      (seed?.repo_settings ?? []).map((row) => [
+        row.repo_full_name,
+        normalize_repo_settings(row.repo_full_name, structuredClone(row)),
+      ]),
     ),
   }
 
@@ -316,6 +327,7 @@ export function create_memory_repositories(seed?: {
       bag.sync_states.clear()
       bag.pr_facts.clear()
       bag.pr_changed_files.clear()
+      bag.repo_settings.clear()
     },
     reset_sync_data: async () => {
       bag.pull_requests.clear()
@@ -499,5 +511,28 @@ export function create_memory_repositories(seed?: {
     },
   }
 
-  return { settings, pull_requests, reviews, sync_state, pr_facts, pr_changed_files }
+  const repo_settings: RepoSettingsRepository = {
+    get: async (repo_full_name) =>
+      normalize_repo_settings(repo_full_name, bag.repo_settings.get(repo_full_name)),
+    get_many: async (repo_full_names) => {
+      const next: Record<string, RepoSettings> = {}
+      for (const repo_full_name of new Set(repo_full_names)) {
+        next[repo_full_name] = normalize_repo_settings(
+          repo_full_name,
+          bag.repo_settings.get(repo_full_name),
+        )
+      }
+      return next
+    },
+    save: async (settings) => {
+      const next = normalize_repo_settings(settings.repo_full_name, settings)
+      bag.repo_settings.set(next.repo_full_name, structuredClone(next))
+      return structuredClone(next)
+    },
+    delete: async (repo_full_name) => {
+      bag.repo_settings.delete(repo_full_name)
+    },
+  }
+
+  return { settings, repo_settings, pull_requests, reviews, sync_state, pr_facts, pr_changed_files }
 }
