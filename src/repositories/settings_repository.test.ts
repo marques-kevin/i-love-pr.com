@@ -128,7 +128,7 @@ describe('create_memory_repositories settings', () => {
     })
     expect(saved.ignored_bots).toEqual(['alice'])
     expect(saved.test_file_globs).toEqual(['**/*.spec.ts'])
-    expect(saved.business_hours.enabled).toBe(true)
+    expect(saved.business_hours?.enabled).toBe(true)
 
     const other = await repositories.settings.get_repo('acme/other')
     expect(other?.ignored_bots).toBeUndefined()
