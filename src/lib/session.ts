@@ -50,6 +50,7 @@ async function copy_workspace(source: IlovePrDatabase, target: IlovePrDatabase):
   const tables = [
     'settings',
     'repos',
+    'repo_settings',
     'pull_requests',
     'reviews',
     'sync_state',

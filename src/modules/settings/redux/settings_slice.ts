@@ -8,7 +8,7 @@ import {
   import_repo_snapshot,
   parse_share_id_from_url,
 } from '@/lib/repo_snapshot'
-import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
+import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 import { build_settings_after_remove_repo } from '@/lib/remove_repo'
 import {
   build_share_page_url,
@@ -19,7 +19,7 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
+import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
@@ -59,9 +59,6 @@ export const save_settings = create_app_async_thunk<
     repos: string[]
     sync_interval_hours?: number
     backfill_limit?: number
-    ignored_bots?: string[]
-    test_file_globs?: string[]
-    business_hours?: BusinessHoursConfig
     locale?: AppSettings['locale']
   }
 >('settings/save', async (input, { extra }) => {
@@ -81,9 +78,6 @@ export const save_settings = create_app_async_thunk<
     imported_repos,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
-    ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
-    test_file_globs: input.test_file_globs,
-    business_hours: input.business_hours,
     locale: input.locale,
   }
   const next = await extra.repositories.settings.save(payload)
@@ -113,14 +107,6 @@ export const save_settings = create_app_async_thunk<
     }
   }
 
-  const bots_changed =
-    JSON.stringify(previous?.ignored_bots ?? []) !== JSON.stringify(next.ignored_bots)
-  const hours_changed =
-    JSON.stringify(previous?.business_hours ?? null) !== JSON.stringify(next.business_hours)
-  if (bots_changed || hours_changed) {
-    await rebuild_all_pr_facts(extra.repositories)
-  }
-
   if (previous?.token !== next.token && next.token) {
     track_umami_event('token_saved')
   }
@@ -129,6 +115,39 @@ export const save_settings = create_app_async_thunk<
     if (!previous_repos.includes(repo)) {
       track_umami_event('repository_added')
     }
+  }
+
+  return next
+})
+
+export const load_repo_settings = create_app_async_thunk<RepoSettings, { repo_full_name: string }>(
+  'settings/load_repo_settings',
+  async ({ repo_full_name }, { extra }) => {
+    return extra.repositories.repo_settings.get(repo_full_name)
+  },
+)
+
+export const save_repo_settings = create_app_async_thunk<
+  RepoSettings,
+  {
+    repo_full_name: string
+    ignored_bots: string[]
+    test_file_globs: string[]
+    business_hours: BusinessHoursConfig
+  }
+>('settings/save_repo_settings', async (input, { extra }) => {
+  const previous = await extra.repositories.repo_settings.get(input.repo_full_name)
+  const next = await extra.repositories.repo_settings.save(input.repo_full_name, {
+    ignored_bots: input.ignored_bots,
+    test_file_globs: input.test_file_globs,
+    business_hours: input.business_hours,
+  })
+
+  const bots_changed = JSON.stringify(previous.ignored_bots) !== JSON.stringify(next.ignored_bots)
+  const hours_changed =
+    JSON.stringify(previous.business_hours) !== JSON.stringify(next.business_hours)
+  if (bots_changed || hours_changed) {
+    await rebuild_pr_facts_for_repos(extra.repositories, [input.repo_full_name])
   }
 
   return next
@@ -301,6 +320,7 @@ export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name:
     await extra.repositories.reviews.delete_by_repos(repos)
     await extra.repositories.pr_changed_files.delete_by_repos(repos)
     await extra.repositories.sync_state.delete_by_repos(repos)
+    await extra.repositories.repo_settings.delete(repo_full_name)
     await extra.repositories.settings.delete_repo(repo_full_name)
 
     return next

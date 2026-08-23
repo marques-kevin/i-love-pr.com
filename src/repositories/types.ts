@@ -5,10 +5,12 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoSettings,
   ReviewRecord,
   SyncState,
   DashboardLayoutItem,
 } from '@/lib/types'
+import type { SaveRepoSettingsInput } from '@/lib/repo_settings'
 import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
 import type { DashboardTabFilters } from '@/lib/dashboard_layout'
 
@@ -83,8 +85,16 @@ export interface PrChangedFilesRepository {
   clear: () => Promise<void>
 }
 
+export interface RepoSettingsRepository {
+  get: (repo_full_name: string) => Promise<RepoSettings>
+  save: (repo_full_name: string, partial: SaveRepoSettingsInput) => Promise<RepoSettings>
+  delete: (repo_full_name: string) => Promise<void>
+  clear: () => Promise<void>
+}
+
 export interface Repositories {
   settings: SettingsRepository
+  repo_settings: RepoSettingsRepository
   pull_requests: PullRequestRepository
   reviews: ReviewRepository
   sync_state: SyncStateRepository

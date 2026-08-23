@@ -24,6 +24,7 @@ export type DashboardState = {
   metrics: MetricsSnapshot | null
   contributors: string[]
   loading: boolean
+  business_hours_enabled: boolean
   show_settings: boolean
   /** One-shot: open the add-repository dialog after onboarding. */
   add_repository_requested: boolean
@@ -42,6 +43,7 @@ const initial_state: DashboardState = {
   metrics: null,
   contributors: [],
   loading: false,
+  business_hours_enabled: false,
   show_settings: false,
   add_repository_requested: false,
   import_repo_requested: false,
@@ -49,17 +51,17 @@ const initial_state: DashboardState = {
 }
 
 export const refresh_metrics = create_app_async_thunk<
-  { metrics: MetricsSnapshot | null; contributors: string[] },
+  { metrics: MetricsSnapshot | null; contributors: string[]; business_hours_enabled: boolean },
   void
 >('dashboard/refresh_metrics', async (_, { extra, getState }) => {
   const { active_repo, members, period_key, custom_from, custom_to, hide_test_files } =
     getState().dashboard
   const repos = active_repo ? [active_repo] : []
   if (repos.length === 0) {
-    return { metrics: null, contributors: [] }
+    return { metrics: null, contributors: [], business_hours_enabled: false }
   }
   const period = build_period(period_key, custom_from, custom_to)
-  const [metrics, contributors] = await Promise.all([
+  const [metrics, contributors, repo_settings] = await Promise.all([
     compute_metrics({
       repositories: extra.repositories,
       repos,
@@ -68,8 +70,13 @@ export const refresh_metrics = create_app_async_thunk<
       hide_test_files,
     }),
     list_contributors(extra.repositories, repos),
+    extra.repositories.repo_settings.get(repos[0]),
   ])
-  return { metrics, contributors }
+  return {
+    metrics,
+    contributors,
+    business_hours_enabled: repo_settings.business_hours.enabled,
+  }
 })
 
 const dashboard_slice = createSlice({
@@ -132,6 +139,7 @@ const dashboard_slice = createSlice({
       .addCase(refresh_metrics.fulfilled, (state, action) => {
         state.metrics = action.payload.metrics
         state.contributors = action.payload.contributors
+        state.business_hours_enabled = action.payload.business_hours_enabled
         state.loading = false
       })
       .addCase(refresh_metrics.rejected, (state) => {

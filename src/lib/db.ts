@@ -27,6 +27,7 @@ import type {
   PrFactRecord,
   PullRequestRecord,
   RepoRecord,
+  RepoSettingsRecord,
   ReviewRecord,
   SyncState,
 } from './types'
@@ -305,6 +306,7 @@ export class IlovePrDatabase extends Dexie {
   pr_facts!: EntityTable<PrFactRecord, 'pr_id'>
   pr_changed_files!: EntityTable<PrChangedFileRecord, 'id'>
   chart_specs!: EntityTable<LegacyChartSpecRow, 'id'>
+  repo_settings!: EntityTable<RepoSettingsRecord, 'repo_full_name'>
 
   constructor(name = LEGACY_WORKSPACE_DB_NAME) {
     super(name)
@@ -408,6 +410,19 @@ export class IlovePrDatabase extends Dexie {
           await tx.table('settings').put(migrated)
         }
       })
+    this.version(8).stores({
+      settings: 'id',
+      repos: 'full_name, owner',
+      pull_requests:
+        'id, repo_full_name, number, author, state, created_at, updated_at, merged_at, [repo_full_name+updated_at]',
+      reviews:
+        'id, pr_id, repo_full_name, pr_number, author, submitted_at, [repo_full_name+author]',
+      sync_state: 'repo_full_name, last_synced_at, mode',
+      pr_facts: 'pr_id, repo_full_name, author, is_bot, merged_at, state, created_at',
+      pr_changed_files: 'id, pr_id, path',
+      chart_specs: 'id',
+      repo_settings: 'repo_full_name',
+    })
   }
 }
 
