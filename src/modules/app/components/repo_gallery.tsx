@@ -5,13 +5,15 @@ import { PlusSignIcon } from '@/components/icons/plus_sign'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import type { SyncState } from '@/lib/types'
+import type { GalleryRowStats } from '@/lib/gallery_row_stats'
 import { ShareRepoDialog } from '@/modules/settings/components/share_repo_dialog'
 import { RepoSettingsDialog } from '@/modules/settings/components/repo_settings_dialog'
-import { RepoGalleryCard } from './repo_gallery_card'
+import { RepoGalleryRow } from './repo_gallery_row'
 import { connector, type ConnectorProps } from './repo_gallery.connector'
 
-function RepoGrid({
+function RepoRows({
   repos,
+  stats_by_repo,
   sync_states,
   show_imported_badge,
   error_label,
@@ -21,6 +23,7 @@ function RepoGrid({
   on_delete,
 }: {
   repos: string[]
+  stats_by_repo: Record<string, GalleryRowStats>
   sync_states: SyncState[]
   show_imported_badge: boolean
   error_label: string
@@ -30,11 +33,12 @@ function RepoGrid({
   on_delete: (repo: string) => void
 }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <ul className="flex flex-col gap-3">
       {repos.map((repo) => (
-        <RepoGalleryCard
+        <RepoGalleryRow
           key={repo}
           repo_full_name={repo}
+          stats={stats_by_repo[repo]}
           sync_states={sync_states}
           show_imported_badge={show_imported_badge}
           error_label={error_label}
@@ -52,6 +56,7 @@ export function Wrapper({
   own_repositories,
   imported_repositories,
   sync_states,
+  stats_by_repo,
   request_add_repository,
   request_import_repository,
   remove_repo,
@@ -123,8 +128,9 @@ export function Wrapper({
             </div>
           ) : (
             <div className="mt-4">
-              <RepoGrid
+              <RepoRows
                 repos={own_repositories}
+                stats_by_repo={stats_by_repo}
                 sync_states={sync_states}
                 show_imported_badge={false}
                 error_label={error_label}
@@ -143,8 +149,9 @@ export function Wrapper({
               {intl.formatMessage({ id: 'home.imported_repositories' })}
             </h2>
             <div className="mt-4">
-              <RepoGrid
+              <RepoRows
                 repos={imported_repositories}
+                stats_by_repo={stats_by_repo}
                 sync_states={sync_states}
                 show_imported_badge={true}
                 error_label={error_label}

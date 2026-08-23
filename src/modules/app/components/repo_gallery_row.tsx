@@ -1,14 +1,16 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { DashboardSquare01Icon } from '@/components/icons/dashboard_square_01'
 import { Delete02Icon } from '@/components/icons/delete_02'
-import { GithubIcon } from '@/components/icons/github'
 import { Loading03Icon } from '@/components/icons/loading_03'
 import { MoreHorizontalIcon } from '@/components/icons/more_horizontal'
 import { Settings01Icon } from '@/components/icons/settings_01'
 import { Share08Icon } from '@/components/icons/share_08'
 import { close_daisy_dropdown } from '@/lib/daisy'
+import { EMPTY_STAT, format_count, format_hours } from '@/lib/format_hours'
+import { EMPTY_GALLERY_ROW_STATS, type GalleryRowStats } from '@/lib/gallery_row_stats'
 import { repo_dashboard_path, split_repo_full_name } from '@/lib/repo_path'
 import { sync_cue_from_state, type SyncCue } from '@/lib/sync_cue'
 import type { SyncState } from '@/lib/types'
@@ -30,8 +32,54 @@ function cue_label(cue: SyncCue, error_label: string, syncing_label: string) {
   return syncing_label
 }
 
-export type RepoGalleryCardProps = {
+function Sparkline({ values }: { values: number[] }) {
+  const width = 72
+  const height = 28
+  const pad = 2
+  const max = Math.max(...values, 1)
+  const last_index = Math.max(values.length - 1, 1)
+  const points = values
+    .map((value, index) => {
+      const x = pad + (index / last_index) * (width - pad * 2)
+      const y = height - pad - (value / max) * (height - pad * 2)
+      return `${x},${y}`
+    })
+    .join(' ')
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className="text-primary shrink-0"
+      aria-hidden={true}
+    >
+      <polyline
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        points={points}
+      />
+    </svg>
+  )
+}
+
+function MetricColumn({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-[8.5rem] flex-col justify-center px-4">
+      <p className="text-base-content/50 text-[10px] font-medium tracking-wide uppercase">
+        {label}
+      </p>
+      {children}
+    </div>
+  )
+}
+
+export type RepoGalleryRowProps = {
   repo_full_name: string
+  stats: GalleryRowStats | undefined
   sync_states: SyncState[]
   show_imported_badge: boolean
   error_label: string
@@ -41,8 +89,9 @@ export type RepoGalleryCardProps = {
   on_delete: (repo_full_name: string) => void
 }
 
-export function RepoGalleryCard({
+export function RepoGalleryRow({
   repo_full_name,
+  stats,
   sync_states,
   show_imported_badge,
   error_label,
@@ -50,9 +99,10 @@ export function RepoGalleryCard({
   on_share,
   on_settings,
   on_delete,
-}: RepoGalleryCardProps) {
+}: RepoGalleryRowProps) {
   const intl = useIntl()
   const { owner, name } = split_repo_full_name(repo_full_name)
+  const row_stats = stats ?? EMPTY_GALLERY_ROW_STATS
   const cue = show_imported_badge
     ? 'idle'
     : sync_cue_from_state(sync_states.find((item) => item.repo_full_name === repo_full_name))
@@ -62,32 +112,61 @@ export function RepoGalleryCard({
       <Link
         to={repo_dashboard_path(repo_full_name)}
         aria-label={intl.formatMessage({ id: 'home.open_repo' }, { repo: repo_full_name })}
-        className="block h-full no-underline"
+        className="bg-base-100 ring-base-content/10 hover:bg-base-200/40 flex items-center gap-3 rounded-2xl py-3 pr-12 pl-4 no-underline shadow-none ring-1 motion-safe:transition-colors"
       >
-        <HoverIcon
-          icon={GithubIcon}
-          size={28}
-          className="card bg-base-100 ring-base-content/10 flex h-full w-full flex-col items-start gap-4 rounded-3xl p-5 shadow-none ring-1 motion-safe:transition-[translate,box-shadow] motion-safe:hover:-translate-y-0.5 hover:shadow-sm"
-        >
-          <div className="min-w-0 w-full pr-10">
-            <p className="font-display truncate text-lg font-semibold text-base-content">{name}</p>
-            <p className="text-base-content/60 truncate text-sm">{owner}</p>
+        <div className="min-w-36 w-36 shrink-0 sm:min-w-48 sm:w-48">
+          <p className="font-display truncate text-base font-semibold text-base-content">{name}</p>
+          <p className="text-base-content/60 truncate text-sm">{owner}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             {show_imported_badge ? (
-              <span className="badge badge-ghost badge-sm mt-2">
+              <span className="badge badge-ghost badge-sm">
                 {intl.formatMessage({ id: 'home.imported_badge' })}
               </span>
             ) : null}
+            {!show_imported_badge && cue !== 'idle' ? (
+              <span className="text-base-content/60 inline-flex items-center gap-1.5 text-xs">
+                <RepoCue cue={cue} error_label={error_label} />
+                <span>{cue_label(cue, error_label, syncing_label)}</span>
+              </span>
+            ) : null}
           </div>
-          {!show_imported_badge && cue !== 'idle' ? (
-            <div className="text-base-content/60 mt-auto flex items-center gap-2 text-sm">
-              <RepoCue cue={cue} error_label={error_label} />
-              <span>{cue_label(cue, error_label, syncing_label)}</span>
-            </div>
-          ) : null}
-        </HoverIcon>
+        </div>
+
+        <div className="min-w-0 flex-1 overflow-x-auto">
+          <div className="divide-base-content/10 flex min-w-max divide-x">
+            <MetricColumn label={intl.formatMessage({ id: 'repo_gallery.throughput' })}>
+              <div className="mt-1 flex items-center gap-3">
+                {row_stats.weekly_merged ? <Sparkline values={row_stats.weekly_merged} /> : null}
+                <div>
+                  <p className="font-display text-xl leading-none font-semibold tabular-nums">
+                    {format_count(row_stats.merged_count)}
+                  </p>
+                  <p className="text-base-content/50 mt-1 text-xs tabular-nums">
+                    {row_stats.open_count == null
+                      ? EMPTY_STAT
+                      : intl.formatMessage(
+                          { id: 'repo_gallery.open_prs' },
+                          { count: row_stats.open_count },
+                        )}
+                  </p>
+                </div>
+              </div>
+            </MetricColumn>
+            <MetricColumn label={intl.formatMessage({ id: 'repo_gallery.cycle' })}>
+              <p className="font-display mt-1 text-xl leading-none font-semibold tabular-nums">
+                {format_hours(row_stats.avg_cycle_hours)}
+              </p>
+            </MetricColumn>
+            <MetricColumn label={intl.formatMessage({ id: 'repo_gallery.review' })}>
+              <p className="font-display mt-1 text-xl leading-none font-semibold tabular-nums">
+                {format_hours(row_stats.avg_first_review_hours)}
+              </p>
+            </MetricColumn>
+          </div>
+        </div>
       </Link>
 
-      <div className="dropdown dropdown-end absolute top-3 right-3">
+      <div className="dropdown dropdown-end absolute top-2 right-2">
         <button
           type="button"
           tabIndex={0}

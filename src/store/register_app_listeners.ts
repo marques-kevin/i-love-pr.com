@@ -1,5 +1,6 @@
 import type { ListenerMiddlewareInstance } from '@reduxjs/toolkit'
 import { global_app_initialized } from '@/modules/app/redux/app_events'
+import { load_gallery_stats } from '@/modules/app/redux/gallery_slice'
 import {
   hydrate_dashboard_filters,
   set_custom_from,
@@ -114,6 +115,7 @@ export function register_app_listeners(
       apply_active_repo_from_url_or_settings(api)
       hydrate_filters_from_active_dashboard(api)
       void api.dispatch(refresh_sync_states())
+      void api.dispatch(load_gallery_stats())
       dispatch_refresh_pr_coverage(api)
 
       if (has_browser_navigator()) {
@@ -157,6 +159,7 @@ export function register_app_listeners(
       api.dispatch(clamp_active_repo_to_settings(settings.repos))
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)
+      void api.dispatch(load_gallery_stats())
       void api.dispatch(load_available_repos({ token: settings.token }))
 
       if (!api.getState().sync.bootstrapped) {
@@ -170,6 +173,7 @@ export function register_app_listeners(
     actionCreator: save_repo_settings.fulfilled,
     effect: async (_action, api) => {
       void api.dispatch(refresh_metrics())
+      void api.dispatch(load_gallery_stats())
     },
   })
 
@@ -188,6 +192,7 @@ export function register_app_listeners(
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_sync_states())
       void api.dispatch(refresh_metrics())
+      void api.dispatch(load_gallery_stats())
     },
   })
 
@@ -214,6 +219,7 @@ export function register_app_listeners(
       if (action.meta.arg.force) play_sound('success')
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
+      void api.dispatch(load_gallery_stats())
     },
   })
 
@@ -224,6 +230,7 @@ export function register_app_listeners(
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
+      void api.dispatch(load_gallery_stats())
     },
   })
 
