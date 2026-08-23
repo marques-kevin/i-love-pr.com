@@ -62,20 +62,12 @@ export function Wrapper({
   const syncing_label = intl.formatMessage({ id: 'sync.syncing' })
   const [share_repo, set_share_repo] = useState<string | null>(null)
   const [settings_repo, set_settings_repo] = useState<string | null>(null)
-  const [settings_error, set_settings_error] = useState<string | null>(null)
   const [delete_repo, set_delete_repo] = useState<string | null>(null)
   const [delete_busy, set_delete_busy] = useState(false)
 
-  async function handle_open_settings(repo_full_name: string) {
-    set_settings_error(null)
-    try {
-      await load_repo_settings(repo_full_name)
-      set_settings_repo(repo_full_name)
-    } catch (err) {
-      set_settings_error(
-        err instanceof Error ? err.message : intl.formatMessage({ id: 'settings.save_failed' }),
-      )
-    }
+  function handle_open_settings(repo_full_name: string) {
+    load_repo_settings(repo_full_name)
+    set_settings_repo(repo_full_name)
   }
 
   async function handle_confirm_delete() {
@@ -138,7 +130,7 @@ export function Wrapper({
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}
-                on_settings={(repo) => void handle_open_settings(repo)}
+                on_settings={handle_open_settings}
                 on_delete={set_delete_repo}
               />
             </div>
@@ -158,7 +150,7 @@ export function Wrapper({
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}
-                on_settings={(repo) => void handle_open_settings(repo)}
+                on_settings={handle_open_settings}
                 on_delete={set_delete_repo}
               />
             </div>
@@ -175,17 +167,8 @@ export function Wrapper({
       <RepoSettingsDialog
         open={settings_repo !== null}
         repo_full_name={settings_repo}
-        on_close={() => {
-          set_settings_repo(null)
-          set_settings_error(null)
-        }}
+        on_close={() => set_settings_repo(null)}
       />
-
-      {settings_error ? (
-        <div role="alert" className="alert">
-          <span>{settings_error}</span>
-        </div>
-      ) : null}
 
       <Modal
         open={delete_repo !== null}

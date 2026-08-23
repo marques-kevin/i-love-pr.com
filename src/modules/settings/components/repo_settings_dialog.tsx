@@ -82,11 +82,20 @@ export function Wrapper({
   open,
   repo_full_name,
   on_close,
-  repo_settings,
-  repo_settings_loading,
+  current_repo_settings,
+  current_repo_settings_repo,
+  current_repo_settings_loading,
+  current_repo_settings_error,
   save_repo_settings,
 }: RepoSettingsDialogProps) {
   const intl = useIntl()
+  const repo_settings =
+    current_repo_settings && current_repo_settings.repo_full_name === repo_full_name
+      ? current_repo_settings
+      : null
+  const loading = current_repo_settings_loading && current_repo_settings_repo === repo_full_name
+  const load_error =
+    current_repo_settings_repo === repo_full_name ? current_repo_settings_error : null
 
   function handle_close() {
     on_close()
@@ -113,7 +122,11 @@ export function Wrapper({
           save_repo_settings={save_repo_settings}
           on_close={handle_close}
         />
-      ) : repo_settings_loading ? (
+      ) : load_error ? (
+        <div role="alert" className="alert mt-5">
+          <span>{load_error}</span>
+        </div>
+      ) : loading ? (
         <p className="text-base-content/60 mt-5 text-sm">
           {intl.formatMessage({ id: 'settings.saving' })}
         </p>

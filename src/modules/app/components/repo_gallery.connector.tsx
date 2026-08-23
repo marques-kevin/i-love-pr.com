@@ -27,8 +27,9 @@ export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
     dispatch(request_import_repo_action(null))
   },
   remove_repo: (repo_full_name: string) => dispatch(remove_repo({ repo_full_name })),
-  load_repo_settings: (repo_full_name: string) =>
-    dispatch(load_repo_settings({ repo_full_name })).unwrap(),
+  load_repo_settings: (repo_full_name: string) => {
+    void dispatch(load_repo_settings({ repo_full_name }))
+  },
 })
 
 export const connector = connect(map_state_to_props, map_dispatch_to_props)

@@ -25,8 +25,10 @@ import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SettingsState = {
   settings: AppSettings | null
-  repo_settings_by_repo: Record<string, RepoSettings>
-  repo_settings_loading_repo: string | null
+  current_repo_settings: RepoSettings | null
+  current_repo_settings_repo: string | null
+  current_repo_settings_loading: boolean
+  current_repo_settings_error: string | null
   loading: boolean
   error: string | null
   available_repos: GitHubRepoOption[]
@@ -37,8 +39,10 @@ export type SettingsState = {
 
 const initial_state: SettingsState = {
   settings: null,
-  repo_settings_by_repo: {},
-  repo_settings_loading_repo: null,
+  current_repo_settings: null,
+  current_repo_settings_repo: null,
+  current_repo_settings_loading: false,
+  current_repo_settings_error: null,
   loading: true,
   error: null,
   available_repos: [],
@@ -396,17 +400,24 @@ const settings_slice = createSlice({
         state.loading = false
       })
       .addCase(load_repo_settings.pending, (state, action) => {
-        state.repo_settings_loading_repo = action.meta.arg.repo_full_name
+        state.current_repo_settings_repo = action.meta.arg.repo_full_name
+        state.current_repo_settings = null
+        state.current_repo_settings_loading = true
+        state.current_repo_settings_error = null
       })
       .addCase(load_repo_settings.fulfilled, (state, action) => {
-        state.repo_settings_by_repo[action.payload.repo_full_name] = action.payload
-        state.repo_settings_loading_repo = null
+        if (state.current_repo_settings_repo !== action.meta.arg.repo_full_name) return
+        state.current_repo_settings = action.payload
+        state.current_repo_settings_loading = false
       })
-      .addCase(load_repo_settings.rejected, (state) => {
-        state.repo_settings_loading_repo = null
+      .addCase(load_repo_settings.rejected, (state, action) => {
+        if (state.current_repo_settings_repo !== action.meta.arg.repo_full_name) return
+        state.current_repo_settings_loading = false
+        state.current_repo_settings_error = action.error.message ?? 'Failed to load repo settings'
       })
       .addCase(save_repo_settings.fulfilled, (state, action) => {
-        state.repo_settings_by_repo[action.payload.repo_full_name] = action.payload
+        if (state.current_repo_settings_repo !== action.payload.repo_full_name) return
+        state.current_repo_settings = action.payload
       })
       .addCase(upsert_team.fulfilled, (state, action) => {
         state.settings = action.payload
@@ -437,12 +448,19 @@ const settings_slice = createSlice({
       })
       .addCase(remove_repo.fulfilled, (state, action) => {
         state.settings = action.payload
-        delete state.repo_settings_by_repo[action.meta.arg.repo_full_name]
+        if (state.current_repo_settings_repo === action.meta.arg.repo_full_name) {
+          state.current_repo_settings = null
+          state.current_repo_settings_repo = null
+          state.current_repo_settings_loading = false
+          state.current_repo_settings_error = null
+        }
       })
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
-        state.repo_settings_by_repo = {}
-        state.repo_settings_loading_repo = null
+        state.current_repo_settings = null
+        state.current_repo_settings_repo = null
+        state.current_repo_settings_loading = false
+        state.current_repo_settings_error = null
         state.loading = false
         state.available_repos = []
         state.available_repos_loading = false
