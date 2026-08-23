@@ -1,12 +1,7 @@
 import { useIntl } from 'react-intl'
+import { format_hours } from '@/lib/format_hours'
 import { StatCard } from './panel'
 import { connector, type ConnectorProps } from './summary_stats.connector'
-
-function format_hours(h: number | null): string {
-  if (h == null) return '—'
-  if (h < 24) return `${h.toFixed(1)}h`
-  return `${(h / 24).toFixed(1)}d`
-}
 
 export function Wrapper({ summary, business_hours_enabled }: ConnectorProps) {
   const intl = useIntl()

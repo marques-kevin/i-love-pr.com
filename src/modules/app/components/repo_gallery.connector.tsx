@@ -1,5 +1,6 @@
 import { connect, type ConnectedProps } from 'react-redux'
 import { partition_gallery_repos } from '@/lib/repo_gallery'
+import { load_gallery_stats } from '@/modules/dashboard/redux/dashboard_slice'
 import {
   load_repo_settings,
   request_add_repository as request_add_repository_action,
@@ -16,6 +17,7 @@ export const map_state_to_props = (state: RootState) => {
     own_repositories: own,
     imported_repositories: imported,
     sync_states: state.sync.sync_states,
+    gallery_stats: state.dashboard.gallery_stats,
   }
 }
 
@@ -29,6 +31,9 @@ export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   remove_repo: (repo_full_name: string) => dispatch(remove_repo({ repo_full_name })),
   load_repo_settings: (repo_full_name: string) => {
     void dispatch(load_repo_settings({ repo_full_name }))
+  },
+  load_gallery_stats: () => {
+    void dispatch(load_gallery_stats())
   },
 })
 

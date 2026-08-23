@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { HoverIcon } from '@/components/hover_icon'
 import { PlusSignIcon } from '@/components/icons/plus_sign'
@@ -7,11 +7,12 @@ import { Modal } from '@/components/ui/modal'
 import type { SyncState } from '@/lib/types'
 import { ShareRepoDialog } from '@/modules/settings/components/share_repo_dialog'
 import { RepoSettingsDialog } from '@/modules/settings/components/repo_settings_dialog'
-import { RepoGalleryCard } from './repo_gallery_card'
+import { RepoGalleryRow } from './repo_gallery_row'
 import { connector, type ConnectorProps } from './repo_gallery.connector'
 
-function RepoGrid({
+function RepoList({
   repos,
+  gallery_stats,
   sync_states,
   show_imported_badge,
   error_label,
@@ -21,6 +22,7 @@ function RepoGrid({
   on_delete,
 }: {
   repos: string[]
+  gallery_stats: ConnectorProps['gallery_stats']
   sync_states: SyncState[]
   show_imported_badge: boolean
   error_label: string
@@ -30,11 +32,12 @@ function RepoGrid({
   on_delete: (repo: string) => void
 }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <ul className="space-y-3">
       {repos.map((repo) => (
-        <RepoGalleryCard
+        <RepoGalleryRow
           key={repo}
           repo_full_name={repo}
+          stats={gallery_stats[repo]}
           sync_states={sync_states}
           show_imported_badge={show_imported_badge}
           error_label={error_label}
@@ -52,14 +55,22 @@ export function Wrapper({
   own_repositories,
   imported_repositories,
   sync_states,
+  gallery_stats,
   request_add_repository,
   request_import_repository,
   remove_repo,
   load_repo_settings,
+  load_gallery_stats,
 }: ConnectorProps) {
   const intl = useIntl()
   const error_label = intl.formatMessage({ id: 'app.nav.sync_error' })
   const syncing_label = intl.formatMessage({ id: 'sync.syncing' })
+  const initial_load = useRef(false)
+  if (!initial_load.current) {
+    initial_load.current = true
+    load_gallery_stats()
+  }
+
   const [share_repo, set_share_repo] = useState<string | null>(null)
   const [settings_repo, set_settings_repo] = useState<string | null>(null)
   const [delete_repo, set_delete_repo] = useState<string | null>(null)
@@ -123,8 +134,9 @@ export function Wrapper({
             </div>
           ) : (
             <div className="mt-4">
-              <RepoGrid
+              <RepoList
                 repos={own_repositories}
+                gallery_stats={gallery_stats}
                 sync_states={sync_states}
                 show_imported_badge={false}
                 error_label={error_label}
@@ -143,8 +155,9 @@ export function Wrapper({
               {intl.formatMessage({ id: 'home.imported_repositories' })}
             </h2>
             <div className="mt-4">
-              <RepoGrid
+              <RepoList
                 repos={imported_repositories}
+                gallery_stats={gallery_stats}
                 sync_states={sync_states}
                 show_imported_badge={true}
                 error_label={error_label}

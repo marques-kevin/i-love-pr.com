@@ -10,6 +10,7 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
+  load_gallery_stats,
   request_import_repo,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
@@ -54,6 +55,10 @@ function active_repo_list(state: RootState): string[] {
 
 function dispatch_refresh_pr_coverage(api: { getState: () => RootState; dispatch: AppDispatch }) {
   void api.dispatch(refresh_pr_coverage({ repos: active_repo_list(api.getState()) }))
+}
+
+function dispatch_load_gallery_stats(api: { dispatch: AppDispatch }) {
+  void api.dispatch(load_gallery_stats())
 }
 
 function current_pathname(): string {
@@ -135,10 +140,12 @@ export function register_app_listeners(
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(refresh_metrics())
+        dispatch_load_gallery_stats(api)
         return
       }
 
       void api.dispatch(load_available_repos())
+      dispatch_load_gallery_stats(api)
 
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
@@ -158,6 +165,7 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(load_available_repos({ token: settings.token }))
+      dispatch_load_gallery_stats(api)
 
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
@@ -170,6 +178,7 @@ export function register_app_listeners(
     actionCreator: save_repo_settings.fulfilled,
     effect: async (_action, api) => {
       void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
     },
   })
 
@@ -188,6 +197,7 @@ export function register_app_listeners(
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_sync_states())
       void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
     },
   })
 
@@ -214,6 +224,7 @@ export function register_app_listeners(
       if (action.meta.arg.force) play_sound('success')
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
     },
   })
 
@@ -224,6 +235,7 @@ export function register_app_listeners(
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
     },
   })
 

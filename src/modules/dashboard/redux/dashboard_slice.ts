@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { subDays } from 'date-fns'
+import { compute_gallery_row_stats, type GalleryRowStats } from '@/lib/gallery_row_stats'
 import { compute_metrics, list_contributors } from '@/lib/metrics'
 import type { MetricsSnapshot, PeriodKey, PeriodRange } from '@/lib/types'
 import type { DashboardTabFilters } from '@/lib/dashboard_layout'
@@ -31,6 +32,8 @@ export type DashboardState = {
   /** One-shot: open the import-repository dialog (optionally prefilled). */
   import_repo_requested: boolean
   import_repo_link: string | null
+  gallery_stats: Record<string, GalleryRowStats>
+  gallery_stats_loading: boolean
 }
 
 const initial_state: DashboardState = {
@@ -48,6 +51,8 @@ const initial_state: DashboardState = {
   add_repository_requested: false,
   import_repo_requested: false,
   import_repo_link: null,
+  gallery_stats: {},
+  gallery_stats_loading: false,
 }
 
 export const refresh_metrics = create_app_async_thunk<
@@ -78,6 +83,29 @@ export const refresh_metrics = create_app_async_thunk<
     business_hours_enabled: repo_settings.business_hours.enabled,
   }
 })
+
+export const load_gallery_stats = create_app_async_thunk<Record<string, GalleryRowStats>, void>(
+  'dashboard/load_gallery_stats',
+  async (_, { extra, getState }) => {
+    const repos = getState().settings.settings?.repos ?? []
+    if (repos.length === 0) return {}
+
+    const facts = await extra.repositories.pr_facts.list_by_repos(repos)
+    const facts_by_repo = new Map<string, typeof facts>()
+    for (const fact of facts) {
+      const list = facts_by_repo.get(fact.repo_full_name) ?? []
+      list.push(fact)
+      facts_by_repo.set(fact.repo_full_name, list)
+    }
+
+    const now = new Date()
+    const gallery_stats: Record<string, GalleryRowStats> = {}
+    for (const repo of repos) {
+      gallery_stats[repo] = compute_gallery_row_stats(facts_by_repo.get(repo) ?? [], now)
+    }
+    return gallery_stats
+  },
+)
 
 const dashboard_slice = createSlice({
   name: 'dashboard',
@@ -144,6 +172,16 @@ const dashboard_slice = createSlice({
       })
       .addCase(refresh_metrics.rejected, (state) => {
         state.loading = false
+      })
+      .addCase(load_gallery_stats.pending, (state) => {
+        state.gallery_stats_loading = true
+      })
+      .addCase(load_gallery_stats.fulfilled, (state, action) => {
+        state.gallery_stats = action.payload
+        state.gallery_stats_loading = false
+      })
+      .addCase(load_gallery_stats.rejected, (state) => {
+        state.gallery_stats_loading = false
       })
   },
 })
