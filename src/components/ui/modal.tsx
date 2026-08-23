@@ -9,14 +9,12 @@ export function Modal({
   children,
   box_className,
   hide_close = false,
-  placement,
 }: {
   open: boolean
   on_close: () => void
   children: ReactNode
   box_className?: string
   hide_close?: boolean
-  placement?: 'end'
 }) {
   const dialog_ref = useRef<HTMLDialogElement>(null)
   const open_ref = useRef(open)
@@ -35,7 +33,7 @@ export function Modal({
   return (
     <dialog
       ref={dialog_ref}
-      className={cn('modal', placement === 'end' && 'modal-end')}
+      className="modal"
       onClose={() => {
         if (open_ref.current) on_close()
       }}
