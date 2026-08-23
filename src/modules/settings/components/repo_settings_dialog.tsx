@@ -35,7 +35,9 @@ function Editor({
   save_repo_settings: RepoSettingsDialogProps['save_repo_settings']
 }) {
   const intl = useIntl()
-  const [draft, set_draft] = useState<RepoSettingsFormValue>(() => form_value_from_settings(initial))
+  const [draft, set_draft] = useState<RepoSettingsFormValue>(() =>
+    form_value_from_settings(initial),
+  )
   const [busy, set_busy] = useState(false)
   const [message, set_message] = useState<string | null>(null)
 

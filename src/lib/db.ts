@@ -416,7 +416,8 @@ export class IlovePrDatabase extends Dexie {
       repo_settings: 'repo_full_name',
       pull_requests:
         'id, repo_full_name, number, author, state, created_at, updated_at, merged_at, [repo_full_name+updated_at]',
-      reviews: 'id, pr_id, repo_full_name, pr_number, author, submitted_at, [repo_full_name+author]',
+      reviews:
+        'id, pr_id, repo_full_name, pr_number, author, submitted_at, [repo_full_name+author]',
       sync_state: 'repo_full_name, last_synced_at, mode',
       pr_facts: 'pr_id, repo_full_name, author, is_bot, merged_at, state, created_at',
       pr_changed_files: 'id, pr_id, path',
