@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT } from '@/lib/db'
+import { default_repo_settings, resolve_repo_settings } from '@/lib/repo_settings'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import {
   create_dashboard_tab,
@@ -17,6 +18,7 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoSettingsRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
@@ -24,6 +26,7 @@ import type {
   PrChangedFilesRepository,
   PrFactsRepository,
   PullRequestRepository,
+  RepoSettingsRepository,
   Repositories,
   ReviewRepository,
   SettingsRepository,
@@ -75,6 +78,7 @@ function normalize_settings(
 
 type MemoryBag = {
   settings: AppSettings | undefined
+  repo_settings: Map<string, RepoSettingsRecord>
   pull_requests: Map<string, PullRequestRecord>
   reviews: Map<string, ReviewRecord>
   sync_states: Map<string, SyncState>
@@ -84,6 +88,7 @@ type MemoryBag = {
 
 export function create_memory_repositories(seed?: {
   settings?: AppSettings
+  repo_settings?: RepoSettingsRecord[]
   pull_requests?: PullRequestRecord[]
   reviews?: ReviewRecord[]
   sync_states?: SyncState[]
@@ -92,6 +97,9 @@ export function create_memory_repositories(seed?: {
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
+    repo_settings: new Map(
+      (seed?.repo_settings ?? []).map((row) => [row.repo_full_name, structuredClone(row)]),
+    ),
     pull_requests: new Map((seed?.pull_requests ?? []).map((pr) => [pr.id, structuredClone(pr)])),
     reviews: new Map((seed?.reviews ?? []).map((r) => [r.id, structuredClone(r)])),
     sync_states: new Map(
@@ -311,6 +319,7 @@ export function create_memory_repositories(seed?: {
     },
     clear_all_data: async () => {
       bag.settings = undefined
+      bag.repo_settings.clear()
       bag.pull_requests.clear()
       bag.reviews.clear()
       bag.sync_states.clear()
@@ -499,5 +508,33 @@ export function create_memory_repositories(seed?: {
     },
   }
 
-  return { settings, pull_requests, reviews, sync_state, pr_facts, pr_changed_files }
+  const repo_settings: RepoSettingsRepository = {
+    get: async (repo_full_name) => {
+      const stored = bag.repo_settings.get(repo_full_name)
+      return resolve_repo_settings(stored, repo_full_name)
+    },
+    save: async (repo_full_name, partial) => {
+      const existing = bag.repo_settings.get(repo_full_name)
+      const defaults = default_repo_settings(repo_full_name)
+      const next: RepoSettingsRecord = {
+        repo_full_name,
+        ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? defaults.ignored_bots,
+        test_file_globs:
+          partial.test_file_globs ?? existing?.test_file_globs ?? defaults.test_file_globs,
+        business_hours: normalizeBusinessHours(
+          partial.business_hours ?? existing?.business_hours ?? defaults.business_hours,
+        ),
+      }
+      bag.repo_settings.set(repo_full_name, structuredClone(next))
+      return resolve_repo_settings(next, repo_full_name)
+    },
+    delete: async (repo_full_name) => {
+      bag.repo_settings.delete(repo_full_name)
+    },
+    clear: async () => {
+      bag.repo_settings.clear()
+    },
+  }
+
+  return { settings, repo_settings, pull_requests, reviews, sync_state, pr_facts, pr_changed_files }
 }

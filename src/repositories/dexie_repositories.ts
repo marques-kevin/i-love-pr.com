@@ -1,6 +1,7 @@
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
+import { default_repo_settings, resolve_repo_settings } from '@/lib/repo_settings'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import type {
   AppSettings,
@@ -23,6 +24,7 @@ import type {
   PullRequestRepository,
   PrChangedFilesRepository,
   PrFactsRepository,
+  RepoSettingsRepository,
   Repositories,
   ReviewRepository,
   SaveSettingsInput,
@@ -348,6 +350,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
           database.pr_facts,
           database.pr_changed_files,
           database.chart_specs,
+          database.repo_settings,
         ],
         async () => {
           await Promise.all([
@@ -359,6 +362,7 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
             database.pr_facts.clear(),
             database.pr_changed_files.clear(),
             database.chart_specs.clear(),
+            database.repo_settings.clear(),
           ])
         },
       )
@@ -581,9 +585,42 @@ export function create_dexie_pr_changed_files_repository(
   }
 }
 
+export function create_dexie_repo_settings_repository(
+  database: IlovePrDatabase,
+): RepoSettingsRepository {
+  return {
+    get: async (repo_full_name) => {
+      const stored = await database.repo_settings.get(repo_full_name)
+      return resolve_repo_settings(stored, repo_full_name)
+    },
+    save: async (repo_full_name, partial) => {
+      const existing = await database.repo_settings.get(repo_full_name)
+      const defaults = default_repo_settings(repo_full_name)
+      const next = {
+        repo_full_name,
+        ignored_bots: partial.ignored_bots ?? existing?.ignored_bots ?? defaults.ignored_bots,
+        test_file_globs:
+          partial.test_file_globs ?? existing?.test_file_globs ?? defaults.test_file_globs,
+        business_hours: normalizeBusinessHours(
+          partial.business_hours ?? existing?.business_hours ?? defaults.business_hours,
+        ),
+      }
+      await database.repo_settings.put(next)
+      return resolve_repo_settings(next, repo_full_name)
+    },
+    delete: async (repo_full_name) => {
+      await database.repo_settings.delete(repo_full_name)
+    },
+    clear: async () => {
+      await database.repo_settings.clear()
+    },
+  }
+}
+
 export function create_dexie_repositories(database: IlovePrDatabase): Repositories {
   return {
     settings: create_dexie_settings_repository(database),
+    repo_settings: create_dexie_repo_settings_repository(database),
     pull_requests: create_dexie_pull_request_repository(database),
     reviews: create_dexie_review_repository(database),
     sync_state: create_dexie_sync_state_repository(database),

@@ -17,6 +17,7 @@ export const fr_messages = define_locale_messages({
   'repo_gallery.menu_label': 'Actions pour {repo}',
   'repo_gallery.view': 'Voir',
   'repo_gallery.share': 'Partager',
+  'repo_gallery.settings': 'Réglages',
   'repo_gallery.delete': 'Supprimer',
   'repo_gallery.delete_title': 'Retirer le dépôt',
   'repo_gallery.delete_confirm': 'Retirer {repo} de cet espace de travail ?',
@@ -396,6 +397,9 @@ export const fr_messages = define_locale_messages({
   'settings.workdays': 'Jours ouvrés',
   'settings.start': 'Début',
   'settings.end': 'Fin',
+  'repo_settings.title': 'Réglages — {repo}',
+  'repo_settings.description': 'Bots, motifs de fichiers de test et heures ouvrées pour ce dépôt.',
+  'repo_settings.reset_defaults': 'Réinitialiser les valeurs par défaut',
   'settings.storage': 'Stockage local',
   'settings.reset_sync': 'Effacer les données PR synchronisées',
   'settings.reset_sync_confirm':

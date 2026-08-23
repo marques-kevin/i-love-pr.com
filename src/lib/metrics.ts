@@ -76,8 +76,12 @@ export async function compute_metrics(options: {
   const { repositories, repos, members, period, hide_test_files = false } = options
   const member_set = new Set(members)
   const has_member_filter = member_set.size > 0
-  const settings = await repositories.settings.get()
-  const ignored_bots = settings?.ignored_bots ?? []
+
+  const repo_settings_by_repo = new Map(
+    await Promise.all(
+      repos.map(async (repo) => [repo, await repositories.repo_settings.get(repo)] as const),
+    ),
+  )
 
   let prs: PrFactRecord[] = await repositories.pr_facts.list_by_repos(repos)
   prs = prs.filter((pr) => !pr.is_bot)
@@ -86,7 +90,6 @@ export async function compute_metrics(options: {
   }
 
   if (hide_test_files && prs.length > 0) {
-    const test_file_globs = settings?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS
     const changed_files = await repositories.pr_changed_files.list_by_pr_ids(
       prs.map((pr) => pr.pr_id),
     )
@@ -99,15 +102,20 @@ export async function compute_metrics(options: {
     prs = prs.map((pr) => {
       const files = files_by_pr.get(pr.pr_id) ?? []
       if (files.length === 0) return pr
+      const test_file_globs =
+        repo_settings_by_repo.get(pr.repo_full_name)?.test_file_globs ?? DEFAULT_TEST_FILE_GLOBS
       return apply_test_file_line_filter(pr, files, test_file_globs)
     })
   }
 
   const pr_by_id = new Map(prs.map((pr) => [pr.pr_id, pr]))
   const all_reviews = await repositories.reviews.list_by_pr_ids([...pr_by_id.keys()])
-  const reviews = all_reviews.filter(
-    (r) => pr_by_id.has(r.pr_id) && !isBotLogin(r.author, ignored_bots),
-  )
+  const reviews = all_reviews.filter((r) => {
+    if (!pr_by_id.has(r.pr_id)) return false
+    const pr = pr_by_id.get(r.pr_id)!
+    const ignored_bots = repo_settings_by_repo.get(pr.repo_full_name)?.ignored_bots ?? []
+    return !isBotLogin(r.author, ignored_bots)
+  })
 
   const merged_in_period = prs.filter(
     (pr) => pr.state === 'MERGED' && in_period(pr.merged_at, period),

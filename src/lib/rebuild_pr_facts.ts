@@ -56,10 +56,13 @@ export async function rebuild_pr_facts_for_prs(
   prs: PullRequestRecord[],
 ): Promise<void> {
   if (prs.length === 0) return
-  const settings = await repositories.settings.get()
-  const ignored_bots = settings?.ignored_bots ?? []
-  const business_hours = settings?.business_hours
-  const elapsed = create_elapsed_hours_fn(business_hours)
+
+  const by_repo = new Map<string, PullRequestRecord[]>()
+  for (const pr of prs) {
+    const list = by_repo.get(pr.repo_full_name) ?? []
+    list.push(pr)
+    by_repo.set(pr.repo_full_name, list)
+  }
 
   const reviews = await repositories.reviews.list_by_pr_ids(prs.map((pr) => pr.id))
   const reviews_by_pr = new Map<string, typeof reviews>()
@@ -69,9 +72,23 @@ export async function rebuild_pr_facts_for_prs(
     reviews_by_pr.set(review.pr_id, list)
   }
 
-  const facts = prs.map((pr) =>
-    pr_to_fact_record(pr, reviews_by_pr.get(pr.id) ?? [], ignored_bots, business_hours, elapsed),
-  )
+  const facts: PrFactRecord[] = []
+  for (const [repo_full_name, repo_prs] of by_repo) {
+    const repo_settings = await repositories.repo_settings.get(repo_full_name)
+    const elapsed = create_elapsed_hours_fn(repo_settings.business_hours)
+    for (const pr of repo_prs) {
+      facts.push(
+        pr_to_fact_record(
+          pr,
+          reviews_by_pr.get(pr.id) ?? [],
+          repo_settings.ignored_bots,
+          repo_settings.business_hours,
+          elapsed,
+        ),
+      )
+    }
+  }
+
   await repositories.pr_facts.put_many(facts)
 }
 

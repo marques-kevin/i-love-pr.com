@@ -122,6 +122,17 @@ export interface RepoRecord {
   added_at: string
 }
 
+/** Per-repo metrics configuration stored in IndexedDB `repo_settings` table. */
+export interface RepoSettingsRecord {
+  repo_full_name: string
+  ignored_bots: string[]
+  test_file_globs: string[]
+  business_hours: BusinessHoursConfig
+}
+
+/** Resolved per-repo settings (always includes defaults when row is missing). */
+export type RepoSettings = RepoSettingsRecord
+
 export interface SyncState {
   repo_full_name: string
   /** ISO timestamp of the most recent PR updated_at fully processed */
