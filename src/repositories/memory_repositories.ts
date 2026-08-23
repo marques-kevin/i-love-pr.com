@@ -10,6 +10,7 @@ import {
   type DashboardTabFilters,
 } from '@/lib/dashboard_layout'
 import { normalize_locale, normalize_stored_locale } from '@/lib/i18n'
+import type { SaveRepoSettingsInput } from '@/lib/repo_settings'
 import type {
   AppSettings,
   DashboardLayoutItem,
@@ -17,6 +18,7 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
@@ -75,6 +77,7 @@ function normalize_settings(
 
 type MemoryBag = {
   settings: AppSettings | undefined
+  repos: Map<string, RepoRecord>
   pull_requests: Map<string, PullRequestRecord>
   reviews: Map<string, ReviewRecord>
   sync_states: Map<string, SyncState>
@@ -82,8 +85,26 @@ type MemoryBag = {
   pr_changed_files: Map<string, PrChangedFileRecord>
 }
 
+function save_memory_repo_record(bag: MemoryBag, input: SaveRepoSettingsInput): RepoRecord {
+  const [owner, name] = input.repo_full_name.split('/')
+  if (!owner || !name) throw new Error('Invalid repo')
+  const existing = bag.repos.get(input.repo_full_name)
+  const next: RepoRecord = {
+    full_name: input.repo_full_name,
+    owner: existing?.owner ?? owner,
+    name: existing?.name ?? name,
+    added_at: existing?.added_at ?? new Date().toISOString(),
+    ignored_bots: [...input.ignored_bots],
+    test_file_globs: [...input.test_file_globs],
+    business_hours: normalizeBusinessHours(input.business_hours),
+  }
+  bag.repos.set(input.repo_full_name, next)
+  return structuredClone(next)
+}
+
 export function create_memory_repositories(seed?: {
   settings?: AppSettings
+  repos?: RepoRecord[]
   pull_requests?: PullRequestRecord[]
   reviews?: ReviewRecord[]
   sync_states?: SyncState[]
@@ -92,6 +113,7 @@ export function create_memory_repositories(seed?: {
 }): Repositories {
   const bag: MemoryBag = {
     settings: seed?.settings ? normalize_settings(structuredClone(seed.settings)) : undefined,
+    repos: new Map((seed?.repos ?? []).map((repo) => [repo.full_name, structuredClone(repo)])),
     pull_requests: new Map((seed?.pull_requests ?? []).map((pr) => [pr.id, structuredClone(pr)])),
     reviews: new Map((seed?.reviews ?? []).map((r) => [r.id, structuredClone(r)])),
     sync_states: new Map(
@@ -298,19 +320,35 @@ export function create_memory_repositories(seed?: {
       return save_teams((bag.settings.teams ?? []).filter((t) => t.id !== id))
     },
     upsert_repos: async (full_names) => {
+      const now = new Date().toISOString()
       for (const full_name of full_names) {
         const [owner, name] = full_name.split('/')
         if (!owner || !name) continue
+        if (!bag.repos.has(full_name)) {
+          bag.repos.set(full_name, {
+            full_name,
+            owner,
+            name,
+            added_at: now,
+          })
+        }
         if (!bag.sync_states.has(full_name)) {
           bag.sync_states.set(full_name, empty_sync_state(full_name))
         }
       }
     },
-    delete_repo: async (_repo_full_name) => {
-      // Memory repositories do not persist the repos catalog table.
+    get_repo: async (repo_full_name) => {
+      const repo = bag.repos.get(repo_full_name)
+      return repo ? structuredClone(repo) : undefined
+    },
+    list_repos: async () => [...bag.repos.values()].map((repo) => structuredClone(repo)),
+    save_repo_settings: async (input) => save_memory_repo_record(bag, input),
+    delete_repo: async (repo_full_name) => {
+      bag.repos.delete(repo_full_name)
     },
     clear_all_data: async () => {
       bag.settings = undefined
+      bag.repos.clear()
       bag.pull_requests.clear()
       bag.reviews.clear()
       bag.sync_states.clear()

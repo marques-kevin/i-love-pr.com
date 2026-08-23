@@ -2,11 +2,13 @@ import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS, normalizeBusinessHours } from '@/lib/business-hours'
 import { DEFAULT_BACKFILL_LIMIT, type IlovePrDatabase } from '@/lib/db'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
+import type { SaveRepoSettingsInput } from '@/lib/repo_settings'
 import type {
   AppSettings,
   DashboardLayoutItem,
   MemberTeam,
   PrChangedFileRecord,
+  RepoRecord,
   ReviewRecord,
   SyncState,
 } from '@/lib/types'
@@ -50,6 +52,26 @@ function normalize_sync_state(state: SyncState): SyncState {
     ...state,
     remote_oldest_created_at: state.remote_oldest_created_at ?? null,
   }
+}
+
+async function save_repo_record(
+  database: IlovePrDatabase,
+  input: SaveRepoSettingsInput,
+): Promise<RepoRecord> {
+  const [owner, name] = input.repo_full_name.split('/')
+  if (!owner || !name) throw new Error('Invalid repo')
+  const existing = await database.repos.get(input.repo_full_name)
+  const next: RepoRecord = {
+    full_name: input.repo_full_name,
+    owner: existing?.owner ?? owner,
+    name: existing?.name ?? name,
+    added_at: existing?.added_at ?? new Date().toISOString(),
+    ignored_bots: [...input.ignored_bots],
+    test_file_globs: [...input.test_file_globs],
+    business_hours: normalizeBusinessHours(input.business_hours),
+  }
+  await database.repos.put(next)
+  return next
 }
 
 function normalize_settings(settings: AppSettings & Partial<SettingsDashboardsInput>): AppSettings {
@@ -331,6 +353,9 @@ export function create_dexie_settings_repository(database: IlovePrDatabase): Set
         }
       })
     },
+    get_repo: async (repo_full_name) => database.repos.get(repo_full_name),
+    list_repos: async () => database.repos.toArray(),
+    save_repo_settings: async (input) => save_repo_record(database, input),
     delete_repo: async (repo_full_name) => {
       await database.transaction('rw', database.repos, async () => {
         await database.repos.delete(repo_full_name)

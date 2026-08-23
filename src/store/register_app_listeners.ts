@@ -25,6 +25,7 @@ import {
   load_settings,
   remove_repo,
   save_dashboard_filters,
+  save_repo_settings,
   save_settings,
   set_active_dashboard,
   set_active_repo,
@@ -105,7 +106,7 @@ export function register_app_listeners(
   middleware.startListening({
     actionCreator: load_settings.fulfilled,
     effect: async (action, api) => {
-      const settings = action.payload
+      const settings = action.payload.settings
       api.dispatch(hydrate_locale_from_settings(settings))
       if (!settings) return
 
@@ -162,6 +163,13 @@ export function register_app_listeners(
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(run_sync({ force: false }))
       }
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: save_repo_settings.fulfilled,
+    effect: async (_action, api) => {
+      void api.dispatch(refresh_metrics())
     },
   })
 

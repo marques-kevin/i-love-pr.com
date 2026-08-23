@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
 import { rebuild_pr_facts_for_prs, ensure_pr_facts } from '@/lib/rebuild_pr_facts'
+import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import { create_memory_repositories } from '@/repositories'
 import {
   PR_FACTS_VERSION,
@@ -131,5 +133,27 @@ describe('rebuild_pr_facts', () => {
     await ensure_pr_facts(repositories)
     const facts = await repositories.pr_facts.list_by_repos(['org/repo'])
     expect(facts[0]._version).toBe(PR_FACTS_VERSION)
+  })
+
+  it('rebuilds each repo with its own ignored bots', async () => {
+    const pr_a = sample_pr({ id: 'org/a#1', repo_full_name: 'org/a' })
+    const pr_b = sample_pr({ id: 'org/b#1', repo_full_name: 'org/b' })
+    const repositories = create_memory_repositories({
+      settings: { ...sample_settings, repos: ['org/a', 'org/b'] },
+      pull_requests: [pr_a, pr_b],
+    })
+    await repositories.settings.upsert_repos(['org/a', 'org/b'])
+    await repositories.settings.save_repo_settings({
+      repo_full_name: 'org/a',
+      ignored_bots: ['alice'],
+      test_file_globs: [...DEFAULT_TEST_FILE_GLOBS],
+      business_hours: DEFAULT_BUSINESS_HOURS,
+    })
+
+    await rebuild_pr_facts_for_prs(repositories, [pr_a, pr_b])
+    const facts_a = await repositories.pr_facts.list_by_repos(['org/a'])
+    const facts_b = await repositories.pr_facts.list_by_repos(['org/b'])
+    expect(facts_a[0].is_bot).toBe(true)
+    expect(facts_b[0].is_bot).toBe(false)
   })
 })

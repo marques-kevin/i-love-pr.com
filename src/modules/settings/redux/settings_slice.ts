@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createAction, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
@@ -8,7 +8,8 @@ import {
   import_repo_snapshot,
   parse_share_id_from_url,
 } from '@/lib/repo_snapshot'
-import { rebuild_all_pr_facts } from '@/lib/rebuild_pr_facts'
+import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
+import { index_repo_records, resolve_repo_settings } from '@/lib/repo_settings'
 import { build_settings_after_remove_repo } from '@/lib/remove_repo'
 import {
   build_share_page_url,
@@ -19,12 +20,14 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import type { AppSettings, BusinessHoursConfig } from '@/lib/types'
+import type { AppSettings, BusinessHoursConfig, RepoRecord } from '@/lib/types'
+import type { SaveRepoSettingsInput } from '@/lib/repo_settings'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
 export type SettingsState = {
   settings: AppSettings | null
+  repo_records: Record<string, RepoRecord>
   loading: boolean
   error: string | null
   available_repos: GitHubRepoOption[]
@@ -33,8 +36,11 @@ export type SettingsState = {
   available_repos_token: string | null
 }
 
+export const set_repo_records = createAction<RepoRecord[]>('settings/set_repo_records')
+
 const initial_state: SettingsState = {
   settings: null,
+  repo_records: {},
   loading: true,
   error: null,
   available_repos: [],
@@ -43,14 +49,15 @@ const initial_state: SettingsState = {
   available_repos_token: null,
 }
 
-export const load_settings = create_app_async_thunk<AppSettings | null, void>(
-  'settings/load',
-  async (_, { extra }) => {
-    void requestPersistentStorage()
-    const settings = await extra.repositories.settings.get()
-    return settings ?? null
-  },
-)
+export const load_settings = create_app_async_thunk<
+  { settings: AppSettings | null; repo_records: RepoRecord[] },
+  void
+>('settings/load', async (_, { extra }) => {
+  void requestPersistentStorage()
+  const settings = await extra.repositories.settings.get()
+  const repo_records = await extra.repositories.settings.list_repos()
+  return { settings: settings ?? null, repo_records }
+})
 
 export const save_settings = create_app_async_thunk<
   AppSettings,
@@ -64,7 +71,7 @@ export const save_settings = create_app_async_thunk<
     business_hours?: BusinessHoursConfig
     locale?: AppSettings['locale']
   }
->('settings/save', async (input, { extra }) => {
+>('settings/save', async (input, { extra, dispatch }) => {
   const token = input.token.trim()
   const repos = input.repos.map((r) => r.trim()).filter(Boolean)
 
@@ -81,13 +88,14 @@ export const save_settings = create_app_async_thunk<
     imported_repos,
     sync_interval_hours: input.sync_interval_hours,
     backfill_limit: input.backfill_limit,
-    ignored_bots: input.ignored_bots ?? DEFAULT_IGNORED_BOTS,
+    ignored_bots: input.ignored_bots,
     test_file_globs: input.test_file_globs,
     business_hours: input.business_hours,
     locale: input.locale,
   }
   const next = await extra.repositories.settings.save(payload)
   await extra.repositories.settings.upsert_repos(next.repos)
+  dispatch(set_repo_records(await extra.repositories.settings.list_repos()))
 
   try {
     const client = new GitHubClient(token)
@@ -113,14 +121,6 @@ export const save_settings = create_app_async_thunk<
     }
   }
 
-  const bots_changed =
-    JSON.stringify(previous?.ignored_bots ?? []) !== JSON.stringify(next.ignored_bots)
-  const hours_changed =
-    JSON.stringify(previous?.business_hours ?? null) !== JSON.stringify(next.business_hours)
-  if (bots_changed || hours_changed) {
-    await rebuild_all_pr_facts(extra.repositories)
-  }
-
   if (previous?.token !== next.token && next.token) {
     track_umami_event('token_saved')
   }
@@ -133,6 +133,25 @@ export const save_settings = create_app_async_thunk<
 
   return next
 })
+
+export const save_repo_settings = create_app_async_thunk<RepoRecord, SaveRepoSettingsInput>(
+  'settings/save_repo_settings',
+  async (input, { extra }) => {
+    const previous = await extra.repositories.settings.get_repo(input.repo_full_name)
+    const next = await extra.repositories.settings.save_repo_settings(input)
+    const previous_resolved = resolve_repo_settings(previous)
+    const next_resolved = resolve_repo_settings(next)
+    const bots_changed =
+      JSON.stringify(previous_resolved.ignored_bots) !== JSON.stringify(next_resolved.ignored_bots)
+    const hours_changed =
+      JSON.stringify(previous_resolved.business_hours) !==
+      JSON.stringify(next_resolved.business_hours)
+    if (bots_changed || hours_changed) {
+      await rebuild_pr_facts_for_repos(extra.repositories, [input.repo_full_name])
+    }
+    return next
+  },
+)
 
 export const complete_onboarding = create_app_async_thunk<void, { token: string }>(
   'settings/complete_onboarding',
@@ -355,12 +374,16 @@ const settings_slice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(set_repo_records, (state, action) => {
+        state.repo_records = index_repo_records(action.payload)
+      })
       .addCase(load_settings.pending, (state) => {
         state.loading = true
         state.error = null
       })
       .addCase(load_settings.fulfilled, (state, action) => {
-        state.settings = action.payload
+        state.settings = action.payload.settings
+        state.repo_records = index_repo_records(action.payload.repo_records)
         state.loading = false
       })
       .addCase(load_settings.rejected, (state, action) => {
@@ -370,6 +393,9 @@ const settings_slice = createSlice({
       .addCase(save_settings.fulfilled, (state, action) => {
         state.settings = action.payload
         state.loading = false
+      })
+      .addCase(save_repo_settings.fulfilled, (state, action) => {
+        state.repo_records[action.payload.full_name] = action.payload
       })
       .addCase(upsert_team.fulfilled, (state, action) => {
         state.settings = action.payload
@@ -400,9 +426,11 @@ const settings_slice = createSlice({
       })
       .addCase(remove_repo.fulfilled, (state, action) => {
         state.settings = action.payload
+        delete state.repo_records[action.meta.arg.repo_full_name]
       })
       .addCase(clear_all_data.fulfilled, (state) => {
         state.settings = null
+        state.repo_records = {}
         state.loading = false
         state.available_repos = []
         state.available_repos_loading = false

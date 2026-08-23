@@ -5,10 +5,12 @@ import type {
   PrChangedFileRecord,
   PrFactRecord,
   PullRequestRecord,
+  RepoRecord,
   ReviewRecord,
   SyncState,
   DashboardLayoutItem,
 } from '@/lib/types'
+import type { SaveRepoSettingsInput } from '@/lib/repo_settings'
 import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
 import type { DashboardTabFilters } from '@/lib/dashboard_layout'
 
@@ -34,6 +36,9 @@ export interface SettingsRepository {
   upsert_team: (input: { name: string; members: string[]; id?: string }) => Promise<AppSettings>
   delete_team: (id: string) => Promise<AppSettings>
   upsert_repos: (full_names: string[]) => Promise<void>
+  get_repo: (repo_full_name: string) => Promise<RepoRecord | undefined>
+  list_repos: () => Promise<RepoRecord[]>
+  save_repo_settings: (input: SaveRepoSettingsInput) => Promise<RepoRecord>
   delete_repo: (repo_full_name: string) => Promise<void>
   clear_all_data: () => Promise<void>
   reset_sync_data: () => Promise<void>

@@ -120,6 +120,12 @@ export interface RepoRecord {
   owner: string
   name: string
   added_at: string
+  /** Per-repo ignored bot logins. Unset = factory defaults. */
+  ignored_bots?: string[]
+  /** Per-repo test-file glob patterns. Unset = factory defaults. */
+  test_file_globs?: string[]
+  /** Per-repo business hours. Unset = factory defaults. */
+  business_hours?: BusinessHoursConfig
 }
 
 export interface SyncState {

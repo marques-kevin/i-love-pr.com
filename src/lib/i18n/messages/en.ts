@@ -14,6 +14,7 @@ export const en_messages = {
   'app.nav.add_repository_saving': 'Saving…',
   'repo_gallery.menu_label': 'Actions for {repo}',
   'repo_gallery.view': 'View',
+  'repo_gallery.settings': 'Settings',
   'repo_gallery.share': 'Share',
   'repo_gallery.delete': 'Delete',
   'repo_gallery.delete_title': 'Remove repository',
@@ -364,7 +365,9 @@ export const en_messages = {
   'period.custom': 'Custom',
 
   'settings.title': 'Settings',
-  'settings.description': 'Token, repos, sync cadence, and local data controls.',
+  'settings.description': 'Language, theme, token, sync cadence, and local data controls.',
+  'settings.reset_defaults': 'Reset to defaults',
+  'repo_settings.description': 'Business hours, ignored bots, and test-file patterns for {repo}.',
   'settings.language': 'Language',
   'settings.sound': 'Interaction sounds',
   'settings.sound_help': 'Play soft cues for clicks, sync, and confirmations.',

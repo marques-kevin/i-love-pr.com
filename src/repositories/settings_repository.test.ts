@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
+import { resolve_repo_settings } from '@/lib/repo_settings'
+import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
 import { create_memory_repositories } from './memory_repositories'
 
 describe('create_memory_repositories settings', () => {
@@ -102,5 +105,33 @@ describe('create_memory_repositories settings', () => {
     await expect(repositories.settings.delete_dashboard(deleted.dashboards[0].id)).rejects.toThrow(
       /last dashboard/i,
     )
+  })
+
+  it('stores analysis settings on the repo record with factory defaults when unset', async () => {
+    const repositories = create_memory_repositories()
+    await repositories.settings.save({ token: 't', repos: ['acme/app', 'acme/other'] })
+    await repositories.settings.upsert_repos(['acme/app', 'acme/other'])
+
+    const unset = await repositories.settings.get_repo('acme/app')
+    expect(unset?.ignored_bots).toBeUndefined()
+    expect(resolve_repo_settings(unset)).toEqual({
+      ignored_bots: DEFAULT_IGNORED_BOTS,
+      test_file_globs: DEFAULT_TEST_FILE_GLOBS,
+      business_hours: DEFAULT_BUSINESS_HOURS,
+    })
+
+    const saved = await repositories.settings.save_repo_settings({
+      repo_full_name: 'acme/app',
+      ignored_bots: ['alice'],
+      test_file_globs: ['**/*.spec.ts'],
+      business_hours: { ...DEFAULT_BUSINESS_HOURS, enabled: true },
+    })
+    expect(saved.ignored_bots).toEqual(['alice'])
+    expect(saved.test_file_globs).toEqual(['**/*.spec.ts'])
+    expect(saved.business_hours.enabled).toBe(true)
+
+    const other = await repositories.settings.get_repo('acme/other')
+    expect(other?.ignored_bots).toBeUndefined()
+    expect(resolve_repo_settings(other).ignored_bots).toEqual(DEFAULT_IGNORED_BOTS)
   })
 })

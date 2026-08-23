@@ -6,6 +6,7 @@ import { Delete02Icon } from '@/components/icons/delete_02'
 import { GithubIcon } from '@/components/icons/github'
 import { Loading03Icon } from '@/components/icons/loading_03'
 import { MoreHorizontalIcon } from '@/components/icons/more_horizontal'
+import { Settings01Icon } from '@/components/icons/settings_01'
 import { Share08Icon } from '@/components/icons/share_08'
 import { close_daisy_dropdown } from '@/lib/daisy'
 import { repo_dashboard_path, split_repo_full_name } from '@/lib/repo_path'
@@ -36,6 +37,7 @@ export type RepoGalleryCardProps = {
   error_label: string
   syncing_label: string
   on_share: (repo_full_name: string) => void
+  on_settings: (repo_full_name: string) => void
   on_delete: (repo_full_name: string) => void
 }
 
@@ -46,6 +48,7 @@ export function RepoGalleryCard({
   error_label,
   syncing_label,
   on_share,
+  on_settings,
   on_delete,
 }: RepoGalleryCardProps) {
   const intl = useIntl()
@@ -112,6 +115,18 @@ export function RepoGalleryCard({
               <HoverIcon icon={DashboardSquare01Icon} size={16} />
               {intl.formatMessage({ id: 'repo_gallery.view' })}
             </Link>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={(event) => {
+                on_settings(repo_full_name)
+                close_daisy_dropdown(event.currentTarget)
+              }}
+            >
+              <HoverIcon icon={Settings01Icon} size={16} />
+              {intl.formatMessage({ id: 'repo_gallery.settings' })}
+            </button>
           </li>
           <li>
             <button
