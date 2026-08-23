@@ -57,6 +57,10 @@ function dispatch_refresh_pr_coverage(api: { getState: () => RootState; dispatch
   void api.dispatch(refresh_pr_coverage({ repos: active_repo_list(api.getState()) }))
 }
 
+function dispatch_load_gallery_stats(api: { dispatch: AppDispatch }) {
+  void api.dispatch(load_gallery_stats())
+}
+
 function current_pathname(): string {
   return has_browser_navigator() ? window.location.pathname : ''
 }
@@ -92,10 +96,6 @@ function hydrate_filters_from_active_dashboard(api: {
     dashboard_id,
   )
   api.dispatch(hydrate_dashboard_filters(normalize_dashboard_filters(active)))
-}
-
-function dispatch_load_gallery_stats(api: { dispatch: AppDispatch }) {
-  void api.dispatch(load_gallery_stats())
 }
 
 export function register_app_listeners(
@@ -178,6 +178,7 @@ export function register_app_listeners(
     actionCreator: save_repo_settings.fulfilled,
     effect: async (_action, api) => {
       void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
     },
   })
 
