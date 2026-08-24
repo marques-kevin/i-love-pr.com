@@ -121,6 +121,7 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   'home.my_repositories',
   'home.imported_repositories',
   'home.imported_badge',
+  'dashboard.imported_snapshot',
   'app.nav.import',
   'app.nav.import_repository',
   'app.nav.import_repository_title',
