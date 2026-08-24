@@ -12,6 +12,7 @@ import {
   format_gallery_hours,
   type GalleryRowStats,
 } from '@/lib/gallery_row_stats'
+import { imported_repo_chrome } from '@/lib/imported_repo'
 import { close_daisy_dropdown } from '@/lib/daisy'
 import { repo_dashboard_path, split_repo_full_name } from '@/lib/repo_path'
 import { sync_cue_from_state, type SyncCue } from '@/lib/sync_cue'
@@ -76,7 +77,7 @@ export type RepoGalleryRowProps = {
   repo_full_name: string
   stats: GalleryRowStats | undefined
   sync_states: SyncState[]
-  show_imported_badge: boolean
+  is_imported: boolean
   error_label: string
   syncing_label: string
   on_share: (repo_full_name: string) => void
@@ -88,7 +89,7 @@ export function RepoGalleryRow({
   repo_full_name,
   stats,
   sync_states,
-  show_imported_badge,
+  is_imported,
   error_label,
   syncing_label,
   on_share,
@@ -96,8 +97,9 @@ export function RepoGalleryRow({
   on_delete,
 }: RepoGalleryRowProps) {
   const intl = useIntl()
+  const chrome = imported_repo_chrome(is_imported)
   const { owner, name } = split_repo_full_name(repo_full_name)
-  const cue = show_imported_badge
+  const cue = is_imported
     ? 'idle'
     : sync_cue_from_state(sync_states.find((item) => item.repo_full_name === repo_full_name))
 
@@ -113,12 +115,12 @@ export function RepoGalleryRow({
             <p className="font-display truncate text-lg font-semibold text-base-content">{name}</p>
             <p className="text-base-content/60 truncate text-sm">{owner}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              {show_imported_badge ? (
+              {is_imported ? (
                 <span className="badge badge-ghost badge-sm">
                   {intl.formatMessage({ id: 'home.imported_badge' })}
                 </span>
               ) : null}
-              {!show_imported_badge && cue !== 'idle' ? (
+              {!is_imported && cue !== 'idle' ? (
                 <div className="text-base-content/60 flex items-center gap-2 text-sm">
                   <RepoCue cue={cue} error_label={error_label} />
                   <span>{cue_label(cue, error_label, syncing_label)}</span>
@@ -202,30 +204,34 @@ export function RepoGalleryRow({
               {intl.formatMessage({ id: 'repo_gallery.view' })}
             </Link>
           </li>
-          <li>
-            <button
-              type="button"
-              onClick={(event) => {
-                on_share(repo_full_name)
-                close_daisy_dropdown(event.currentTarget)
-              }}
-            >
-              <HoverIcon icon={Share08Icon} size={16} />
-              {intl.formatMessage({ id: 'repo_gallery.share' })}
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              onClick={(event) => {
-                on_settings(repo_full_name)
-                close_daisy_dropdown(event.currentTarget)
-              }}
-            >
-              <HoverIcon icon={Settings01Icon} size={16} />
-              {intl.formatMessage({ id: 'repo_gallery.settings' })}
-            </button>
-          </li>
+          {chrome.show_share ? (
+            <li>
+              <button
+                type="button"
+                onClick={(event) => {
+                  on_share(repo_full_name)
+                  close_daisy_dropdown(event.currentTarget)
+                }}
+              >
+                <HoverIcon icon={Share08Icon} size={16} />
+                {intl.formatMessage({ id: 'repo_gallery.share' })}
+              </button>
+            </li>
+          ) : null}
+          {chrome.show_settings ? (
+            <li>
+              <button
+                type="button"
+                onClick={(event) => {
+                  on_settings(repo_full_name)
+                  close_daisy_dropdown(event.currentTarget)
+                }}
+              >
+                <HoverIcon icon={Settings01Icon} size={16} />
+                {intl.formatMessage({ id: 'repo_gallery.settings' })}
+              </button>
+            </li>
+          ) : null}
           <li>
             <hr className="border-base-300 my-1" />
           </li>

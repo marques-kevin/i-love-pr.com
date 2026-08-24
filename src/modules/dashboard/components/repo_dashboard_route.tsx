@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { imported_repo_chrome } from '@/lib/imported_repo'
 import { is_known_repo } from '@/lib/repo_path'
 import {
   TAB_CROSSFADE_DURATION_S,
@@ -17,6 +18,7 @@ export function Wrapper({
   repos,
   active_repo,
   active_dashboard_id,
+  is_imported,
   set_active_repo,
 }: ConnectorProps) {
   const { owner, name } = useParams()
@@ -26,6 +28,7 @@ export function Wrapper({
   const [close_pending, set_close_pending] = useState(false)
   const repo = owner && name ? `${owner}/${name}` : null
   const known = is_known_repo(repo, repos)
+  const chrome = imported_repo_chrome(is_imported)
 
   useEffect(() => {
     if (!known || !repo || repo === active_repo) return
@@ -50,7 +53,7 @@ export function Wrapper({
             <DashboardEditProvider>
               <div className="shrink-0">
                 <DashboardHeader on_close_window={() => set_close_pending(true)} />
-                <DashboardToolbar />
+                {chrome.show_filters || chrome.show_period_picker ? <DashboardToolbar /> : null}
               </div>
               <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-10 px-4 pt-6 pb-10 sm:px-6 lg:px-8">
                 <AnimatePresence mode="wait">
@@ -65,7 +68,7 @@ export function Wrapper({
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <CustomizeFab />
+              {chrome.show_customize ? <CustomizeFab /> : null}
             </DashboardEditProvider>
           </motion.div>
         )}

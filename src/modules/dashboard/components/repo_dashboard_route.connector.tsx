@@ -1,5 +1,6 @@
 import { connect, type ConnectedProps } from 'react-redux'
 import { normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { is_imported_active_repo } from '@/lib/imported_repo'
 import { set_active_repo } from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
@@ -12,6 +13,7 @@ export const map_state_to_props = (state: RootState) => {
     repos: settings?.repos ?? [],
     active_repo: state.dashboard.active_repo,
     active_dashboard_id: normalized.active_dashboard_id,
+    is_imported: is_imported_active_repo(settings, state.dashboard.active_repo),
   }
 }
 

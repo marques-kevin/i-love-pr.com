@@ -2,13 +2,14 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import { is_imported_active_repo, is_imported_repo } from '@/lib/imported_repo'
+import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 import {
   download_repo_snapshot,
   export_repo_snapshot,
   import_repo_snapshot,
   parse_share_id_from_url,
 } from '@/lib/repo_snapshot'
-import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 import { build_settings_after_remove_repo } from '@/lib/remove_repo'
 import {
   build_share_page_url,
@@ -22,6 +23,12 @@ import { track_umami_event } from '@/lib/umami'
 import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
+import type { RootState } from '@/store/root_reducer'
+
+function can_mutate_active_repo(getState: () => RootState): boolean {
+  const state = getState()
+  return !is_imported_active_repo(state.settings.settings, state.dashboard.active_repo)
+}
 
 export type SettingsState = {
   settings: AppSettings | null
@@ -143,23 +150,30 @@ export const save_repo_settings = create_app_async_thunk<
     test_file_globs: string[]
     business_hours: BusinessHoursConfig
   }
->('settings/save_repo_settings', async (input, { extra }) => {
-  const previous = await extra.repositories.repo_settings.get(input.repo_full_name)
-  const next = await extra.repositories.repo_settings.save(input.repo_full_name, {
-    ignored_bots: input.ignored_bots,
-    test_file_globs: input.test_file_globs,
-    business_hours: input.business_hours,
-  })
+>(
+  'settings/save_repo_settings',
+  async (input, { extra }) => {
+    const previous = await extra.repositories.repo_settings.get(input.repo_full_name)
+    const next = await extra.repositories.repo_settings.save(input.repo_full_name, {
+      ignored_bots: input.ignored_bots,
+      test_file_globs: input.test_file_globs,
+      business_hours: input.business_hours,
+    })
 
-  const bots_changed = JSON.stringify(previous.ignored_bots) !== JSON.stringify(next.ignored_bots)
-  const hours_changed =
-    JSON.stringify(previous.business_hours) !== JSON.stringify(next.business_hours)
-  if (bots_changed || hours_changed) {
-    await rebuild_pr_facts_for_repos(extra.repositories, [input.repo_full_name])
-  }
+    const bots_changed = JSON.stringify(previous.ignored_bots) !== JSON.stringify(next.ignored_bots)
+    const hours_changed =
+      JSON.stringify(previous.business_hours) !== JSON.stringify(next.business_hours)
+    if (bots_changed || hours_changed) {
+      await rebuild_pr_facts_for_repos(extra.repositories, [input.repo_full_name])
+    }
 
-  return next
-})
+    return next
+  },
+  {
+    condition: ({ repo_full_name }, { getState }) =>
+      !is_imported_repo(getState().settings.settings, repo_full_name),
+  },
+)
 
 export const complete_onboarding = create_app_async_thunk<void, { token: string }>(
   'settings/complete_onboarding',
@@ -199,9 +213,15 @@ export const delete_team = create_app_async_thunk<AppSettings, string>(
 export const save_dashboard_layout = create_app_async_thunk<
   AppSettings,
   AppSettings['dashboards'][number]['layout']
->('settings/save_dashboard_layout', async (layout, { extra }) => {
-  return extra.repositories.settings.save_dashboard_layout(layout)
-})
+>(
+  'settings/save_dashboard_layout',
+  async (layout, { extra }) => {
+    return extra.repositories.settings.save_dashboard_layout(layout)
+  },
+  {
+    condition: (_layout, { getState }) => can_mutate_active_repo(getState),
+  },
+)
 
 export const save_dashboard_filters = create_app_async_thunk<
   AppSettings,
@@ -213,28 +233,46 @@ export const save_dashboard_filters = create_app_async_thunk<
     custom_to: string
     hide_test_files: boolean
   }
->('settings/save_dashboard_filters', async (input, { extra }) => {
-  return extra.repositories.settings.save_dashboard_filters(input)
-})
+>(
+  'settings/save_dashboard_filters',
+  async (input, { extra }) => {
+    return extra.repositories.settings.save_dashboard_filters(input)
+  },
+  {
+    condition: (_input, { getState }) => can_mutate_active_repo(getState),
+  },
+)
 
 export const create_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/create_dashboard',
   async (name, { extra }) => {
     return extra.repositories.settings.create_dashboard(name)
   },
+  {
+    condition: (_name, { getState }) => can_mutate_active_repo(getState),
+  },
 )
 
 export const rename_dashboard = create_app_async_thunk<
   AppSettings,
   { dashboard_id: string; name: string }
->('settings/rename_dashboard', async (input, { extra }) => {
-  return extra.repositories.settings.rename_dashboard(input)
-})
+>(
+  'settings/rename_dashboard',
+  async (input, { extra }) => {
+    return extra.repositories.settings.rename_dashboard(input)
+  },
+  {
+    condition: (_input, { getState }) => can_mutate_active_repo(getState),
+  },
+)
 
 export const delete_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/delete_dashboard',
   async (dashboard_id, { extra }) => {
     return extra.repositories.settings.delete_dashboard(dashboard_id)
+  },
+  {
+    condition: (_dashboard_id, { getState }) => can_mutate_active_repo(getState),
   },
 )
 
@@ -277,16 +315,23 @@ export const download_repo_snapshot_file = create_app_async_thunk<void, { repo_f
 export const create_repo_share_link = create_app_async_thunk<
   { share_url: string; pr_count: number },
   { repo_full_name: string }
->('settings/create_repo_share_link', async ({ repo_full_name }, { extra }) => {
-  const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
-  const payload = encode_share_snapshot(snapshot)
-  const urls = await request_share_upload_urls(payload.byte_length)
-  await upload_share_snapshot(urls.upload_url, payload.body)
-  return {
-    share_url: build_share_page_url(urls.share_id),
-    pr_count: snapshot.pull_requests.length,
-  }
-})
+>(
+  'settings/create_repo_share_link',
+  async ({ repo_full_name }, { extra }) => {
+    const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
+    const payload = encode_share_snapshot(snapshot)
+    const urls = await request_share_upload_urls(payload.byte_length)
+    await upload_share_snapshot(urls.upload_url, payload.body)
+    return {
+      share_url: build_share_page_url(urls.share_id),
+      pr_count: snapshot.pull_requests.length,
+    }
+  },
+  {
+    condition: ({ repo_full_name }, { getState }) =>
+      !is_imported_repo(getState().settings.settings, repo_full_name),
+  },
+)
 
 export const import_repo_snapshot_from_link = create_app_async_thunk<
   { repo_full_name: string; pr_count: number },

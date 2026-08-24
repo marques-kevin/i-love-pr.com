@@ -3,15 +3,17 @@ import type { DashboardLayoutItem } from '@/lib/types'
 import { save_dashboard_layout } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
 import { get_active_dashboard, normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { is_imported_active_repo } from '@/lib/imported_repo'
 
 function map_state_to_props(state: RootState) {
   const settings = state.settings.settings
-  const { dashboards, active_dashboard_id } = settings
+  const { dashboards, active_dashboard_id, active_repo } = settings
     ? normalize_settings_dashboards(settings)
     : normalize_settings_dashboards({})
   const active = get_active_dashboard(dashboards, active_dashboard_id)
   return {
     layout: active.layout,
+    is_imported: is_imported_active_repo(settings, state.dashboard.active_repo ?? active_repo),
   }
 }
 

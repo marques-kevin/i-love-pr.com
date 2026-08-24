@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { is_imported_repo } from '@/lib/imported_repo'
 import { sync_all_repos } from '@/lib/sync'
 import { track_umami_event } from '@/lib/umami'
 import type { PrCreatedAtBounds } from '@/lib/pr_coverage'
@@ -44,43 +45,54 @@ export const refresh_pr_coverage = create_app_async_thunk<
 export const run_sync = create_app_async_thunk<
   { rate_limit: RateLimitInfo | null; sync_completed: boolean },
   { force?: boolean; repos?: string[] }
->('sync/run', async ({ force = false, repos }, { extra, dispatch, getState }) => {
-  const settings = await extra.repositories.settings.get()
-  if (!settings?.token?.trim()) {
-    return { rate_limit: null, sync_completed: false }
-  }
-  if (sync_lock) {
-    return { rate_limit: null, sync_completed: false }
-  }
-  sync_lock = true
-  try {
-    let last_coverage_refresh_at = 0
-    const result = await sync_all_repos({
-      repositories: extra.repositories,
-      force,
-      repos,
-      on_progress: (progress) => {
-        dispatch(set_progress(progress))
-        if (progress.rate_limit) {
-          dispatch(set_rate_limit(progress.rate_limit))
-        }
-        const now = Date.now()
-        if (now - last_coverage_refresh_at < 800) return
-        last_coverage_refresh_at = now
-        void dispatch(refresh_sync_states())
-        const { active_repo } = getState().dashboard
-        void dispatch(refresh_pr_coverage({ repos: active_repo ? [active_repo] : [] }))
-      },
-    })
-    await dispatch(refresh_sync_states())
-    if (result.sync_completed) {
-      track_umami_event('sync_completed')
+>(
+  'sync/run',
+  async ({ force = false, repos }, { extra, dispatch, getState }) => {
+    const settings = await extra.repositories.settings.get()
+    if (!settings?.token?.trim()) {
+      return { rate_limit: null, sync_completed: false }
     }
-    return result
-  } finally {
-    sync_lock = false
-  }
-})
+    if (sync_lock) {
+      return { rate_limit: null, sync_completed: false }
+    }
+    sync_lock = true
+    try {
+      let last_coverage_refresh_at = 0
+      const result = await sync_all_repos({
+        repositories: extra.repositories,
+        force,
+        repos,
+        on_progress: (progress) => {
+          dispatch(set_progress(progress))
+          if (progress.rate_limit) {
+            dispatch(set_rate_limit(progress.rate_limit))
+          }
+          const now = Date.now()
+          if (now - last_coverage_refresh_at < 800) return
+          last_coverage_refresh_at = now
+          void dispatch(refresh_sync_states())
+          const { active_repo } = getState().dashboard
+          void dispatch(refresh_pr_coverage({ repos: active_repo ? [active_repo] : [] }))
+        },
+      })
+      await dispatch(refresh_sync_states())
+      if (result.sync_completed) {
+        track_umami_event('sync_completed')
+      }
+      return result
+    } finally {
+      sync_lock = false
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      const repos = arg.repos
+      if (!repos || repos.length === 0) return true
+      const settings = getState().settings.settings
+      return repos.some((repo) => !is_imported_repo(settings, repo))
+    },
+  },
+)
 
 const sync_slice = createSlice({
   name: 'sync',

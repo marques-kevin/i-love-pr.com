@@ -15,7 +15,7 @@ function RepoRowList({
   repos,
   stats_by_repo,
   sync_states,
-  show_imported_badge,
+  is_imported,
   error_label,
   syncing_label,
   on_share,
@@ -25,7 +25,7 @@ function RepoRowList({
   repos: string[]
   stats_by_repo: Record<string, GalleryRowStats>
   sync_states: SyncState[]
-  show_imported_badge: boolean
+  is_imported: boolean
   error_label: string
   syncing_label: string
   on_share: (repo: string) => void
@@ -40,7 +40,7 @@ function RepoRowList({
           repo_full_name={repo}
           stats={stats_by_repo[repo]}
           sync_states={sync_states}
-          show_imported_badge={show_imported_badge}
+          is_imported={is_imported}
           error_label={error_label}
           syncing_label={syncing_label}
           on_share={on_share}
@@ -132,7 +132,7 @@ export function Wrapper({
                 repos={own_repositories}
                 stats_by_repo={stats_by_repo}
                 sync_states={sync_states}
-                show_imported_badge={false}
+                is_imported={false}
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}
@@ -153,7 +153,7 @@ export function Wrapper({
                 repos={imported_repositories}
                 stats_by_repo={stats_by_repo}
                 sync_states={sync_states}
-                show_imported_badge={true}
+                is_imported={true}
                 error_label={error_label}
                 syncing_label={syncing_label}
                 on_share={set_share_repo}

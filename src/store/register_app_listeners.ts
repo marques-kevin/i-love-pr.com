@@ -52,6 +52,7 @@ import {
   normalize_dashboard_filters,
   normalize_settings_dashboards,
 } from '@/lib/dashboard_layout'
+import { is_imported_active_repo } from '@/lib/imported_repo'
 import type { AppSettings } from '@/lib/types'
 import type { AppDispatch } from './create_store'
 import type { RootState } from './root_reducer'
@@ -313,6 +314,9 @@ export function register_app_listeners(
         const settings = api.getState().settings.settings
         if (!settings) {
           void api.dispatch(refresh_metrics())
+          return
+        }
+        if (is_imported_active_repo(settings, api.getState().dashboard.active_repo)) {
           return
         }
         const { members, period_key, custom_from, custom_to, hide_test_files } =

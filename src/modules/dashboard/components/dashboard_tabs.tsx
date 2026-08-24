@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import type { DashboardTab } from '@/lib/types'
+import { imported_repo_chrome } from '@/lib/imported_repo'
 import { dashboard_tab_class_name } from '@/modules/dashboard/lib/window_chrome'
 import { connector, type ConnectorProps } from './dashboard_tabs.connector'
 
@@ -21,12 +22,14 @@ function dashboard_tab_label(
 export function Wrapper({
   dashboards,
   active_dashboard_id,
+  is_imported,
   create_dashboard_tab,
   rename_dashboard_tab,
   delete_dashboard_tab,
   set_active_dashboard_id,
 }: ConnectorProps) {
   const intl = useIntl()
+  const chrome = imported_repo_chrome(is_imported)
   const [create_open, set_create_open] = useState(false)
   const [rename_open, set_rename_open] = useState(false)
   const [delete_open, set_delete_open] = useState(false)
@@ -38,17 +41,18 @@ export function Wrapper({
   const target_label = target_tab
     ? dashboard_tab_label(target_tab, intl.formatMessage)
     : intl.formatMessage({ id: 'dashboard.default_name' })
-  const can_delete_tab = dashboards.length > 1
+  const can_delete_tab = chrome.show_tab_mutations && dashboards.length > 1
 
   const submit_create = () => {
     const name = new_name.trim()
-    if (!name) return
+    if (!name || !chrome.show_tab_mutations) return
     create_dashboard_tab(name)
     set_new_name('')
     set_create_open(false)
   }
 
   const open_rename = (tab: DashboardTab) => {
+    if (!chrome.show_tab_mutations) return
     const label = dashboard_tab_label(tab, intl.formatMessage)
     set_target_tab_id(tab.id)
     set_rename_name(tab.name.trim() ? tab.name : label)
@@ -57,7 +61,7 @@ export function Wrapper({
 
   const submit_rename = () => {
     const name = rename_name.trim()
-    if (!name || !target_tab) return
+    if (!name || !target_tab || !chrome.show_tab_mutations) return
     rename_dashboard_tab(target_tab.id, name)
     set_rename_open(false)
     set_target_tab_id(null)
@@ -90,7 +94,7 @@ export function Wrapper({
                 aria-selected={is_active}
                 className="max-w-40 truncate px-3 py-2 text-left"
                 onClick={() => set_active_dashboard_id(tab.id)}
-                onDoubleClick={() => open_rename(tab)}
+                onDoubleClick={chrome.show_tab_mutations ? () => open_rename(tab) : undefined}
               >
                 {label}
               </button>
@@ -112,129 +116,143 @@ export function Wrapper({
         })}
       </div>
 
-      <Button
-        type="button"
-        className="btn-ghost btn-circle btn-xs mb-1 shrink-0"
-        onClick={() => {
-          set_new_name('')
-          set_create_open(true)
-        }}
-        aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
-      >
-        <HoverIcon icon={PlusSignIcon} size={16} />
-      </Button>
-
-      <Modal
-        open={create_open}
-        on_close={() => {
-          set_create_open(false)
-          set_new_name('')
-        }}
-        box_className="max-w-md"
-      >
-        <h3 className="font-display text-lg font-semibold">
-          {intl.formatMessage({ id: 'dashboard.create_title' })}
-        </h3>
-        <p className="text-base-content/60 mt-1 text-sm">
-          {intl.formatMessage({ id: 'dashboard.create_description' })}
-        </p>
-        <form
-          className="mt-4 space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submit_create()
+      {chrome.show_tab_mutations ? (
+        <Button
+          type="button"
+          className="btn-ghost btn-circle btn-xs mb-1 shrink-0"
+          onClick={() => {
+            set_new_name('')
+            set_create_open(true)
           }}
+          aria-label={intl.formatMessage({ id: 'dashboard.add_tab' })}
         >
-          <label className="form-control w-full">
-            <span className="label">
-              {intl.formatMessage({ id: 'dashboard.create_name_label' })}
-            </span>
-            <Input
-              id="dashboard-name"
-              value={new_name}
-              onChange={(event) => set_new_name(event.target.value)}
-              placeholder={intl.formatMessage({ id: 'dashboard.create_name_placeholder' })}
-              autoFocus
-            />
-          </label>
-          <div className="modal-action">
-            <Button type="button" className="btn-outline" onClick={() => set_create_open(false)}>
-              {intl.formatMessage({ id: 'dashboard.create_cancel' })}
-            </Button>
-            <Button type="submit" className="btn-primary" disabled={!new_name.trim()}>
-              {intl.formatMessage({ id: 'dashboard.create_confirm' })}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+          <HoverIcon icon={PlusSignIcon} size={16} />
+        </Button>
+      ) : null}
 
-      <Modal
-        open={rename_open}
-        on_close={() => {
-          set_rename_open(false)
-          set_rename_name('')
-          set_target_tab_id(null)
-        }}
-        box_className="max-w-md"
-      >
-        <h3 className="font-display text-lg font-semibold">
-          {intl.formatMessage({ id: 'dashboard.rename_title' })}
-        </h3>
-        <p className="text-base-content/60 mt-1 text-sm">
-          {intl.formatMessage({ id: 'dashboard.rename_description' })}
-        </p>
-        <form
-          className="mt-4 space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            submit_rename()
-          }}
-        >
-          <label className="form-control w-full">
-            <span className="label">
-              {intl.formatMessage({ id: 'dashboard.create_name_label' })}
-            </span>
-            <Input
-              id="dashboard-rename"
-              value={rename_name}
-              onChange={(event) => set_rename_name(event.target.value)}
-              autoFocus
-            />
-          </label>
-          <div className="modal-action">
-            <Button type="button" className="btn-outline" onClick={() => set_rename_open(false)}>
-              {intl.formatMessage({ id: 'dashboard.create_cancel' })}
-            </Button>
-            <Button type="submit" className="btn-primary" disabled={!rename_name.trim()}>
-              {intl.formatMessage({ id: 'dashboard.rename_confirm' })}
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      {chrome.show_tab_mutations ? (
+        <>
+          <Modal
+            open={create_open}
+            on_close={() => {
+              set_create_open(false)
+              set_new_name('')
+            }}
+            box_className="max-w-md"
+          >
+            <h3 className="font-display text-lg font-semibold">
+              {intl.formatMessage({ id: 'dashboard.create_title' })}
+            </h3>
+            <p className="text-base-content/60 mt-1 text-sm">
+              {intl.formatMessage({ id: 'dashboard.create_description' })}
+            </p>
+            <form
+              className="mt-4 space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                submit_create()
+              }}
+            >
+              <label className="form-control w-full">
+                <span className="label">
+                  {intl.formatMessage({ id: 'dashboard.create_name_label' })}
+                </span>
+                <Input
+                  id="dashboard-name"
+                  value={new_name}
+                  onChange={(event) => set_new_name(event.target.value)}
+                  placeholder={intl.formatMessage({ id: 'dashboard.create_name_placeholder' })}
+                  autoFocus
+                />
+              </label>
+              <div className="modal-action">
+                <Button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => set_create_open(false)}
+                >
+                  {intl.formatMessage({ id: 'dashboard.create_cancel' })}
+                </Button>
+                <Button type="submit" className="btn-primary" disabled={!new_name.trim()}>
+                  {intl.formatMessage({ id: 'dashboard.create_confirm' })}
+                </Button>
+              </div>
+            </form>
+          </Modal>
 
-      <Modal
-        open={delete_open}
-        on_close={() => {
-          set_delete_open(false)
-          set_target_tab_id(null)
-        }}
-        box_className="max-w-md"
-      >
-        <h3 className="font-display text-lg font-semibold">
-          {intl.formatMessage({ id: 'dashboard.delete_title' })}
-        </h3>
-        <p className="text-base-content/60 mt-1 text-sm">
-          {intl.formatMessage({ id: 'dashboard.delete_description' }, { name: target_label })}
-        </p>
-        <div className="modal-action">
-          <Button type="button" className="btn-outline" onClick={() => set_delete_open(false)}>
-            {intl.formatMessage({ id: 'dashboard.create_cancel' })}
-          </Button>
-          <Button type="button" className="btn-error" onClick={submit_delete}>
-            {intl.formatMessage({ id: 'dashboard.delete_confirm' })}
-          </Button>
-        </div>
-      </Modal>
+          <Modal
+            open={rename_open}
+            on_close={() => {
+              set_rename_open(false)
+              set_rename_name('')
+              set_target_tab_id(null)
+            }}
+            box_className="max-w-md"
+          >
+            <h3 className="font-display text-lg font-semibold">
+              {intl.formatMessage({ id: 'dashboard.rename_title' })}
+            </h3>
+            <p className="text-base-content/60 mt-1 text-sm">
+              {intl.formatMessage({ id: 'dashboard.rename_description' })}
+            </p>
+            <form
+              className="mt-4 space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault()
+                submit_rename()
+              }}
+            >
+              <label className="form-control w-full">
+                <span className="label">
+                  {intl.formatMessage({ id: 'dashboard.create_name_label' })}
+                </span>
+                <Input
+                  id="dashboard-rename"
+                  value={rename_name}
+                  onChange={(event) => set_rename_name(event.target.value)}
+                  autoFocus
+                />
+              </label>
+              <div className="modal-action">
+                <Button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => set_rename_open(false)}
+                >
+                  {intl.formatMessage({ id: 'dashboard.create_cancel' })}
+                </Button>
+                <Button type="submit" className="btn-primary" disabled={!rename_name.trim()}>
+                  {intl.formatMessage({ id: 'dashboard.rename_confirm' })}
+                </Button>
+              </div>
+            </form>
+          </Modal>
+
+          <Modal
+            open={delete_open}
+            on_close={() => {
+              set_delete_open(false)
+              set_target_tab_id(null)
+            }}
+            box_className="max-w-md"
+          >
+            <h3 className="font-display text-lg font-semibold">
+              {intl.formatMessage({ id: 'dashboard.delete_title' })}
+            </h3>
+            <p className="text-base-content/60 mt-1 text-sm">
+              {intl.formatMessage({ id: 'dashboard.delete_description' }, { name: target_label })}
+            </p>
+            <div className="modal-action">
+              <Button type="button" className="btn-outline" onClick={() => set_delete_open(false)}>
+                {intl.formatMessage({ id: 'dashboard.create_cancel' })}
+              </Button>
+              <Button type="button" className="btn-error" onClick={submit_delete}>
+                {intl.formatMessage({ id: 'dashboard.delete_confirm' })}
+              </Button>
+            </div>
+          </Modal>
+        </>
+      ) : null}
     </div>
   )
 }

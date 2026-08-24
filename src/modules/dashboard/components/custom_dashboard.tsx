@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import type { DashboardLayoutItem, DashboardWidgetId } from '@/lib/types'
 import { create_layout_item } from '@/lib/dashboard_layout'
+import { imported_repo_chrome } from '@/lib/imported_repo'
 import { widget_description_key, widget_label_key } from '@/lib/i18n'
 import { DASHBOARD_WIDGET_CATALOG, get_dashboard_widget_meta } from '../lib/widget_catalog'
 import { useDashboardEdit } from './dashboard_edit_context'
@@ -25,8 +26,9 @@ function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: nu
   return next
 }
 
-export function Wrapper({ layout, save_layout }: ConnectorProps) {
+export function Wrapper({ layout, is_imported, save_layout }: ConnectorProps) {
   const intl = useIntl()
+  const chrome = imported_repo_chrome(is_imported)
   const {
     editing,
     set_editing,
@@ -38,11 +40,13 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
   } = useDashboardEdit()
 
   const add_widget = (widget_id: DashboardWidgetId) => {
+    if (!chrome.show_customize) return
     save_layout([...layout, create_layout_item(widget_id)])
     set_picker_open(false)
   }
 
   const remove_widget = (instance_id: string) => {
+    if (!chrome.show_customize) return
     save_layout(layout.filter((item) => item.instance_id !== instance_id))
   }
 
@@ -56,17 +60,19 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           <p className="text-base-content/60 mt-2 text-sm">
             {intl.formatMessage({ id: 'dashboard.empty_body' })}
           </p>
-          <Button
-            type="button"
-            className="btn-primary mt-6"
-            onClick={() => {
-              set_editing(true)
-              open_picker()
-            }}
-          >
-            <HoverIcon icon={PlusSignIcon} size={16} />
-            {intl.formatMessage({ id: 'dashboard.add_chart' })}
-          </Button>
+          {chrome.show_customize ? (
+            <Button
+              type="button"
+              className="btn-primary mt-6"
+              onClick={() => {
+                set_editing(true)
+                open_picker()
+              }}
+            >
+              <HoverIcon icon={PlusSignIcon} size={16} />
+              {intl.formatMessage({ id: 'dashboard.add_chart' })}
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -117,7 +123,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
       )}
 
       <Modal
-        open={picker_open}
+        open={picker_open && chrome.show_customize}
         on_close={() => set_picker_open(false)}
         box_className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0"
         hide_close={false}
