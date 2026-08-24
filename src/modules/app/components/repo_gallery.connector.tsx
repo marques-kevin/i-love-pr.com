@@ -18,6 +18,7 @@ export const map_state_to_props = (state: RootState) => {
     imported_repositories: imported,
     sync_states: state.sync.sync_states,
     stats_by_repo: state.gallery.stats_by_repo,
+    import_job: state.import_job,
   }
 }
 

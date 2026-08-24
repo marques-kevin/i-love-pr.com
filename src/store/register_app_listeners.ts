@@ -12,20 +12,14 @@ import {
   clamp_active_repo_to_settings,
   refresh_metrics,
   request_import_repo,
-  clear_share_boot_import,
-  set_share_boot_import_error,
-  set_share_boot_import_pending,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
-import { active_repo_from_url_or_settings, repo_dashboard_path } from '@/lib/repo_path'
+import { active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
-import {
-  share_link_from_browser_location,
-  strip_share_link_from_browser_location,
-} from '@/lib/repo_snapshot'
+import { share_link_from_browser_location } from '@/lib/repo_snapshot'
 import {
   create_dashboard,
   delete_dashboard,
@@ -39,6 +33,11 @@ import {
   set_active_dashboard,
   set_active_repo,
 } from '@/modules/settings/redux/settings_slice'
+import {
+  complete_import_job,
+  fail_import_job,
+  start_import_job,
+} from '@/modules/settings/redux/import_job_slice'
 import { hydrate_locale_from_settings } from '@/modules/i18n/redux/i18n_slice'
 import {
   refresh_sync_states,
@@ -149,24 +148,6 @@ export function register_app_listeners(
   middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
-      const share_link = share_link_from_browser_location()
-      if (share_link) {
-        api.dispatch(set_share_boot_import_pending())
-        try {
-          const result = await api.dispatch(import_repo_snapshot_from_link({ share_link })).unwrap()
-          strip_share_link_from_browser_location()
-          const path = repo_dashboard_path(result.repo_full_name)
-          window.history.replaceState({}, '', path)
-          api.dispatch(hydrate_active_repo(result.repo_full_name))
-          await api.dispatch(set_active_repo(result.repo_full_name))
-          api.dispatch(clear_share_boot_import())
-        } catch (error) {
-          strip_share_link_from_browser_location()
-          api.dispatch(
-            set_share_boot_import_error(error instanceof Error ? error.message : 'Import failed'),
-          )
-        }
-      }
       await api.dispatch(load_settings())
     },
   })
@@ -176,20 +157,49 @@ export function register_app_listeners(
     effect: async (action, api) => {
       const settings = action.payload
       api.dispatch(hydrate_locale_from_settings(settings))
-      if (!settings) return
+      if (settings) {
+        await bootstrap_after_settings_loaded(api, settings)
+      }
 
-      await bootstrap_after_settings_loaded(api, settings)
-
-      if (
-        has_browser_navigator() &&
-        api.getState().dashboard.share_boot_import_status !== 'error'
-      ) {
+      if (has_browser_navigator()) {
         const share_link = share_link_from_browser_location()
         if (share_link) {
           api.dispatch(request_import_repo(share_link))
-          strip_share_link_from_browser_location()
         }
       }
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: import_repo_snapshot_from_link.pending,
+    effect: async (_action, api) => {
+      api.dispatch(start_import_job())
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: import_repo_snapshot_from_link.fulfilled,
+    effect: async (action, api) => {
+      api.dispatch(complete_import_job({ repo_full_name: action.payload.repo_full_name }))
+      const repo_full_name = action.payload.repo_full_name
+      apply_active_repo_from_url_or_settings(api)
+      api.dispatch(clamp_active_repo_to_settings(api.getState().settings.settings?.repos ?? []))
+      hydrate_filters_from_active_dashboard(api)
+      dispatch_refresh_pr_coverage(api)
+      void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
+
+      const pathname = current_pathname()
+      if (pathname === '/' || pathname === '') {
+        void api.dispatch(set_active_repo(repo_full_name))
+      }
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: import_repo_snapshot_from_link.rejected,
+    effect: async (action, api) => {
+      api.dispatch(fail_import_job(action.error.message ?? 'Import failed'))
     },
   })
 

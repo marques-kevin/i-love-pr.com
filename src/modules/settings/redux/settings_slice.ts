@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import { download_import_percent } from '@/lib/import_progress'
 import {
   download_repo_snapshot,
   export_repo_snapshot,
@@ -22,6 +23,7 @@ import { track_umami_event } from '@/lib/umami'
 import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
+import { update_import_job } from '@/modules/settings/redux/import_job_slice'
 
 export type SettingsState = {
   settings: AppSettings | null
@@ -298,8 +300,28 @@ export const import_repo_snapshot_from_link = create_app_async_thunk<
   }
   const origin = has_browser_navigator() ? window.location.origin : ''
   const download_url = `${origin}/api/share/${share_id}`
-  const snapshot = await fetch_share_snapshot(download_url)
-  const result = await import_repo_snapshot(extra.repositories, snapshot)
+  const snapshot = await fetch_share_snapshot(download_url, {
+    on_download_progress: (bytes_read, content_length) => {
+      dispatch(
+        update_import_job({
+          step: 'download',
+          percent: download_import_percent(bytes_read, content_length),
+        }),
+      )
+    },
+  })
+  dispatch(
+    update_import_job({
+      step: 'download',
+      percent: 30,
+      repo_full_name: snapshot.repo_full_name,
+    }),
+  )
+  const result = await import_repo_snapshot(extra.repositories, snapshot, {
+    on_progress: (progress) => {
+      dispatch(update_import_job(progress))
+    },
+  })
   await dispatch(load_settings())
   return result
 })

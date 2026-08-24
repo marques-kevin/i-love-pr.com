@@ -57,6 +57,7 @@ export function Wrapper({
   imported_repositories,
   sync_states,
   stats_by_repo,
+  import_job,
   request_add_repository,
   request_import_repository,
   remove_repo,
@@ -88,6 +89,36 @@ export function Wrapper({
 
   return (
     <div className="space-y-6">
+      {import_job.status === 'running' || import_job.status === 'error' ? (
+        <div
+          role="status"
+          className={`alert ${import_job.status === 'error' ? 'alert-error' : 'alert-info'}`}
+        >
+          <div className="w-full space-y-2">
+            <p className="text-sm font-medium">
+              {import_job.status === 'error'
+                ? intl.formatMessage(
+                    { id: 'app.nav.import_repository_banner_error' },
+                    { repo: import_job.repo_full_name ?? '…' },
+                  )
+                : intl.formatMessage(
+                    { id: 'app.nav.import_repository_banner_running' },
+                    { repo: import_job.repo_full_name ?? '…' },
+                  )}
+            </p>
+            {import_job.status === 'running' ? (
+              <progress
+                className="progress progress-primary w-full"
+                value={import_job.percent}
+                max={100}
+              />
+            ) : import_job.error ? (
+              <p className="text-sm opacity-80">{import_job.error}</p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <div>
         <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {intl.formatMessage({ id: 'app.nav.repositories' })}
@@ -143,12 +174,28 @@ export function Wrapper({
           )}
         </section>
 
-        {imported_repositories.length > 0 ? (
+        {imported_repositories.length > 0 || import_job.status === 'running' ? (
           <section>
             <h2 className="font-display text-lg">
               {intl.formatMessage({ id: 'home.imported_repositories' })}
             </h2>
             <div className="mt-4">
+              {import_job.status === 'running' &&
+              import_job.repo_full_name &&
+              !imported_repositories.includes(import_job.repo_full_name) ? (
+                <ul className="space-y-3">
+                  <li className="card bg-base-100 ring-base-content/10 rounded-3xl shadow-none ring-1">
+                    <div className="card-body gap-3 px-6 py-5">
+                      <p className="font-medium">{import_job.repo_full_name}</p>
+                      <progress
+                        className="progress progress-primary w-full"
+                        value={import_job.percent}
+                        max={100}
+                      />
+                    </div>
+                  </li>
+                </ul>
+              ) : null}
               <RepoRowList
                 repos={imported_repositories}
                 stats_by_repo={stats_by_repo}

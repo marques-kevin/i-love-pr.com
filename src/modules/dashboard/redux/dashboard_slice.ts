@@ -14,8 +14,6 @@ function build_period(key: PeriodKey, custom_from?: string, custom_to?: string):
   return { key, from: subDays(to, days), to }
 }
 
-export type ShareBootImportStatus = 'idle' | 'pending' | 'error'
-
 export type DashboardState = {
   active_repo: string | null
   members: string[]
@@ -33,8 +31,6 @@ export type DashboardState = {
   /** One-shot: open the import-repository dialog (optionally prefilled). */
   import_repo_requested: boolean
   import_repo_link: string | null
-  share_boot_import_status: ShareBootImportStatus
-  share_boot_import_error: string | null
 }
 
 const initial_state: DashboardState = {
@@ -52,8 +48,6 @@ const initial_state: DashboardState = {
   add_repository_requested: false,
   import_repo_requested: false,
   import_repo_link: null,
-  share_boot_import_status: 'idle',
-  share_boot_import_error: null,
 }
 
 export const refresh_metrics = create_app_async_thunk<
@@ -136,18 +130,6 @@ const dashboard_slice = createSlice({
       state.import_repo_requested = false
       state.import_repo_link = null
     },
-    set_share_boot_import_pending(state) {
-      state.share_boot_import_status = 'pending'
-      state.share_boot_import_error = null
-    },
-    set_share_boot_import_error(state, action: PayloadAction<string>) {
-      state.share_boot_import_status = 'error'
-      state.share_boot_import_error = action.payload
-    },
-    clear_share_boot_import(state) {
-      state.share_boot_import_status = 'idle'
-      state.share_boot_import_error = null
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -180,9 +162,6 @@ export const {
   clear_add_repository_request,
   request_import_repo,
   clear_import_repo_request,
-  set_share_boot_import_pending,
-  set_share_boot_import_error,
-  clear_share_boot_import,
 } = dashboard_slice.actions
 
 export const dashboard_reducer = dashboard_slice.reducer
