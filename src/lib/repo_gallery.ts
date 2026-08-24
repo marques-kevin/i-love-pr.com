@@ -1,6 +1,15 @@
+import type { AppSettings } from '@/lib/types'
+
 export type RepoGalleryPartition = {
   own: string[]
   imported: string[]
+}
+
+export function is_imported_repo(
+  settings: Pick<AppSettings, 'imported_repos'> | null | undefined,
+  repo_full_name: string,
+): boolean {
+  return (settings?.imported_repos ?? []).includes(repo_full_name)
 }
 
 export function partition_gallery_repos(

@@ -7,6 +7,7 @@ import {
 } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
 import { dashboards_for_repo, normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { imported_dashboard_chrome, select_is_imported_from_state } from '../lib/imported_dashboard'
 
 function map_state_to_props(state: RootState) {
   const settings = state.settings.settings
@@ -14,9 +15,11 @@ function map_state_to_props(state: RootState) {
     ? normalize_settings_dashboards(settings)
     : normalize_settings_dashboards({})
   const active_repo = state.dashboard.active_repo ?? normalized.active_repo
+  const is_imported = select_is_imported_from_state(state)
   return {
     dashboards: dashboards_for_repo(normalized.dashboards, active_repo),
     active_dashboard_id: normalized.active_dashboard_id,
+    chrome: imported_dashboard_chrome(is_imported),
   }
 }
 

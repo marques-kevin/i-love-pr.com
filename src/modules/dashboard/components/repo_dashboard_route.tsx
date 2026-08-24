@@ -17,6 +17,7 @@ export function Wrapper({
   repos,
   active_repo,
   active_dashboard_id,
+  chrome,
   set_active_repo,
 }: ConnectorProps) {
   const { owner, name } = useParams()
@@ -47,10 +48,10 @@ export function Wrapper({
             animate={window_motion.animate}
             exit={window_motion.exit}
           >
-            <DashboardEditProvider>
+            <DashboardEditProvider read_only={!chrome.show_edit_chrome}>
               <div className="shrink-0">
                 <DashboardHeader on_close_window={() => set_close_pending(true)} />
-                <DashboardToolbar />
+                {chrome.show_toolbar ? <DashboardToolbar /> : null}
               </div>
               <div className="bg-base-100 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-pb-10 px-4 pt-6 pb-10 sm:px-6 lg:px-8">
                 <AnimatePresence mode="wait">
@@ -65,7 +66,7 @@ export function Wrapper({
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <CustomizeFab />
+              {chrome.show_customize_fab ? <CustomizeFab /> : null}
             </DashboardEditProvider>
           </motion.div>
         )}

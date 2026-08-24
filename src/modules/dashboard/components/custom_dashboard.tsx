@@ -25,7 +25,7 @@ function move_item(layout: DashboardLayoutItem[], instance_id: string, delta: nu
   return next
 }
 
-export function Wrapper({ layout, save_layout }: ConnectorProps) {
+export function Wrapper({ layout, save_layout, chrome }: ConnectorProps) {
   const intl = useIntl()
   const {
     editing,
@@ -56,17 +56,19 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
           <p className="text-base-content/60 mt-2 text-sm">
             {intl.formatMessage({ id: 'dashboard.empty_body' })}
           </p>
-          <Button
-            type="button"
-            className="btn-primary mt-6"
-            onClick={() => {
-              set_editing(true)
-              open_picker()
-            }}
-          >
-            <HoverIcon icon={PlusSignIcon} size={16} />
-            {intl.formatMessage({ id: 'dashboard.add_chart' })}
-          </Button>
+          {chrome.show_edit_chrome ? (
+            <Button
+              type="button"
+              className="btn-primary mt-6"
+              onClick={() => {
+                set_editing(true)
+                open_picker()
+              }}
+            >
+              <HoverIcon icon={PlusSignIcon} size={16} />
+              {intl.formatMessage({ id: 'dashboard.add_chart' })}
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -76,7 +78,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
             const span_class = meta.span === 'full' ? 'lg:col-span-2' : ''
             return (
               <div key={item.instance_id} className={`relative min-w-0 ${span_class}`}>
-                {editing && (
+                {editing && chrome.show_edit_chrome ? (
                   <div className="bg-base-200/40 mb-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-base-300 px-3 py-2">
                     <span className="text-sm font-medium">{label}</span>
                     <div className="flex gap-1">
@@ -108,7 +110,7 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
                       </Button>
                     </div>
                   </div>
-                )}
+                ) : null}
                 <DashboardWidget widget_id={item.widget_id} />
               </div>
             )
@@ -116,86 +118,88 @@ export function Wrapper({ layout, save_layout }: ConnectorProps) {
         </div>
       )}
 
-      <Modal
-        open={picker_open}
-        on_close={() => set_picker_open(false)}
-        box_className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0"
-        hide_close={false}
-      >
-        <div className="shrink-0 border-b border-base-300 px-6 py-4 pr-12">
-          <h3 className="font-display text-lg font-semibold">
-            {intl.formatMessage({ id: 'dashboard.add_title' })}
-          </h3>
-          <p className="text-base-content/60 mt-1 text-sm">
-            {intl.formatMessage({ id: 'dashboard.add_description' })}
-          </p>
-        </div>
-
-        <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[minmax(14rem,18rem)_1fr]">
-          <div className="min-h-0 max-h-[40vh] overflow-y-auto overscroll-contain md:h-full md:max-h-none">
-            <ul className="menu w-full rounded-none border-b border-base-300 p-3 md:border-r md:border-b-0">
-              {DASHBOARD_WIDGET_CATALOG.map((widget) => {
-                const selected = widget.widget_id === preview_widget_id
-                return (
-                  <li key={widget.widget_id}>
-                    <button
-                      type="button"
-                      className={selected ? 'menu-active' : undefined}
-                      onClick={() => set_preview_widget_id(widget.widget_id)}
-                      aria-pressed={selected}
-                    >
-                      <span className="flex flex-col items-start gap-0.5">
-                        <span className="text-sm font-medium">
-                          {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
-                        </span>
-                        <span
-                          className={
-                            selected
-                              ? 'text-primary-content/80 text-xs'
-                              : 'text-base-content/60 text-xs'
-                          }
-                        >
-                          {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+      {chrome.show_edit_chrome ? (
+        <Modal
+          open={picker_open}
+          on_close={() => set_picker_open(false)}
+          box_className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden p-0"
+          hide_close={false}
+        >
+          <div className="shrink-0 border-b border-base-300 px-6 py-4 pr-12">
+            <h3 className="font-display text-lg font-semibold">
+              {intl.formatMessage({ id: 'dashboard.add_title' })}
+            </h3>
+            <p className="text-base-content/60 mt-1 text-sm">
+              {intl.formatMessage({ id: 'dashboard.add_description' })}
+            </p>
           </div>
 
-          <div className="flex min-h-0 flex-col">
-            <div className="flex items-center justify-between gap-2 border-b border-base-300 px-4 py-2">
-              <p className="text-sm font-medium">
-                {intl.formatMessage({ id: 'dashboard.add_preview' })}
-                <span className="text-base-content/60 ml-2 font-normal">
-                  {intl.formatMessage({ id: widget_label_key(preview_widget_id) })}
-                </span>
-              </p>
+          <div className="grid min-h-0 flex-1 overflow-hidden md:grid-cols-[minmax(14rem,18rem)_1fr]">
+            <div className="min-h-0 max-h-[40vh] overflow-y-auto overscroll-contain md:h-full md:max-h-none">
+              <ul className="menu w-full rounded-none border-b border-base-300 p-3 md:border-r md:border-b-0">
+                {DASHBOARD_WIDGET_CATALOG.map((widget) => {
+                  const selected = widget.widget_id === preview_widget_id
+                  return (
+                    <li key={widget.widget_id}>
+                      <button
+                        type="button"
+                        className={selected ? 'menu-active' : undefined}
+                        onClick={() => set_preview_widget_id(widget.widget_id)}
+                        aria-pressed={selected}
+                      >
+                        <span className="flex flex-col items-start gap-0.5">
+                          <span className="text-sm font-medium">
+                            {intl.formatMessage({ id: widget_label_key(widget.widget_id) })}
+                          </span>
+                          <span
+                            className={
+                              selected
+                                ? 'text-primary-content/80 text-xs'
+                                : 'text-base-content/60 text-xs'
+                            }
+                          >
+                            {intl.formatMessage({ id: widget_description_key(widget.widget_id) })}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
-            <div className="min-h-[16rem] flex-1 overflow-y-auto p-4 md:min-h-[22rem]">
-              <div key={preview_widget_id} className="min-w-0">
-                <DashboardWidget widget_id={preview_widget_id} />
+
+            <div className="flex min-h-0 flex-col">
+              <div className="flex items-center justify-between gap-2 border-b border-base-300 px-4 py-2">
+                <p className="text-sm font-medium">
+                  {intl.formatMessage({ id: 'dashboard.add_preview' })}
+                  <span className="text-base-content/60 ml-2 font-normal">
+                    {intl.formatMessage({ id: widget_label_key(preview_widget_id) })}
+                  </span>
+                </p>
+              </div>
+              <div className="min-h-[16rem] flex-1 overflow-y-auto p-4 md:min-h-[22rem]">
+                <div key={preview_widget_id} className="min-w-0">
+                  <DashboardWidget widget_id={preview_widget_id} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="modal-action mx-6 mb-6">
-          <Button type="button" className="btn-outline" onClick={() => set_picker_open(false)}>
-            {intl.formatMessage({ id: 'dashboard.add_cancel' })}
-          </Button>
-          <Button
-            type="button"
-            className="btn-primary"
-            onClick={() => add_widget(preview_widget_id)}
-          >
-            <HoverIcon icon={PlusSignIcon} size={16} />
-            {intl.formatMessage({ id: 'dashboard.add_confirm' })}
-          </Button>
-        </div>
-      </Modal>
+          <div className="modal-action mx-6 mb-6">
+            <Button type="button" className="btn-outline" onClick={() => set_picker_open(false)}>
+              {intl.formatMessage({ id: 'dashboard.add_cancel' })}
+            </Button>
+            <Button
+              type="button"
+              className="btn-primary"
+              onClick={() => add_widget(preview_widget_id)}
+            >
+              <HoverIcon icon={PlusSignIcon} size={16} />
+              {intl.formatMessage({ id: 'dashboard.add_confirm' })}
+            </Button>
+          </div>
+        </Modal>
+      ) : null}
     </>
   )
 }

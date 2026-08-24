@@ -202,30 +202,34 @@ export function RepoGalleryRow({
               {intl.formatMessage({ id: 'repo_gallery.view' })}
             </Link>
           </li>
-          <li>
-            <button
-              type="button"
-              onClick={(event) => {
-                on_share(repo_full_name)
-                close_daisy_dropdown(event.currentTarget)
-              }}
-            >
-              <HoverIcon icon={Share08Icon} size={16} />
-              {intl.formatMessage({ id: 'repo_gallery.share' })}
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              onClick={(event) => {
-                on_settings(repo_full_name)
-                close_daisy_dropdown(event.currentTarget)
-              }}
-            >
-              <HoverIcon icon={Settings01Icon} size={16} />
-              {intl.formatMessage({ id: 'repo_gallery.settings' })}
-            </button>
-          </li>
+          {!show_imported_badge ? (
+            <>
+              <li>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    on_share(repo_full_name)
+                    close_daisy_dropdown(event.currentTarget)
+                  }}
+                >
+                  <HoverIcon icon={Share08Icon} size={16} />
+                  {intl.formatMessage({ id: 'repo_gallery.share' })}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    on_settings(repo_full_name)
+                    close_daisy_dropdown(event.currentTarget)
+                  }}
+                >
+                  <HoverIcon icon={Settings01Icon} size={16} />
+                  {intl.formatMessage({ id: 'repo_gallery.settings' })}
+                </button>
+              </li>
+            </>
+          ) : null}
           <li>
             <hr className="border-base-300 my-1" />
           </li>

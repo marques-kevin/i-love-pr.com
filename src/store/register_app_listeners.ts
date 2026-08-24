@@ -19,6 +19,7 @@ import {
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
 import { active_repo_from_url_or_settings, repo_dashboard_path } from '@/lib/repo_path'
+import { select_is_imported_from_state } from '@/modules/dashboard/lib/imported_dashboard'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
@@ -310,6 +311,10 @@ export function register_app_listeners(
     middleware.startListening({
       actionCreator: action_creator,
       effect: async (_action, api) => {
+        if (select_is_imported_from_state(api.getState())) {
+          void api.dispatch(refresh_metrics())
+          return
+        }
         const settings = api.getState().settings.settings
         if (!settings) {
           void api.dispatch(refresh_metrics())

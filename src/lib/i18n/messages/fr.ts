@@ -47,6 +47,7 @@ export const fr_messages = define_locale_messages({
   'home.imported_badge': 'Importé',
   'home.open_repo': 'Ouvrir {repo}',
   'dashboard.back_to_list': 'Retour aux dépôts',
+  'dashboard.imported_snapshot': 'Instantané importé',
   'app.language': 'Langue',
   'app.locale.en': 'English',
   'app.locale.fr': 'Français',

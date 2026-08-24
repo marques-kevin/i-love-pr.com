@@ -3,6 +3,7 @@ import type { DashboardLayoutItem } from '@/lib/types'
 import { save_dashboard_layout } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
 import { get_active_dashboard, normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { imported_dashboard_chrome, select_is_imported_from_state } from '../lib/imported_dashboard'
 
 function map_state_to_props(state: RootState) {
   const settings = state.settings.settings
@@ -10,8 +11,10 @@ function map_state_to_props(state: RootState) {
     ? normalize_settings_dashboards(settings)
     : normalize_settings_dashboards({})
   const active = get_active_dashboard(dashboards, active_dashboard_id)
+  const is_imported = select_is_imported_from_state(state)
   return {
     layout: active.layout,
+    chrome: imported_dashboard_chrome(is_imported),
   }
 }
 
