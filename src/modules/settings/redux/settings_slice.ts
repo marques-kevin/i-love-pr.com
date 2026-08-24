@@ -291,7 +291,7 @@ export const create_repo_share_link = create_app_async_thunk<
 export const import_repo_snapshot_from_link = create_app_async_thunk<
   { repo_full_name: string; pr_count: number },
   { share_link: string }
->('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra }) => {
+>('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra, dispatch }) => {
   const share_id = parse_share_id_from_url(share_link)
   if (!share_id) {
     throw new Error('Invalid share link')
@@ -299,7 +299,9 @@ export const import_repo_snapshot_from_link = create_app_async_thunk<
   const origin = has_browser_navigator() ? window.location.origin : ''
   const download_url = `${origin}/api/share/${share_id}`
   const snapshot = await fetch_share_snapshot(download_url)
-  return import_repo_snapshot(extra.repositories, snapshot)
+  const result = await import_repo_snapshot(extra.repositories, snapshot)
+  await dispatch(load_settings())
+  return result
 })
 
 export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name: string }>(

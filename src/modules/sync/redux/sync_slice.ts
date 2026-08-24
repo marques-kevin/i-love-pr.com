@@ -45,6 +45,10 @@ export const run_sync = create_app_async_thunk<
   { rate_limit: RateLimitInfo | null; sync_completed: boolean },
   { force?: boolean; repos?: string[] }
 >('sync/run', async ({ force = false, repos }, { extra, dispatch, getState }) => {
+  const settings = await extra.repositories.settings.get()
+  if (!settings?.token?.trim()) {
+    return { rate_limit: null, sync_completed: false }
+  }
   if (sync_lock) {
     return { rate_limit: null, sync_completed: false }
   }
