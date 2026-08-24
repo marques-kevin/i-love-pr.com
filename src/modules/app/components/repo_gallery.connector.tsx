@@ -2,6 +2,7 @@ import { connect, type ConnectedProps } from 'react-redux'
 import { partition_gallery_repos } from '@/lib/repo_gallery'
 import { load_gallery_stats } from '@/store'
 import {
+  dismiss_import_job,
   load_repo_settings,
   request_add_repository as request_add_repository_action,
   request_import_repo as request_import_repo_action,
@@ -18,6 +19,7 @@ export const map_state_to_props = (state: RootState) => {
     imported_repositories: imported,
     sync_states: state.sync.sync_states,
     stats_by_repo: state.gallery.stats_by_repo,
+    import_job: state.settings.import_job,
   }
 }
 
@@ -34,6 +36,9 @@ export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
   },
   load_gallery_stats: () => {
     void dispatch(load_gallery_stats())
+  },
+  dismiss_import_job: () => {
+    dispatch(dismiss_import_job())
   },
 })
 

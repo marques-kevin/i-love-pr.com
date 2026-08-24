@@ -2,15 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { DEFAULT_TEST_FILE_GLOBS } from '@/lib/test_file_patterns'
+import { import_job_percent } from '@/lib/import_job_progress'
 import {
   assert_snapshot_has_no_token,
   export_repo_snapshot,
+  IMPORT_WRITE_CHUNK_SIZE,
   import_repo_snapshot,
   parse_repo_snapshot,
   parse_share_id_from_url,
   RepoSnapshotError,
   serialize_repo_snapshot,
+  snapshot_write_record_count,
   validate_repo_snapshot,
+  type ImportSnapshotWriteProgress,
   type RepoSnapshotV1,
 } from '@/lib/repo_snapshot'
 import type { AppSettings, DashboardTab, PullRequestRecord } from '@/lib/types'
@@ -385,5 +389,72 @@ describe('repo_snapshot', () => {
     const settings = await target.settings.get()
     expect(settings?.repos).toContain(repo)
     expect(settings?.imported_repos).toEqual([])
+  })
+
+  it('reports increasing write progress across chunked PR batches', async () => {
+    const repo = 'acme/widgets'
+    const pull_requests: PullRequestRecord[] = []
+    for (let index = 0; index < IMPORT_WRITE_CHUNK_SIZE + 5; index += 1) {
+      pull_requests.push({
+        ...sample_pr(repo),
+        id: `pr-${index}`,
+        number: index + 1,
+      })
+    }
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests,
+      reviews: [
+        {
+          id: 'rev-1',
+          pr_id: 'pr-0',
+          repo_full_name: repo,
+          pr_number: 1,
+          author: 'bob',
+          state: 'APPROVED',
+          submitted_at: '2026-01-01T02:00:00.000Z',
+        },
+      ],
+      pr_changed_files: [
+        {
+          id: 'file-1',
+          pr_id: 'pr-0',
+          path: 'src/widget.ts',
+          additions: 10,
+          deletions: 2,
+        },
+      ],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    const reports: ImportSnapshotWriteProgress[] = []
+    const target = create_memory_repositories()
+    await import_repo_snapshot(target, snapshot, (progress) => {
+      reports.push({ ...progress })
+    })
+
+    expect(reports.length).toBeGreaterThan(2)
+    const percents = reports.map((progress) =>
+      import_job_percent(
+        progress.step,
+        progress.records_total > 0 ? progress.records_written / progress.records_total : null,
+      ),
+    )
+    for (let index = 1; index < percents.length; index += 1) {
+      expect(percents[index]).toBeGreaterThanOrEqual(percents[index - 1] ?? 0)
+    }
+    expect(reports[reports.length - 1]?.step).toBe('facts')
+    expect(reports[reports.length - 1]?.records_written).toBe(snapshot_write_record_count(snapshot))
+    const settings = await target.settings.get()
+    expect(settings?.token).toBe('')
+    expect(settings?.imported_repos).toEqual([repo])
   })
 })

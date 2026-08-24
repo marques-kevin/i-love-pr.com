@@ -3,7 +3,6 @@ import { AccountPicker } from '@/modules/accounts/components/account_picker'
 import { Onboarding } from '@/modules/onboarding'
 import { AppChromeHeader } from './components/app_chrome_header'
 import { AppShell } from './components/app_shell'
-import { ShareImportError } from './components/share_import_error'
 import { connector, type ConnectorProps } from './app.connector'
 
 export function Wrapper({
@@ -11,12 +10,14 @@ export function Wrapper({
   settings_loading,
   accounts,
   adding_account,
-  share_boot_import_status,
-  share_boot_import_error,
+  import_repo_requested,
+  import_job_status,
 }: ConnectorProps) {
   const intl = useIntl()
+  const import_job_active = import_job_status !== 'idle'
+  const show_shell = Boolean(settings) || import_repo_requested || import_job_active
 
-  if (settings_loading || share_boot_import_status === 'pending') {
+  if (settings_loading && !show_shell) {
     return (
       <div className="min-h-screen">
         <AppChromeHeader />
@@ -27,11 +28,7 @@ export function Wrapper({
     )
   }
 
-  if (share_boot_import_status === 'error') {
-    return <ShareImportError error={share_boot_import_error} />
-  }
-
-  if (settings) {
+  if (show_shell) {
     return <AppShell />
   }
 

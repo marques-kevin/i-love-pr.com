@@ -15,6 +15,7 @@ import { connector, type ConnectorProps } from './home_header.connector'
 export function Wrapper({
   add_repository_requested,
   import_repo_requested,
+  import_repo_link,
   set_show_settings,
   load_available_repos,
   clear_add_repository_request,
@@ -93,7 +94,9 @@ export function Wrapper({
         </div>
       </div>
       {show_add_repo_dialog ? <AddRepositoryDialog on_close={close_add_repo_dialog} /> : null}
-      {show_import_repo_dialog ? <ImportRepoDialog on_close={close_import_repo_dialog} /> : null}
+      {show_import_repo_dialog ? (
+        <ImportRepoDialog key={import_repo_link ?? 'manual'} on_close={close_import_repo_dialog} />
+      ) : null}
     </header>
   )
 }

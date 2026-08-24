@@ -415,37 +415,86 @@ export function assert_snapshot_has_no_token(snapshot: RepoSnapshotV1): void {
   }
 }
 
+export const IMPORT_WRITE_CHUNK_SIZE = 250
+
+export type ImportSnapshotWriteProgress = {
+  step: 'prs' | 'facts'
+  records_written: number
+  records_total: number
+}
+
+export type ImportSnapshotProgressCallback = (progress: ImportSnapshotWriteProgress) => void
+
+function yield_to_ui(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0)
+  })
+}
+
+export function snapshot_write_record_count(snapshot: RepoSnapshotV1): number {
+  return snapshot.pull_requests.length + snapshot.reviews.length + snapshot.pr_changed_files.length
+}
+
+function group_by_pr_id<T extends { pr_id: string }>(rows: T[]): Map<string, T[]> {
+  const grouped = new Map<string, T[]>()
+  for (const row of rows) {
+    const list = grouped.get(row.pr_id) ?? []
+    list.push(row)
+    grouped.set(row.pr_id, list)
+  }
+  return grouped
+}
+
 export async function import_repo_snapshot(
   repositories: Repositories,
   snapshot: RepoSnapshotV1,
+  on_progress?: ImportSnapshotProgressCallback,
 ): Promise<{ repo_full_name: string; pr_count: number }> {
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
   const settings = await ensure_settings_initialized(repositories)
+  const records_total = snapshot_write_record_count(snapshot)
+  let records_written = 0
 
-  if (snapshot.pull_requests.length > 0) {
-    await repositories.pull_requests.put_many(snapshot.pull_requests)
+  function report_prs() {
+    on_progress?.({ step: 'prs', records_written, records_total })
   }
 
-  const reviews_by_pr = new Map<string, ReviewRecord[]>()
-  for (const review of snapshot.reviews) {
-    const list = reviews_by_pr.get(review.pr_id) ?? []
-    list.push(review)
-    reviews_by_pr.set(review.pr_id, list)
+  report_prs()
+
+  for (let index = 0; index < snapshot.pull_requests.length; index += IMPORT_WRITE_CHUNK_SIZE) {
+    const chunk = snapshot.pull_requests.slice(index, index + IMPORT_WRITE_CHUNK_SIZE)
+    await repositories.pull_requests.put_many(chunk)
+    records_written += chunk.length
+    report_prs()
+    await yield_to_ui()
   }
+
+  const reviews_by_pr = group_by_pr_id(snapshot.reviews)
+  let reviews_since_yield = 0
   for (const [pr_id, reviews] of reviews_by_pr) {
     await repositories.reviews.replace_for_pr(pr_id, reviews)
+    records_written += reviews.length
+    reviews_since_yield += 1
+    report_prs()
+    if (reviews_since_yield >= IMPORT_WRITE_CHUNK_SIZE) {
+      reviews_since_yield = 0
+      await yield_to_ui()
+    }
   }
 
-  const changed_files_by_pr = new Map<string, PrChangedFileRecord[]>()
-  for (const file of snapshot.pr_changed_files) {
-    const list = changed_files_by_pr.get(file.pr_id) ?? []
-    list.push(file)
-    changed_files_by_pr.set(file.pr_id, list)
-  }
+  const changed_files_by_pr = group_by_pr_id(snapshot.pr_changed_files)
+  let files_since_yield = 0
   for (const [pr_id, files] of changed_files_by_pr) {
     await repositories.pr_changed_files.replace_for_pr(pr_id, files)
+    records_written += files.length
+    files_since_yield += 1
+    report_prs()
+    if (files_since_yield >= IMPORT_WRITE_CHUNK_SIZE) {
+      files_since_yield = 0
+      await yield_to_ui()
+    }
   }
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
@@ -481,7 +530,9 @@ export async function import_repo_snapshot(
     teams: merged_teams,
   })
   await repositories.settings.upsert_repos(merged_repos)
+  on_progress?.({ step: 'facts', records_written, records_total })
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
+  on_progress?.({ step: 'facts', records_written: records_total, records_total })
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
 }

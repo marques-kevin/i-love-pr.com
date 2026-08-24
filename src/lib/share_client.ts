@@ -111,13 +111,62 @@ export async function upload_share_snapshot(upload_url: string, body: string): P
   }
 }
 
-export async function fetch_share_snapshot(download_url: string): Promise<RepoSnapshotV1> {
+export type ShareDownloadProgressCallback = (
+  received_bytes: number,
+  total_bytes: number | null,
+) => void
+
+function content_length_from_headers(headers: Headers): number | null {
+  const raw = headers.get('content-length')
+  if (!raw) return null
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+async function read_response_text(
+  response: Response,
+  on_progress?: ShareDownloadProgressCallback,
+): Promise<string> {
+  const total_bytes = content_length_from_headers(response.headers)
+  const body = response.body
+  if (!body || !on_progress) {
+    const raw = await response.text()
+    on_progress?.(raw.length, total_bytes ?? raw.length)
+    return raw
+  }
+
+  const reader = body.getReader()
+  const chunks: Uint8Array[] = []
+  let received_bytes = 0
+  on_progress(0, total_bytes)
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    if (!value) continue
+    chunks.push(value)
+    received_bytes += value.byteLength
+    on_progress(received_bytes, total_bytes)
+  }
+
+  const merged = new Uint8Array(received_bytes)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(merged)
+}
+
+export async function fetch_share_snapshot(
+  download_url: string,
+  on_progress?: ShareDownloadProgressCallback,
+): Promise<RepoSnapshotV1> {
   const response = await fetch(download_url)
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
     throw new Error(detail || `Download failed (${response.status})`)
   }
-  const raw = await response.text()
+  const raw = await read_response_text(response, on_progress)
   return parse_repo_snapshot(raw)
 }
 

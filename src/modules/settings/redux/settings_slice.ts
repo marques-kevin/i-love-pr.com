@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
+import { import_job_percent, type ImportJobStep } from '@/lib/import_job_progress'
 import {
   download_repo_snapshot,
   export_repo_snapshot,
@@ -23,6 +24,16 @@ import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
+export type ImportJobStatus = 'idle' | 'running' | 'success' | 'error'
+
+export type ImportJobState = {
+  status: ImportJobStatus
+  step: ImportJobStep | null
+  percent: number
+  repo_full_name: string | null
+  error: string | null
+}
+
 export type SettingsState = {
   settings: AppSettings | null
   current_repo_settings: RepoSettings | null
@@ -35,6 +46,7 @@ export type SettingsState = {
   available_repos_loading: boolean
   available_repos_error: string | null
   available_repos_token: string | null
+  import_job: ImportJobState
 }
 
 const initial_state: SettingsState = {
@@ -49,6 +61,13 @@ const initial_state: SettingsState = {
   available_repos_loading: false,
   available_repos_error: null,
   available_repos_token: null,
+  import_job: {
+    status: 'idle',
+    step: null,
+    percent: 0,
+    repo_full_name: null,
+    error: null,
+  },
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -291,18 +310,57 @@ export const create_repo_share_link = create_app_async_thunk<
 export const import_repo_snapshot_from_link = create_app_async_thunk<
   { repo_full_name: string; pr_count: number },
   { share_link: string }
->('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra, dispatch }) => {
-  const share_id = parse_share_id_from_url(share_link)
-  if (!share_id) {
-    throw new Error('Invalid share link')
-  }
-  const origin = has_browser_navigator() ? window.location.origin : ''
-  const download_url = `${origin}/api/share/${share_id}`
-  const snapshot = await fetch_share_snapshot(download_url)
-  const result = await import_repo_snapshot(extra.repositories, snapshot)
-  await dispatch(load_settings())
-  return result
-})
+>(
+  'settings/import_repo_snapshot_from_link',
+  async ({ share_link }, { extra, dispatch }) => {
+    const share_id = parse_share_id_from_url(share_link)
+    if (!share_id) {
+      throw new Error('Invalid share link')
+    }
+    const origin = has_browser_navigator() ? window.location.origin : ''
+    const download_url = `${origin}/api/share/${share_id}`
+    dispatch(
+      set_import_job_progress({
+        step: 'download',
+        percent: import_job_percent('download', null),
+        repo_full_name: null,
+      }),
+    )
+    const snapshot = await fetch_share_snapshot(download_url, (received_bytes, total_bytes) => {
+      const fraction = total_bytes && total_bytes > 0 ? received_bytes / total_bytes : null
+      dispatch(
+        set_import_job_progress({
+          step: 'download',
+          percent: import_job_percent('download', fraction),
+          repo_full_name: null,
+        }),
+      )
+    })
+    dispatch(
+      set_import_job_progress({
+        step: 'prs',
+        percent: import_job_percent('prs', 0),
+        repo_full_name: snapshot.repo_full_name,
+      }),
+    )
+    const result = await import_repo_snapshot(extra.repositories, snapshot, (progress) => {
+      const fraction =
+        progress.records_total > 0 ? progress.records_written / progress.records_total : null
+      dispatch(
+        set_import_job_progress({
+          step: progress.step,
+          percent: import_job_percent(progress.step, fraction),
+          repo_full_name: snapshot.repo_full_name,
+        }),
+      )
+    })
+    await dispatch(load_settings())
+    return result
+  },
+  {
+    condition: (_, { getState }) => getState().settings.import_job.status !== 'running',
+  },
+)
 
 export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name: string }>(
   'settings/remove_repo',
@@ -381,6 +439,29 @@ const settings_slice = createSlice({
       state.available_repos_loading = false
       state.available_repos_error = null
       state.available_repos_token = null
+    },
+    set_import_job_progress(
+      state,
+      action: PayloadAction<{
+        step: ImportJobStep
+        percent: number
+        repo_full_name: string | null
+      }>,
+    ) {
+      state.import_job.status = 'running'
+      state.import_job.step = action.payload.step
+      state.import_job.percent = action.payload.percent
+      state.import_job.repo_full_name = action.payload.repo_full_name
+      state.import_job.error = null
+    },
+    dismiss_import_job(state) {
+      state.import_job = {
+        status: 'idle',
+        step: null,
+        percent: 0,
+        repo_full_name: null,
+        error: null,
+      }
     },
   },
   extraReducers: (builder) => {
@@ -484,8 +565,27 @@ const settings_slice = createSlice({
         state.available_repos = []
         state.available_repos_token = null
       })
+      .addCase(import_repo_snapshot_from_link.pending, (state) => {
+        state.import_job.status = 'running'
+        state.import_job.step = 'download'
+        state.import_job.percent = 0
+        state.import_job.repo_full_name = null
+        state.import_job.error = null
+      })
+      .addCase(import_repo_snapshot_from_link.fulfilled, (state, action) => {
+        state.import_job.status = 'success'
+        state.import_job.step = 'facts'
+        state.import_job.percent = 100
+        state.import_job.repo_full_name = action.payload.repo_full_name
+        state.import_job.error = null
+      })
+      .addCase(import_repo_snapshot_from_link.rejected, (state, action) => {
+        state.import_job.status = 'error'
+        state.import_job.error = action.error.message ?? 'Import failed'
+      })
   },
 })
 
-export const { set_settings, clear_available_repos } = settings_slice.actions
+export const { set_settings, clear_available_repos, set_import_job_progress, dismiss_import_job } =
+  settings_slice.actions
 export const settings_reducer = settings_slice.reducer

@@ -1,54 +1,44 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
+import type { ImportJobStep } from '@/lib/import_job_progress'
+import { ImportProgress } from './import_progress'
 import { connector, type ConnectorProps } from './import_repo_dialog.connector'
+
+function step_message_id(step: ImportJobStep | null) {
+  if (step === 'prs') return 'app.nav.import_repository_step_prs' as const
+  if (step === 'facts') return 'app.nav.import_repository_step_facts' as const
+  return 'app.nav.import_repository_step_download' as const
+}
 
 export function Wrapper({
   on_close,
   import_repo_link,
+  import_job,
   import_repo_snapshot_from_link,
-  set_active_repo,
-  refresh_metrics,
-  run_sync,
+  strip_share_link,
 }: ConnectorProps & { on_close: () => void }) {
   const intl = useIntl()
   const [share_link, set_share_link] = useState(import_repo_link ?? '')
-  const [importing, set_importing] = useState(false)
-  const [error, set_error] = useState<string | null>(null)
+  const running = import_job.status === 'running'
+  const failed = import_job.status === 'error'
 
-  useEffect(() => {
-    if (import_repo_link) {
-      set_share_link(import_repo_link)
-    }
-  }, [import_repo_link])
-
-  async function handle_import() {
+  function handle_import() {
     const link = share_link.trim()
-    if (!link) return
-    set_importing(true)
-    set_error(null)
-    try {
-      const result = await import_repo_snapshot_from_link({ share_link: link })
-      set_active_repo(result.repo_full_name)
-      set_share_link('')
-      refresh_metrics()
-      run_sync()
-      on_close()
-    } catch (err) {
-      set_error(
-        err instanceof Error
-          ? err.message
-          : intl.formatMessage({ id: 'app.nav.import_repository_failed' }),
-      )
-    } finally {
-      set_importing(false)
-    }
+    if (!link || running) return
+    strip_share_link()
+    void import_repo_snapshot_from_link({ share_link: link })
+  }
+
+  function handle_cancel() {
+    strip_share_link()
+    on_close()
   }
 
   return (
-    <Modal open on_close={on_close} box_className="max-w-lg">
+    <Modal open on_close={handle_cancel} box_className="max-w-lg">
       <h3 className="font-display text-lg font-semibold">
         {intl.formatMessage({ id: 'app.nav.import_repository_title' })}
       </h3>
@@ -65,23 +55,34 @@ export function Wrapper({
           value={share_link}
           onChange={(event) => set_share_link(event.target.value)}
           placeholder={intl.formatMessage({ id: 'app.nav.import_repository_placeholder' })}
-          disabled={importing}
+          disabled={running}
         />
       </label>
 
-      {error ? <p className="text-error mt-3 text-sm">{error}</p> : null}
+      {running ? (
+        <ImportProgress
+          step_label={intl.formatMessage({ id: step_message_id(import_job.step) })}
+          percent={import_job.percent}
+        />
+      ) : null}
+
+      {failed ? (
+        <p className="text-error mt-3 text-sm">
+          {import_job.error ?? intl.formatMessage({ id: 'app.nav.import_repository_failed' })}
+        </p>
+      ) : null}
 
       <div className="modal-action">
-        <Button type="button" className="btn-outline" disabled={importing} onClick={on_close}>
+        <Button type="button" className="btn-outline" onClick={handle_cancel}>
           {intl.formatMessage({ id: 'app.nav.import_repository_cancel' })}
         </Button>
         <Button
           type="button"
           className="btn-primary"
-          disabled={importing || share_link.trim().length === 0}
-          onClick={() => void handle_import()}
+          disabled={running || share_link.trim().length === 0}
+          onClick={handle_import}
         >
-          {importing
+          {running
             ? intl.formatMessage({ id: 'app.nav.import_repository_importing' })
             : intl.formatMessage({ id: 'app.nav.import_repository_confirm' })}
         </Button>
