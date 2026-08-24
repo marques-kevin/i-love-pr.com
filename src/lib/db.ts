@@ -426,6 +426,9 @@ export class IlovePrDatabase extends Dexie {
   }
 }
 
+/** Reserved IndexedDB workspace for token-less guest sessions (share imports). */
+export const GUEST_WORKSPACE_LOGIN = 'guest'
+
 export function workspace_db_name(login: string): string {
   const safe = login
     .trim()

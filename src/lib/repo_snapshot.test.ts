@@ -154,24 +154,23 @@ describe('repo_snapshot', () => {
     expect(parse_share_id_from_url('raw-share-id')).toBe('raw-share-id')
   })
 
-  it('keeps the importer ignored_bots, test_file_globs, and business_hours', async () => {
+  it('keeps account settings and writes snapshot repo settings to repo_settings', async () => {
     const repo = 'acme/widgets'
-    const exporter_settings = base_settings([repo])
-    exporter_settings.ignored_bots = ['exporter-bot']
-    exporter_settings.test_file_globs = ['**/*.exporter.ts']
-    exporter_settings.business_hours = {
-      ...DEFAULT_BUSINESS_HOURS,
-      enabled: true,
-      time_zone: 'America/New_York',
-    }
+    const exporter_repositories = create_memory_repositories({
+      settings: base_settings([repo]),
+      pull_requests: [sample_pr(repo)],
+    })
+    await exporter_repositories.repo_settings.save(repo, {
+      ignored_bots: ['exporter-bot'],
+      test_file_globs: ['**/*.exporter.ts'],
+      business_hours: {
+        ...DEFAULT_BUSINESS_HOURS,
+        enabled: true,
+        time_zone: 'America/New_York',
+      },
+    })
 
-    const exported = await export_repo_snapshot(
-      create_memory_repositories({
-        settings: exporter_settings,
-        pull_requests: [sample_pr(repo)],
-      }),
-      repo,
-    )
+    const exported = await export_repo_snapshot(exporter_repositories, repo)
     expect(exported.settings_subset.ignored_bots).toEqual(['exporter-bot'])
 
     const importer_settings = base_settings([])
@@ -191,6 +190,40 @@ describe('repo_snapshot', () => {
     expect(settings?.test_file_globs).toEqual(['**/*.spec.ts'])
     expect(settings?.business_hours).toEqual(importer_settings.business_hours)
     expect(settings?.repos).toContain(repo)
+    const repo_settings = await target.repo_settings.get(repo)
+    expect(repo_settings.ignored_bots).toEqual(['exporter-bot'])
+    expect(repo_settings.test_file_globs).toEqual(['**/*.exporter.ts'])
+    expect(repo_settings.business_hours.time_zone).toBe('America/New_York')
+  })
+
+  it('creates empty-token settings when importing with no prior settings row', async () => {
+    const repo = 'acme/widgets'
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests: [sample_pr(repo)],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    const target = create_memory_repositories()
+    const result = await import_repo_snapshot(target, snapshot)
+
+    expect(result.repo_full_name).toBe(repo)
+    const settings = await target.settings.get()
+    expect(settings?.token).toBe('')
+    expect(settings?.repos).toContain(repo)
+    expect(settings?.imported_repos).toContain(repo)
+    const facts = await target.pr_facts.list_by_repos([repo])
+    expect(facts).toHaveLength(1)
   })
 
   it('exports dashboards with layout and skips empty layouts', async () => {
@@ -300,6 +333,8 @@ describe('repo_snapshot', () => {
     const settings = await target.settings.get()
     expect(settings?.dashboards).toEqual([local_tab])
     expect(settings?.ignored_bots).toEqual([...DEFAULT_IGNORED_BOTS])
+    const repo_settings = await target.repo_settings.get(repo)
+    expect(repo_settings.ignored_bots).toEqual(['should-not-apply'])
   })
 
   it('tags imported repos in imported_repos', async () => {

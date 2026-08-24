@@ -6,8 +6,10 @@ import {
   json_string_field,
   parse_json_array,
 } from '@/lib/boundary_parse'
+import { has_browser_navigator } from '@/lib/boundary_parse'
 import type { ExternalValue, JsonArray, JsonObject, JsonValue } from '@/lib/json_value'
 import type {
+  AppSettings,
   BusinessHoursConfig,
   DashboardTab,
   MemberTeam,
@@ -101,6 +103,7 @@ function repo_record_from_full_name(repo_full_name: string): RepoRecord {
 function settings_subset_for_repo(
   settings: NonNullable<Awaited<ReturnType<Repositories['settings']['get']>>>,
   repo_full_name: string,
+  repo_settings: Awaited<ReturnType<Repositories['repo_settings']['get']>>,
 ): RepoSnapshotSettingsSubset {
   return {
     teams: structuredClone(settings.teams),
@@ -109,10 +112,20 @@ function settings_subset_for_repo(
         (tab) => tab.repo_full_name === repo_full_name && tab.layout.length > 0,
       ),
     ),
-    ignored_bots: [...settings.ignored_bots],
-    test_file_globs: [...settings.test_file_globs],
-    business_hours: structuredClone(settings.business_hours),
+    ignored_bots: [...repo_settings.ignored_bots],
+    test_file_globs: [...repo_settings.test_file_globs],
+    business_hours: structuredClone(repo_settings.business_hours),
   }
+}
+
+async function ensure_settings_initialized(repositories: Repositories): Promise<AppSettings> {
+  const existing = await repositories.settings.get()
+  if (existing) return existing
+  return repositories.settings.save({
+    token: '',
+    repos: [],
+    imported_repos: [],
+  })
 }
 
 export async function export_repo_snapshot(
@@ -131,6 +144,7 @@ export async function export_repo_snapshot(
   const pr_ids = pull_requests.map((pr) => pr.id)
   const reviews = await repositories.reviews.list_by_pr_ids(pr_ids)
   const pr_changed_files = await repositories.pr_changed_files.list_by_pr_ids(pr_ids)
+  const repo_settings = await repositories.repo_settings.get(repo_full_name)
 
   return {
     schema_version: REPO_SNAPSHOT_VERSION,
@@ -140,7 +154,7 @@ export async function export_repo_snapshot(
     pull_requests,
     reviews,
     pr_changed_files,
-    settings_subset: settings_subset_for_repo(settings, repo_full_name),
+    settings_subset: settings_subset_for_repo(settings, repo_full_name, repo_settings),
   }
 }
 
@@ -408,10 +422,7 @@ export async function import_repo_snapshot(
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
-  const settings = await repositories.settings.get()
-  if (!settings) {
-    throw new RepoSnapshotError('Settings not initialized')
-  }
+  const settings = await ensure_settings_initialized(repositories)
 
   if (snapshot.pull_requests.length > 0) {
     await repositories.pull_requests.put_many(snapshot.pull_requests)
@@ -456,15 +467,18 @@ export async function import_repo_snapshot(
       : settings.dashboards
   const merged_teams = merge_teams_by_name(settings.teams, snapshot.settings_subset.teams)
 
+  await repositories.repo_settings.save(repo_full_name, {
+    ignored_bots: snapshot.settings_subset.ignored_bots,
+    test_file_globs: snapshot.settings_subset.test_file_globs,
+    business_hours: snapshot.settings_subset.business_hours,
+  })
+
   await repositories.settings.save({
     token: settings.token,
     repos: merged_repos,
     imported_repos: merged_imported_repos,
     dashboards: merged_dashboards,
     teams: merged_teams,
-    ignored_bots: settings.ignored_bots,
-    test_file_globs: settings.test_file_globs,
-    business_hours: settings.business_hours,
   })
   await repositories.settings.upsert_repos(merged_repos)
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
@@ -508,4 +522,32 @@ export function parse_share_id_from_url(raw_url: string): string | null {
   } catch {
     return raw_url.trim() || null
   }
+}
+
+export function share_link_from_browser_location(): string | null {
+  if (!has_browser_navigator()) return null
+  const params = new URLSearchParams(window.location.search)
+  const import_param = params.get('import') ?? params.get('share')
+  if (import_param) {
+    return import_param.includes('://')
+      ? import_param
+      : `${window.location.origin}/?import=${import_param}`
+  }
+  const share_id = parse_share_id_from_url(window.location.href)
+  if (!share_id) return null
+  return `${window.location.origin}/?import=${share_id}`
+}
+
+export function strip_share_link_from_browser_location(): void {
+  if (!has_browser_navigator()) return
+  const params = new URLSearchParams(window.location.search)
+  params.delete('import')
+  params.delete('share')
+  const next_search = params.toString()
+  let next_path = window.location.pathname
+  if (/^\/share\/[^/]+\/?$/.test(next_path)) {
+    next_path = '/'
+  }
+  const next_url = `${next_path}${next_search ? `?${next_search}` : ''}${window.location.hash}`
+  window.history.replaceState({}, '', next_url)
 }

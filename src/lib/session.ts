@@ -1,5 +1,6 @@
 import Dexie from 'dexie'
 import {
+  GUEST_WORKSPACE_LOGIN,
   IlovePrDatabase,
   LEGACY_WORKSPACE_DB_NAME,
   open_workspace_db,
@@ -278,9 +279,19 @@ export class SessionManager {
   }): Promise<void> {
     this.demo_mode = false
     this.remount_generation += 1
+    const generation = this.remount_generation
     await this.close_workspace()
+
+    const workspace = open_workspace_db(GUEST_WORKSPACE_LOGIN)
+    await workspace.open()
+    if (generation !== this.remount_generation) {
+      await workspace.close()
+      return
+    }
+
+    this.workspace = workspace
     const accounts = options?.accounts ?? (await list_saved_accounts())
-    const repositories = create_memory_repositories()
+    const repositories = create_dexie_repositories(workspace)
     const store = this.build_store(repositories, {
       login: null,
       accounts,

@@ -12,16 +12,24 @@ import {
   clamp_active_repo_to_settings,
   refresh_metrics,
   request_import_repo,
+  clear_share_boot_import,
+  set_share_boot_import_error,
+  set_share_boot_import_pending,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
-import { active_repo_from_url_or_settings } from '@/lib/repo_path'
+import { active_repo_from_url_or_settings, repo_dashboard_path } from '@/lib/repo_path'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import {
+  share_link_from_browser_location,
+  strip_share_link_from_browser_location,
+} from '@/lib/repo_snapshot'
+import {
   create_dashboard,
   delete_dashboard,
+  import_repo_snapshot_from_link,
   load_available_repos,
   load_settings,
   remove_repo,
@@ -44,6 +52,7 @@ import {
   normalize_dashboard_filters,
   normalize_settings_dashboards,
 } from '@/lib/dashboard_layout'
+import type { AppSettings } from '@/lib/types'
 import type { AppDispatch } from './create_store'
 import type { RootState } from './root_reducer'
 import type { ThunkExtra } from './thunk_extra'
@@ -98,12 +107,66 @@ function hydrate_filters_from_active_dashboard(api: {
   api.dispatch(hydrate_dashboard_filters(normalize_dashboard_filters(active)))
 }
 
+async function bootstrap_after_settings_loaded(
+  api: {
+    getState: () => RootState
+    dispatch: AppDispatch
+    extra: ThunkExtra
+  },
+  settings: AppSettings,
+) {
+  await ensure_pr_facts(api.extra.repositories)
+  apply_active_repo_from_url_or_settings(api)
+  hydrate_filters_from_active_dashboard(api)
+  void api.dispatch(refresh_sync_states())
+  dispatch_refresh_pr_coverage(api)
+
+  if (is_demo_mode()) {
+    api.dispatch(set_bootstrapped(true))
+    void api.dispatch(refresh_metrics())
+    dispatch_load_gallery_stats(api)
+    return
+  }
+
+  dispatch_load_gallery_stats(api)
+
+  if (!settings.token?.trim()) {
+    api.dispatch(set_bootstrapped(true))
+    void api.dispatch(refresh_metrics())
+    return
+  }
+
+  void api.dispatch(load_available_repos())
+  if (!api.getState().sync.bootstrapped) {
+    api.dispatch(set_bootstrapped(true))
+    void api.dispatch(run_sync({ force: false }))
+  }
+}
+
 export function register_app_listeners(
   middleware: ListenerMiddlewareInstance<RootState, AppDispatch, ThunkExtra>,
 ) {
   middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
+      const share_link = share_link_from_browser_location()
+      if (share_link) {
+        api.dispatch(set_share_boot_import_pending())
+        try {
+          const result = await api.dispatch(import_repo_snapshot_from_link({ share_link })).unwrap()
+          strip_share_link_from_browser_location()
+          const path = repo_dashboard_path(result.repo_full_name)
+          window.history.replaceState({}, '', path)
+          api.dispatch(hydrate_active_repo(result.repo_full_name))
+          await api.dispatch(set_active_repo(result.repo_full_name))
+          api.dispatch(clear_share_boot_import())
+        } catch (error) {
+          strip_share_link_from_browser_location()
+          api.dispatch(
+            set_share_boot_import_error(error instanceof Error ? error.message : 'Import failed'),
+          )
+        }
+      }
       await api.dispatch(load_settings())
     },
   })
@@ -115,41 +178,17 @@ export function register_app_listeners(
       api.dispatch(hydrate_locale_from_settings(settings))
       if (!settings) return
 
-      await ensure_pr_facts(api.extra.repositories)
-      apply_active_repo_from_url_or_settings(api)
-      hydrate_filters_from_active_dashboard(api)
-      void api.dispatch(refresh_sync_states())
-      dispatch_refresh_pr_coverage(api)
+      await bootstrap_after_settings_loaded(api, settings)
 
-      if (has_browser_navigator()) {
-        const params = new URLSearchParams(window.location.search)
-        const import_param = params.get('import') ?? params.get('share')
-        if (import_param) {
-          const link = import_param.includes('://')
-            ? import_param
-            : `${window.location.origin}/?import=${import_param}`
-          api.dispatch(request_import_repo(link))
-          params.delete('import')
-          params.delete('share')
-          const next_search = params.toString()
-          const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
-          window.history.replaceState({}, '', next_url)
+      if (
+        has_browser_navigator() &&
+        api.getState().dashboard.share_boot_import_status !== 'error'
+      ) {
+        const share_link = share_link_from_browser_location()
+        if (share_link) {
+          api.dispatch(request_import_repo(share_link))
+          strip_share_link_from_browser_location()
         }
-      }
-
-      if (is_demo_mode()) {
-        api.dispatch(set_bootstrapped(true))
-        void api.dispatch(refresh_metrics())
-        dispatch_load_gallery_stats(api)
-        return
-      }
-
-      void api.dispatch(load_available_repos())
-      dispatch_load_gallery_stats(api)
-
-      if (!api.getState().sync.bootstrapped) {
-        api.dispatch(set_bootstrapped(true))
-        void api.dispatch(run_sync({ force: false }))
       }
     },
   })
