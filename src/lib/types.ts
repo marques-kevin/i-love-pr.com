@@ -274,6 +274,32 @@ export interface SyncProgress {
   rate_limit: RateLimitInfo | null
 }
 
+export type ImportProgressStage =
+  | 'downloading'
+  | 'writing_prs'
+  | 'writing_reviews'
+  | 'writing_files'
+  | 'saving_settings'
+  | 'building_facts'
+
+export interface ImportProgress {
+  stage: ImportProgressStage
+  completed: number
+  total: number | null
+  repo_full_name: string | null
+  share_link: string
+}
+
+export type ImportJobStatus = 'running' | 'succeeded' | 'failed'
+
+export interface ImportJobState {
+  status: ImportJobStatus
+  share_link: string
+  repo_full_name: string | null
+  progress: ImportProgress | null
+  error: string | null
+}
+
 export interface MetricsSnapshot {
   cycleTimeSeries: { date: string; avgHours: number; count: number }[]
   cycleBreakdownSeries: {

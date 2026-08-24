@@ -10,6 +10,7 @@ import type { ExternalValue, JsonArray, JsonObject, JsonValue } from '@/lib/json
 import type {
   BusinessHoursConfig,
   DashboardTab,
+  ImportProgressStage,
   MemberTeam,
   PrChangedFileRecord,
   PullRequestRecord,
@@ -18,7 +19,8 @@ import type {
 } from '@/lib/types'
 import type { Repositories } from '@/repositories'
 import { parse_dashboard_layout_from_json } from '@/lib/dashboard_layout'
-import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
+import { rebuild_pr_facts_for_prs } from '@/lib/rebuild_pr_facts'
+import { IMPORT_WRITE_CHUNK_SIZE, yield_to_main_thread } from '@/lib/import_progress'
 
 export const REPO_SNAPSHOT_VERSION = 1 as const
 
@@ -401,20 +403,56 @@ export function assert_snapshot_has_no_token(snapshot: RepoSnapshotV1): void {
   }
 }
 
+export type ImportRepoSnapshotProgress = {
+  stage: ImportProgressStage
+  completed: number
+  total: number | null
+  repo_full_name: string
+}
+
+export type ImportRepoSnapshotOptions = {
+  on_progress?: (progress: ImportRepoSnapshotProgress) => void
+}
+
+async function write_in_chunks<T>(
+  items: T[],
+  write_chunk: (chunk: T[]) => Promise<void>,
+  on_chunk: (completed: number, total: number) => void,
+): Promise<void> {
+  if (items.length === 0) return
+  for (let index = 0; index < items.length; index += IMPORT_WRITE_CHUNK_SIZE) {
+    const chunk = items.slice(index, index + IMPORT_WRITE_CHUNK_SIZE)
+    await write_chunk(chunk)
+    on_chunk(Math.min(index + chunk.length, items.length), items.length)
+    await yield_to_main_thread()
+  }
+}
+
 export async function import_repo_snapshot(
   repositories: Repositories,
   snapshot: RepoSnapshotV1,
+  options?: ImportRepoSnapshotOptions,
 ): Promise<{ repo_full_name: string; pr_count: number }> {
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
+  const report = (stage: ImportProgressStage, completed: number, total: number | null) => {
+    options?.on_progress?.({ stage, completed, total, repo_full_name })
+  }
+
   const settings = await repositories.settings.get()
   if (!settings) {
     throw new RepoSnapshotError('Settings not initialized')
   }
 
   if (snapshot.pull_requests.length > 0) {
-    await repositories.pull_requests.put_many(snapshot.pull_requests)
+    await write_in_chunks(
+      snapshot.pull_requests,
+      (chunk) => repositories.pull_requests.put_many(chunk),
+      (completed, total) => report('writing_prs', completed, total),
+    )
+  } else {
+    report('writing_prs', 0, 0)
   }
 
   const reviews_by_pr = new Map<string, ReviewRecord[]>()
@@ -423,8 +461,18 @@ export async function import_repo_snapshot(
     list.push(review)
     reviews_by_pr.set(review.pr_id, list)
   }
-  for (const [pr_id, reviews] of reviews_by_pr) {
-    await repositories.reviews.replace_for_pr(pr_id, reviews)
+  const review_pr_ids = [...reviews_by_pr.keys()]
+  if (review_pr_ids.length > 0) {
+    for (let index = 0; index < review_pr_ids.length; index += 1) {
+      const pr_id = review_pr_ids[index]
+      await repositories.reviews.replace_for_pr(pr_id, reviews_by_pr.get(pr_id) ?? [])
+      report('writing_reviews', index + 1, review_pr_ids.length)
+      if ((index + 1) % IMPORT_WRITE_CHUNK_SIZE === 0) {
+        await yield_to_main_thread()
+      }
+    }
+  } else {
+    report('writing_reviews', 0, 0)
   }
 
   const changed_files_by_pr = new Map<string, PrChangedFileRecord[]>()
@@ -433,9 +481,24 @@ export async function import_repo_snapshot(
     list.push(file)
     changed_files_by_pr.set(file.pr_id, list)
   }
-  for (const [pr_id, files] of changed_files_by_pr) {
-    await repositories.pr_changed_files.replace_for_pr(pr_id, files)
+  const file_pr_ids = [...changed_files_by_pr.keys()]
+  if (file_pr_ids.length > 0) {
+    for (let index = 0; index < file_pr_ids.length; index += 1) {
+      const pr_id = file_pr_ids[index]
+      await repositories.pr_changed_files.replace_for_pr(
+        pr_id,
+        changed_files_by_pr.get(pr_id) ?? [],
+      )
+      report('writing_files', index + 1, file_pr_ids.length)
+      if ((index + 1) % IMPORT_WRITE_CHUNK_SIZE === 0) {
+        await yield_to_main_thread()
+      }
+    }
+  } else {
+    report('writing_files', 0, 0)
   }
+
+  report('saving_settings', 0, null)
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
   const previous_imported = settings.imported_repos ?? []
@@ -467,7 +530,16 @@ export async function import_repo_snapshot(
     business_hours: settings.business_hours,
   })
   await repositories.settings.upsert_repos(merged_repos)
-  await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
+
+  const prs = await repositories.pull_requests.list_by_repos([repo_full_name])
+  await repositories.pr_facts.delete_by_repos([repo_full_name])
+  if (prs.length > 0) {
+    await rebuild_pr_facts_for_prs(repositories, prs, {
+      on_progress: (completed, total) => report('building_facts', completed, total),
+    })
+  } else {
+    report('building_facts', 0, 0)
+  }
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
 }

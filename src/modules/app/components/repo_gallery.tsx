@@ -8,6 +8,7 @@ import type { SyncState } from '@/lib/types'
 import type { GalleryRowStats } from '@/lib/gallery_row_stats'
 import { ShareRepoDialog } from '@/modules/settings/components/share_repo_dialog'
 import { RepoSettingsDialog } from '@/modules/settings/components/repo_settings_dialog'
+import { ImportProgressBanner } from './import_progress_banner'
 import { RepoGalleryRow } from './repo_gallery_row'
 import { connector, type ConnectorProps } from './repo_gallery.connector'
 
@@ -88,6 +89,8 @@ export function Wrapper({
 
   return (
     <div className="space-y-6">
+      <ImportProgressBanner />
+
       <div>
         <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {intl.formatMessage({ id: 'app.nav.repositories' })}

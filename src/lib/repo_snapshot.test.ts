@@ -351,4 +351,34 @@ describe('repo_snapshot', () => {
     expect(settings?.repos).toContain(repo)
     expect(settings?.imported_repos).toEqual([])
   })
+
+  it('reports import progress stages', async () => {
+    const repo = 'acme/widgets'
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests: [sample_pr(repo)],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    const target = create_memory_repositories({ settings: base_settings([]) })
+    const stages: string[] = []
+    await import_repo_snapshot(target, snapshot, {
+      on_progress: (progress) => {
+        stages.push(progress.stage)
+      },
+    })
+    expect(stages).toContain('writing_prs')
+    expect(stages).toContain('building_facts')
+    expect(stages.at(-1)).toBe('building_facts')
+  })
 })

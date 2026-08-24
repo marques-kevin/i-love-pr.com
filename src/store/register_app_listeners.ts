@@ -24,6 +24,7 @@ import {
   delete_dashboard,
   load_available_repos,
   load_settings,
+  import_repo_snapshot_from_link,
   remove_repo,
   save_dashboard_filters,
   save_repo_settings,
@@ -196,6 +197,17 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)
       void api.dispatch(refresh_sync_states())
+      void api.dispatch(refresh_metrics())
+      dispatch_load_gallery_stats(api)
+    },
+  })
+
+  middleware.startListening({
+    actionCreator: import_repo_snapshot_from_link.fulfilled,
+    effect: async (action, api) => {
+      const { repo_full_name } = action.payload
+      await api.dispatch(load_settings())
+      await api.dispatch(set_active_repo(repo_full_name))
       void api.dispatch(refresh_metrics())
       dispatch_load_gallery_stats(api)
     },

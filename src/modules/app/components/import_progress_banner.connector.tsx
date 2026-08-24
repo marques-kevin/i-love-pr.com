@@ -1,16 +1,12 @@
 import { connect, type ConnectedProps } from 'react-redux'
+import { dismiss_import_job } from '@/store'
 import type { AppDispatch, RootState } from '@/store'
-import { dismiss_import_job, import_repo_snapshot_from_link } from '@/store'
 
 export const map_state_to_props = (state: RootState) => ({
-  import_repo_link: state.dashboard.import_repo_link,
   import_job: state.settings.import_job,
 })
 
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({
-  start_repo_import: (input: Parameters<typeof import_repo_snapshot_from_link>[0]) => {
-    void dispatch(import_repo_snapshot_from_link(input))
-  },
   dismiss_import_job: () => {
     dispatch(dismiss_import_job())
   },

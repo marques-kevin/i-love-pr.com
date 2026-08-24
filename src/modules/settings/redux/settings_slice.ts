@@ -19,7 +19,13 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
+import type {
+  AppSettings,
+  BusinessHoursConfig,
+  ImportJobState,
+  ImportProgress,
+  RepoSettings,
+} from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 
@@ -35,6 +41,7 @@ export type SettingsState = {
   available_repos_loading: boolean
   available_repos_error: string | null
   available_repos_token: string | null
+  import_job: ImportJobState | null
 }
 
 const initial_state: SettingsState = {
@@ -49,6 +56,7 @@ const initial_state: SettingsState = {
   available_repos_loading: false,
   available_repos_error: null,
   available_repos_token: null,
+  import_job: null,
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -288,18 +296,43 @@ export const create_repo_share_link = create_app_async_thunk<
   }
 })
 
+let import_lock = false
+
 export const import_repo_snapshot_from_link = create_app_async_thunk<
   { repo_full_name: string; pr_count: number },
   { share_link: string }
->('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra }) => {
-  const share_id = parse_share_id_from_url(share_link)
-  if (!share_id) {
-    throw new Error('Invalid share link')
+>('settings/import_repo_snapshot_from_link', async ({ share_link }, { extra, dispatch }) => {
+  if (import_lock) {
+    throw new Error('Import already in progress')
   }
-  const origin = has_browser_navigator() ? window.location.origin : ''
-  const download_url = `${origin}/api/share/${share_id}`
-  const snapshot = await fetch_share_snapshot(download_url)
-  return import_repo_snapshot(extra.repositories, snapshot)
+  import_lock = true
+  try {
+    const report = (progress: ImportProgress) => {
+      dispatch(set_import_progress(progress))
+    }
+    report({
+      stage: 'downloading',
+      completed: 0,
+      total: null,
+      repo_full_name: null,
+      share_link,
+    })
+
+    const share_id = parse_share_id_from_url(share_link)
+    if (!share_id) {
+      throw new Error('Invalid share link')
+    }
+    const origin = has_browser_navigator() ? window.location.origin : ''
+    const download_url = `${origin}/api/share/${share_id}`
+    const snapshot = await fetch_share_snapshot(download_url)
+    return await import_repo_snapshot(extra.repositories, snapshot, {
+      on_progress: (progress) => {
+        report({ ...progress, share_link })
+      },
+    })
+  } finally {
+    import_lock = false
+  }
 })
 
 export const remove_repo = create_app_async_thunk<AppSettings, { repo_full_name: string }>(
@@ -379,6 +412,19 @@ const settings_slice = createSlice({
       state.available_repos_loading = false
       state.available_repos_error = null
       state.available_repos_token = null
+    },
+    set_import_progress(state, action: PayloadAction<ImportProgress>) {
+      const progress = action.payload
+      state.import_job = {
+        status: 'running',
+        share_link: progress.share_link,
+        repo_full_name: progress.repo_full_name,
+        progress,
+        error: null,
+      }
+    },
+    dismiss_import_job(state) {
+      state.import_job = null
     },
   },
   extraReducers: (builder) => {
@@ -482,8 +528,42 @@ const settings_slice = createSlice({
         state.available_repos = []
         state.available_repos_token = null
       })
+      .addCase(import_repo_snapshot_from_link.pending, (state, action) => {
+        state.import_job = {
+          status: 'running',
+          share_link: action.meta.arg.share_link,
+          repo_full_name: null,
+          progress: {
+            stage: 'downloading',
+            completed: 0,
+            total: null,
+            repo_full_name: null,
+            share_link: action.meta.arg.share_link,
+          },
+          error: null,
+        }
+      })
+      .addCase(import_repo_snapshot_from_link.fulfilled, (state, action) => {
+        state.import_job = {
+          status: 'succeeded',
+          share_link: state.import_job?.share_link ?? '',
+          repo_full_name: action.payload.repo_full_name,
+          progress: state.import_job?.progress ?? null,
+          error: null,
+        }
+      })
+      .addCase(import_repo_snapshot_from_link.rejected, (state, action) => {
+        state.import_job = {
+          status: 'failed',
+          share_link: state.import_job?.share_link ?? action.meta.arg.share_link,
+          repo_full_name: state.import_job?.repo_full_name ?? null,
+          progress: state.import_job?.progress ?? null,
+          error: action.error.message ?? 'Import failed',
+        }
+      })
   },
 })
 
-export const { set_settings, clear_available_repos } = settings_slice.actions
+export const { set_settings, clear_available_repos, set_import_progress, dismiss_import_job } =
+  settings_slice.actions
 export const settings_reducer = settings_slice.reducer

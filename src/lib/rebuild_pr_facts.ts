@@ -1,5 +1,6 @@
 import { create_elapsed_hours_fn } from '@/lib/business-hours'
 import { enrichPullRequest, reviewWaitStartAt } from '@/lib/derive'
+import { IMPORT_WRITE_CHUNK_SIZE, yield_to_main_thread } from '@/lib/import_progress'
 import { PR_FACTS_VERSION, type PrFactRecord, type PullRequestRecord } from '@/lib/types'
 import type { Repositories } from '@/repositories'
 
@@ -54,6 +55,7 @@ export function pr_to_fact_record(
 export async function rebuild_pr_facts_for_prs(
   repositories: Repositories,
   prs: PullRequestRecord[],
+  options?: { on_progress?: (completed: number, total: number) => void },
 ): Promise<void> {
   if (prs.length === 0) return
 
@@ -73,6 +75,7 @@ export async function rebuild_pr_facts_for_prs(
   }
 
   const facts: PrFactRecord[] = []
+  let completed = 0
   for (const [repo_full_name, repo_prs] of by_repo) {
     const repo_settings = await repositories.repo_settings.get(repo_full_name)
     const elapsed = create_elapsed_hours_fn(repo_settings.business_hours)
@@ -86,10 +89,19 @@ export async function rebuild_pr_facts_for_prs(
           elapsed,
         ),
       )
+      completed += 1
+      options?.on_progress?.(completed, prs.length)
+      if (completed % IMPORT_WRITE_CHUNK_SIZE === 0) {
+        await yield_to_main_thread()
+      }
     }
   }
 
-  await repositories.pr_facts.put_many(facts)
+  for (let index = 0; index < facts.length; index += IMPORT_WRITE_CHUNK_SIZE) {
+    const chunk = facts.slice(index, index + IMPORT_WRITE_CHUNK_SIZE)
+    await repositories.pr_facts.put_many(chunk)
+    await yield_to_main_thread()
+  }
 }
 
 export async function rebuild_pr_facts_for_repos(
