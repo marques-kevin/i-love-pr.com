@@ -35,7 +35,12 @@ export const en_messages = {
   'app.nav.import_repository_cancel': 'Cancel',
   'app.nav.import_repository_confirm': 'Import',
   'app.nav.import_repository_importing': 'Importing…',
+  'app.nav.import_repository_step_download': 'Downloading snapshot…',
+  'app.nav.import_repository_step_write': 'Writing pull requests…',
+  'app.nav.import_repository_step_facts': 'Building metrics…',
   'app.nav.import_repository_failed': 'Import failed',
+  'app.nav.import_repository_banner_running': 'Importing {repo}…',
+  'app.nav.import_repository_banner_error': 'Import failed for {repo}',
   'app.share_import.error_title': 'Could not import repository',
   'app.share_import.error_description':
     'The share link may be invalid or expired. Check the link and try again.',

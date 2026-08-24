@@ -20,6 +20,14 @@ import type {
 } from '@/lib/types'
 import type { Repositories } from '@/repositories'
 import { parse_dashboard_layout_from_json } from '@/lib/dashboard_layout'
+import {
+  chunk_array,
+  facts_import_percent,
+  IMPORT_WRITE_BATCH_SIZE,
+  type ImportJobStep,
+  write_import_percent,
+  yield_to_main,
+} from '@/lib/import_progress'
 import { rebuild_pr_facts_for_repos } from '@/lib/rebuild_pr_facts'
 
 export const REPO_SNAPSHOT_VERSION = 1 as const
@@ -415,17 +423,44 @@ export function assert_snapshot_has_no_token(snapshot: RepoSnapshotV1): void {
   }
 }
 
+export type ImportSnapshotProgress = {
+  step: ImportJobStep
+  percent: number
+  repo_full_name: string
+}
+
+export type ImportSnapshotProgressCallback = (progress: ImportSnapshotProgress) => void
+
 export async function import_repo_snapshot(
   repositories: Repositories,
   snapshot: RepoSnapshotV1,
+  options?: { on_progress?: ImportSnapshotProgressCallback },
 ): Promise<{ repo_full_name: string; pr_count: number }> {
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
   const settings = await ensure_settings_initialized(repositories)
+  const on_progress = options?.on_progress
 
-  if (snapshot.pull_requests.length > 0) {
-    await repositories.pull_requests.put_many(snapshot.pull_requests)
+  const total_write_records =
+    snapshot.pull_requests.length + snapshot.reviews.length + snapshot.pr_changed_files.length
+  let written_records = 0
+
+  function report_write_progress() {
+    on_progress?.({
+      step: 'prs',
+      percent: write_import_percent(written_records, total_write_records),
+      repo_full_name,
+    })
+  }
+
+  for (const batch of chunk_array(snapshot.pull_requests, IMPORT_WRITE_BATCH_SIZE)) {
+    if (batch.length > 0) {
+      await repositories.pull_requests.put_many(batch)
+      written_records += batch.length
+      report_write_progress()
+      await yield_to_main()
+    }
   }
 
   const reviews_by_pr = new Map<string, ReviewRecord[]>()
@@ -434,8 +469,12 @@ export async function import_repo_snapshot(
     list.push(review)
     reviews_by_pr.set(review.pr_id, list)
   }
-  for (const [pr_id, reviews] of reviews_by_pr) {
-    await repositories.reviews.replace_for_pr(pr_id, reviews)
+  for (const [, reviews] of reviews_by_pr) {
+    if (reviews.length === 0) continue
+    await repositories.reviews.replace_for_pr(reviews[0]!.pr_id, reviews)
+    written_records += reviews.length
+    report_write_progress()
+    await yield_to_main()
   }
 
   const changed_files_by_pr = new Map<string, PrChangedFileRecord[]>()
@@ -445,7 +484,11 @@ export async function import_repo_snapshot(
     changed_files_by_pr.set(file.pr_id, list)
   }
   for (const [pr_id, files] of changed_files_by_pr) {
+    if (files.length === 0) continue
     await repositories.pr_changed_files.replace_for_pr(pr_id, files)
+    written_records += files.length
+    report_write_progress()
+    await yield_to_main()
   }
 
   const merged_repos = Array.from(new Set([...settings.repos, repo_full_name]))
@@ -481,7 +524,18 @@ export async function import_repo_snapshot(
     teams: merged_teams,
   })
   await repositories.settings.upsert_repos(merged_repos)
+
+  on_progress?.({
+    step: 'facts',
+    percent: facts_import_percent(false),
+    repo_full_name,
+  })
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
+  on_progress?.({
+    step: 'facts',
+    percent: facts_import_percent(true),
+    repo_full_name,
+  })
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
 }

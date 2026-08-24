@@ -6,8 +6,7 @@ export const map_state_to_props = (state: RootState) => ({
   settings_loading: state.settings.loading,
   accounts: state.accounts.accounts,
   adding_account: state.accounts.adding_account,
-  share_boot_import_status: state.dashboard.share_boot_import_status,
-  share_boot_import_error: state.dashboard.share_boot_import_error,
+  import_job: state.import_job,
 })
 
 export const map_dispatch_to_props = {}

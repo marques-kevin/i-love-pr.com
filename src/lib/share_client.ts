@@ -111,13 +111,45 @@ export async function upload_share_snapshot(upload_url: string, body: string): P
   }
 }
 
-export async function fetch_share_snapshot(download_url: string): Promise<RepoSnapshotV1> {
+export async function fetch_share_snapshot(
+  download_url: string,
+  options?: {
+    on_download_progress?: (bytes_read: number, content_length: number | null) => void
+  },
+): Promise<RepoSnapshotV1> {
   const response = await fetch(download_url)
   if (!response.ok) {
     const detail = await response.text().catch(() => '')
     throw new Error(detail || `Download failed (${response.status})`)
   }
-  const raw = await response.text()
+
+  const content_length_header = response.headers.get('content-length')
+  const content_length =
+    content_length_header && !Number.isNaN(Number(content_length_header))
+      ? Number(content_length_header)
+      : null
+
+  if (!response.body) {
+    const raw = await response.text()
+    options?.on_download_progress?.(raw.length, content_length)
+    return parse_repo_snapshot(raw)
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let raw = ''
+  let bytes_read = 0
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    bytes_read += value.byteLength
+    raw += decoder.decode(value, { stream: true })
+    options?.on_download_progress?.(bytes_read, content_length)
+  }
+
+  raw += decoder.decode()
+  options?.on_download_progress?.(bytes_read, content_length)
   return parse_repo_snapshot(raw)
 }
 

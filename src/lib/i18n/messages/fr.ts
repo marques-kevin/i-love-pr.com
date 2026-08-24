@@ -37,7 +37,12 @@ export const fr_messages = define_locale_messages({
   'app.nav.import_repository_cancel': 'Annuler',
   'app.nav.import_repository_confirm': 'Importer',
   'app.nav.import_repository_importing': 'Import…',
+  'app.nav.import_repository_step_download': 'Téléchargement du snapshot…',
+  'app.nav.import_repository_step_write': 'Écriture des pull requests…',
+  'app.nav.import_repository_step_facts': 'Calcul des métriques…',
   'app.nav.import_repository_failed': 'Échec de l’import',
+  'app.nav.import_repository_banner_running': 'Import de {repo}…',
+  'app.nav.import_repository_banner_error': 'Échec de l’import pour {repo}',
   'app.share_import.error_title': 'Impossible d’importer le dépôt',
   'app.share_import.error_description':
     'Le lien de partage est peut-être invalide ou expiré. Vérifiez le lien et réessayez.',
