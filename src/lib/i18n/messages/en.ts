@@ -50,6 +50,7 @@ export const en_messages = {
   'home.imported_badge': 'Imported',
   'home.open_repo': 'Open {repo}',
   'dashboard.back_to_list': 'Back to repositories',
+  'dashboard.imported_snapshot': 'Imported snapshot',
   'app.language': 'Language',
   'app.locale.en': 'English',
   'app.locale.fr': 'Français',

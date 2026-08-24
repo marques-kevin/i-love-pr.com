@@ -7,6 +7,7 @@ import {
 } from '@/modules/settings/redux/settings_slice'
 import type { AppDispatch, RootState } from '@/store'
 import { dashboards_for_repo, normalize_settings_dashboards } from '@/lib/dashboard_layout'
+import { dashboard_chrome_flags } from '@/lib/is_imported_repo'
 
 function map_state_to_props(state: RootState) {
   const settings = state.settings.settings
@@ -14,9 +15,11 @@ function map_state_to_props(state: RootState) {
     ? normalize_settings_dashboards(settings)
     : normalize_settings_dashboards({})
   const active_repo = state.dashboard.active_repo ?? normalized.active_repo
+  const chrome = dashboard_chrome_flags(settings, active_repo)
   return {
     dashboards: dashboards_for_repo(normalized.dashboards, active_repo),
     active_dashboard_id: normalized.active_dashboard_id,
+    allow_tab_mutations: chrome.tab_mutations,
   }
 }
 

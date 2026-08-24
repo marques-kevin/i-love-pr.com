@@ -14,7 +14,12 @@ type DashboardHeaderProps = ConnectorProps & {
   on_close_window: () => void
 }
 
-export function Wrapper({ on_close_window, load_repo_settings }: DashboardHeaderProps) {
+export function Wrapper({
+  on_close_window,
+  load_repo_settings,
+  is_imported,
+  chrome,
+}: DashboardHeaderProps) {
   const intl = useIntl()
   const { owner, name } = useParams()
   const repo_full_name = owner && name ? `${owner}/${name}` : ''
@@ -48,10 +53,15 @@ export function Wrapper({ on_close_window, load_repo_settings }: DashboardHeader
           </div>
 
           <div className="mb-1 ml-auto flex min-w-0 shrink-0 items-center gap-2">
+            {is_imported ? (
+              <span className="text-base-content/50 hidden text-xs sm:inline">
+                {intl.formatMessage({ id: 'dashboard.imported_snapshot' })}
+              </span>
+            ) : null}
             <span className="text-base-content/60 max-w-48 truncate text-sm" title={repo_label}>
               {repo_label}
             </span>
-            {repo_full_name ? (
+            {repo_full_name && chrome.settings_gear ? (
               <Button
                 type="button"
                 className="btn-ghost btn-circle btn-sm shrink-0"
@@ -62,16 +72,18 @@ export function Wrapper({ on_close_window, load_repo_settings }: DashboardHeader
                 <HoverIcon icon={Settings01Icon} size={17} />
               </Button>
             ) : null}
-            <QuietSyncStatus />
+            {chrome.sync_status ? <QuietSyncStatus /> : null}
           </div>
         </div>
       </header>
 
-      <RepoSettingsDialog
-        open={settings_open}
-        repo_full_name={settings_open ? repo_full_name : null}
-        on_close={() => set_settings_open(false)}
-      />
+      {chrome.settings_gear ? (
+        <RepoSettingsDialog
+          open={settings_open}
+          repo_full_name={settings_open ? repo_full_name : null}
+          on_close={() => set_settings_open(false)}
+        />
+      ) : null}
     </>
   )
 }

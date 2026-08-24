@@ -20,10 +20,20 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
+import { is_imported_repo } from '@/lib/is_imported_repo'
 import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
 import { update_import_job } from '@/modules/settings/redux/import_job_slice'
+import type { RootState } from '@/store/root_reducer'
+
+function settings_for_read_only_active_repo(getState: () => RootState): AppSettings | null {
+  const state = getState()
+  const settings = state.settings.settings
+  if (!settings) return null
+  const repo = state.dashboard.active_repo ?? settings.active_repo
+  return is_imported_repo(settings, repo) ? settings : null
+}
 
 export type SettingsState = {
   settings: AppSettings | null
@@ -145,7 +155,11 @@ export const save_repo_settings = create_app_async_thunk<
     test_file_globs: string[]
     business_hours: BusinessHoursConfig
   }
->('settings/save_repo_settings', async (input, { extra }) => {
+>('settings/save_repo_settings', async (input, { extra, getState }) => {
+  const settings = getState().settings.settings
+  if (is_imported_repo(settings, input.repo_full_name)) {
+    return extra.repositories.repo_settings.get(input.repo_full_name)
+  }
   const previous = await extra.repositories.repo_settings.get(input.repo_full_name)
   const next = await extra.repositories.repo_settings.save(input.repo_full_name, {
     ignored_bots: input.ignored_bots,
@@ -201,7 +215,9 @@ export const delete_team = create_app_async_thunk<AppSettings, string>(
 export const save_dashboard_layout = create_app_async_thunk<
   AppSettings,
   AppSettings['dashboards'][number]['layout']
->('settings/save_dashboard_layout', async (layout, { extra }) => {
+>('settings/save_dashboard_layout', async (layout, { extra, getState }) => {
+  const read_only_settings = settings_for_read_only_active_repo(getState)
+  if (read_only_settings) return read_only_settings
   return extra.repositories.settings.save_dashboard_layout(layout)
 })
 
@@ -215,13 +231,17 @@ export const save_dashboard_filters = create_app_async_thunk<
     custom_to: string
     hide_test_files: boolean
   }
->('settings/save_dashboard_filters', async (input, { extra }) => {
+>('settings/save_dashboard_filters', async (input, { extra, getState }) => {
+  const read_only_settings = settings_for_read_only_active_repo(getState)
+  if (read_only_settings) return read_only_settings
   return extra.repositories.settings.save_dashboard_filters(input)
 })
 
 export const create_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/create_dashboard',
-  async (name, { extra }) => {
+  async (name, { extra, getState }) => {
+    const read_only_settings = settings_for_read_only_active_repo(getState)
+    if (read_only_settings) return read_only_settings
     return extra.repositories.settings.create_dashboard(name)
   },
 )
@@ -229,13 +249,17 @@ export const create_dashboard = create_app_async_thunk<AppSettings, string>(
 export const rename_dashboard = create_app_async_thunk<
   AppSettings,
   { dashboard_id: string; name: string }
->('settings/rename_dashboard', async (input, { extra }) => {
+>('settings/rename_dashboard', async (input, { extra, getState }) => {
+  const read_only_settings = settings_for_read_only_active_repo(getState)
+  if (read_only_settings) return read_only_settings
   return extra.repositories.settings.rename_dashboard(input)
 })
 
 export const delete_dashboard = create_app_async_thunk<AppSettings, string>(
   'settings/delete_dashboard',
-  async (dashboard_id, { extra }) => {
+  async (dashboard_id, { extra, getState }) => {
+    const read_only_settings = settings_for_read_only_active_repo(getState)
+    if (read_only_settings) return read_only_settings
     return extra.repositories.settings.delete_dashboard(dashboard_id)
   },
 )
@@ -279,7 +303,11 @@ export const download_repo_snapshot_file = create_app_async_thunk<void, { repo_f
 export const create_repo_share_link = create_app_async_thunk<
   { share_url: string; pr_count: number },
   { repo_full_name: string }
->('settings/create_repo_share_link', async ({ repo_full_name }, { extra }) => {
+>('settings/create_repo_share_link', async ({ repo_full_name }, { extra, getState }) => {
+  const settings = getState().settings.settings
+  if (is_imported_repo(settings, repo_full_name)) {
+    throw new Error('Cannot create a share link from an imported snapshot')
+  }
   const snapshot = await export_repo_snapshot(extra.repositories, repo_full_name)
   const payload = encode_share_snapshot(snapshot)
   const urls = await request_share_upload_urls(payload.byte_length)
