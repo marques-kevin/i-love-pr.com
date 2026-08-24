@@ -11,11 +11,10 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
-  request_import_repo,
 } from '@/modules/dashboard/redux/dashboard_slice'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
-import { active_repo_from_url_or_settings } from '@/lib/repo_path'
+import { repo_dashboard_path, active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
@@ -24,6 +23,7 @@ import {
   delete_dashboard,
   load_available_repos,
   load_settings,
+  boot_import_share,
   remove_repo,
   save_dashboard_filters,
   save_repo_settings,
@@ -31,6 +31,7 @@ import {
   set_active_dashboard,
   set_active_repo,
 } from '@/modules/settings/redux/settings_slice'
+import { share_link_from_current_location } from '@/lib/repo_snapshot'
 import { hydrate_locale_from_settings } from '@/modules/i18n/redux/i18n_slice'
 import {
   refresh_sync_states,
@@ -104,6 +105,21 @@ export function register_app_listeners(
   middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
+      const share_link = share_link_from_current_location()
+      if (share_link) {
+        try {
+          const result = await api.dispatch(boot_import_share({ share_link })).unwrap()
+          if (has_browser_navigator()) {
+            window.history.replaceState({}, '', repo_dashboard_path(result.repo_full_name))
+          }
+          await api.dispatch(set_active_repo(result.repo_full_name))
+          await api.dispatch(load_settings())
+          return
+        } catch {
+          await api.dispatch(load_settings())
+          return
+        }
+      }
       await api.dispatch(load_settings())
     },
   })
@@ -121,22 +137,6 @@ export function register_app_listeners(
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
 
-      if (has_browser_navigator()) {
-        const params = new URLSearchParams(window.location.search)
-        const import_param = params.get('import') ?? params.get('share')
-        if (import_param) {
-          const link = import_param.includes('://')
-            ? import_param
-            : `${window.location.origin}/?import=${import_param}`
-          api.dispatch(request_import_repo(link))
-          params.delete('import')
-          params.delete('share')
-          const next_search = params.toString()
-          const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
-          window.history.replaceState({}, '', next_url)
-        }
-      }
-
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(refresh_metrics())
@@ -147,9 +147,13 @@ export function register_app_listeners(
       void api.dispatch(load_available_repos())
       dispatch_load_gallery_stats(api)
 
-      if (!api.getState().sync.bootstrapped) {
+      const has_token = Boolean(settings.token.trim())
+      if (has_token && !api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(run_sync({ force: false }))
+      } else if (!has_token) {
+        api.dispatch(set_bootstrapped(true))
+        void api.dispatch(refresh_metrics())
       }
     },
   })

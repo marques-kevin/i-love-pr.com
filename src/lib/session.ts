@@ -18,6 +18,7 @@ import {
 } from '@/lib/meta_db'
 import type { GitHubViewerProfile, SavedAccount } from '@/lib/types'
 import { create_demo_account, create_demo_seed, DEMO_LOGIN, is_demo_mode } from '@/lib/demo_mode'
+import { GUEST_LOGIN } from '@/lib/guest_workspace'
 import { create_dexie_repositories, create_memory_repositories } from '@/repositories'
 import type { Repositories } from '@/repositories'
 import { create_store, type AppStore } from '@/store/create_store'
@@ -278,9 +279,19 @@ export class SessionManager {
   }): Promise<void> {
     this.demo_mode = false
     this.remount_generation += 1
+    const generation = this.remount_generation
     await this.close_workspace()
     const accounts = options?.accounts ?? (await list_saved_accounts())
-    const repositories = create_memory_repositories()
+
+    const workspace = open_workspace_db(GUEST_LOGIN)
+    await workspace.open()
+    if (generation !== this.remount_generation) {
+      await workspace.close()
+      return
+    }
+
+    this.workspace = workspace
+    const repositories = create_dexie_repositories(workspace)
     const store = this.build_store(repositories, {
       login: null,
       accounts,

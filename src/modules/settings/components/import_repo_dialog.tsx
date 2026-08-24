@@ -8,6 +8,7 @@ import { connector, type ConnectorProps } from './import_repo_dialog.connector'
 export function Wrapper({
   on_close,
   import_repo_link,
+  has_github_token,
   import_repo_snapshot_from_link,
   set_active_repo,
   refresh_metrics,
@@ -34,7 +35,9 @@ export function Wrapper({
       set_active_repo(result.repo_full_name)
       set_share_link('')
       refresh_metrics()
-      run_sync()
+      if (has_github_token) {
+        run_sync()
+      }
       on_close()
     } catch (err) {
       set_error(

@@ -1,4 +1,5 @@
 import {
+  has_browser_navigator,
   is_boolean_value,
   is_json_object,
   is_number_value,
@@ -8,6 +9,7 @@ import {
 } from '@/lib/boundary_parse'
 import type { ExternalValue, JsonArray, JsonObject, JsonValue } from '@/lib/json_value'
 import type {
+  AppSettings,
   BusinessHoursConfig,
   DashboardTab,
   MemberTeam,
@@ -98,10 +100,12 @@ function repo_record_from_full_name(repo_full_name: string): RepoRecord {
   }
 }
 
-function settings_subset_for_repo(
-  settings: NonNullable<Awaited<ReturnType<Repositories['settings']['get']>>>,
+async function settings_subset_for_repo(
+  repositories: Repositories,
   repo_full_name: string,
-): RepoSnapshotSettingsSubset {
+  settings: AppSettings,
+): Promise<RepoSnapshotSettingsSubset> {
+  const repo_settings = await repositories.repo_settings.get(repo_full_name)
   return {
     teams: structuredClone(settings.teams),
     dashboards: structuredClone(
@@ -109,9 +113,9 @@ function settings_subset_for_repo(
         (tab) => tab.repo_full_name === repo_full_name && tab.layout.length > 0,
       ),
     ),
-    ignored_bots: [...settings.ignored_bots],
-    test_file_globs: [...settings.test_file_globs],
-    business_hours: structuredClone(settings.business_hours),
+    ignored_bots: [...repo_settings.ignored_bots],
+    test_file_globs: [...repo_settings.test_file_globs],
+    business_hours: structuredClone(repo_settings.business_hours),
   }
 }
 
@@ -140,7 +144,7 @@ export async function export_repo_snapshot(
     pull_requests,
     reviews,
     pr_changed_files,
-    settings_subset: settings_subset_for_repo(settings, repo_full_name),
+    settings_subset: await settings_subset_for_repo(repositories, repo_full_name, settings),
   }
 }
 
@@ -401,6 +405,16 @@ export function assert_snapshot_has_no_token(snapshot: RepoSnapshotV1): void {
   }
 }
 
+export async function ensure_guest_settings(repositories: Repositories): Promise<AppSettings> {
+  const existing = await repositories.settings.get()
+  if (existing) return existing
+  return repositories.settings.save({
+    token: '',
+    repos: [],
+    imported_repos: [],
+  })
+}
+
 export async function import_repo_snapshot(
   repositories: Repositories,
   snapshot: RepoSnapshotV1,
@@ -408,10 +422,7 @@ export async function import_repo_snapshot(
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
-  const settings = await repositories.settings.get()
-  if (!settings) {
-    throw new RepoSnapshotError('Settings not initialized')
-  }
+  const settings = await ensure_guest_settings(repositories)
 
   if (snapshot.pull_requests.length > 0) {
     await repositories.pull_requests.put_many(snapshot.pull_requests)
@@ -462,11 +473,16 @@ export async function import_repo_snapshot(
     imported_repos: merged_imported_repos,
     dashboards: merged_dashboards,
     teams: merged_teams,
-    ignored_bots: settings.ignored_bots,
-    test_file_globs: settings.test_file_globs,
-    business_hours: settings.business_hours,
   })
   await repositories.settings.upsert_repos(merged_repos)
+
+  const subset = snapshot.settings_subset
+  await repositories.repo_settings.save(repo_full_name, {
+    ignored_bots: subset.ignored_bots.length > 0 ? subset.ignored_bots : undefined,
+    test_file_globs: subset.test_file_globs.length > 0 ? subset.test_file_globs : undefined,
+    business_hours: subset.business_hours,
+  })
+
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
@@ -508,4 +524,11 @@ export function parse_share_id_from_url(raw_url: string): string | null {
   } catch {
     return raw_url.trim() || null
   }
+}
+
+export function share_link_from_current_location(): string | null {
+  if (!has_browser_navigator()) return null
+  const share_id = parse_share_id_from_url(window.location.href)
+  if (!share_id) return null
+  return window.location.href
 }

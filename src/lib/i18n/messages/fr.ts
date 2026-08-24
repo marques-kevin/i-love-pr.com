@@ -38,6 +38,9 @@ export const fr_messages = define_locale_messages({
   'app.nav.import_repository_confirm': 'Importer',
   'app.nav.import_repository_importing': 'Import…',
   'app.nav.import_repository_failed': 'Échec de l’import',
+  'app.share_import_error': 'Impossible d’importer ce dépôt partagé.',
+  'app.share_import_error_hint':
+    'Le lien est peut-être invalide ou expiré. Réessayez avec un autre lien — aucun compte GitHub n’est requis.',
   'home.empty_body': 'Ajoutez un dépôt GitHub pour ouvrir son tableau de bord.',
   'home.my_repositories': 'Mes dépôts',
   'home.imported_repositories': 'Importés',

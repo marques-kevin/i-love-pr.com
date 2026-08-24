@@ -131,6 +131,8 @@ export const DYNAMICALLY_REFERENCED_MESSAGE_KEYS: MessageKey[] = [
   'app.nav.import_repository_confirm',
   'app.nav.import_repository_importing',
   'app.nav.import_repository_failed',
+  'app.share_import_error',
+  'app.share_import_error_hint',
   'repo_gallery.menu_label',
   'repo_gallery.view',
   'repo_gallery.share',

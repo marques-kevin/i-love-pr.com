@@ -4,6 +4,7 @@ import { import_repo_snapshot_from_link, refresh_metrics, run_sync, set_active_r
 
 export const map_state_to_props = (state: RootState) => ({
   import_repo_link: state.dashboard.import_repo_link,
+  has_github_token: Boolean(state.settings.settings?.token.trim()),
 })
 
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({

@@ -35,6 +35,8 @@ export type SettingsState = {
   available_repos_loading: boolean
   available_repos_error: string | null
   available_repos_token: string | null
+  boot_share_import_loading: boolean
+  boot_share_import_error: string | null
 }
 
 const initial_state: SettingsState = {
@@ -49,6 +51,8 @@ const initial_state: SettingsState = {
   available_repos_loading: false,
   available_repos_error: null,
   available_repos_token: null,
+  boot_share_import_loading: false,
+  boot_share_import_error: null,
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -288,6 +292,20 @@ export const create_repo_share_link = create_app_async_thunk<
   }
 })
 
+export const boot_import_share = create_app_async_thunk<
+  { repo_full_name: string; pr_count: number },
+  { share_link: string }
+>('settings/boot_import_share', async ({ share_link }, { extra }) => {
+  const share_id = parse_share_id_from_url(share_link)
+  if (!share_id) {
+    throw new Error('Invalid share link')
+  }
+  const origin = has_browser_navigator() ? window.location.origin : ''
+  const download_url = `${origin}/api/share/${share_id}`
+  const snapshot = await fetch_share_snapshot(download_url)
+  return import_repo_snapshot(extra.repositories, snapshot)
+})
+
 export const import_repo_snapshot_from_link = create_app_async_thunk<
   { repo_full_name: string; pr_count: number },
   { share_link: string }
@@ -394,6 +412,18 @@ const settings_slice = createSlice({
       .addCase(load_settings.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message ?? 'Failed to load settings'
+      })
+      .addCase(boot_import_share.pending, (state) => {
+        state.boot_share_import_loading = true
+        state.boot_share_import_error = null
+      })
+      .addCase(boot_import_share.fulfilled, (state) => {
+        state.boot_share_import_loading = false
+        state.boot_share_import_error = null
+      })
+      .addCase(boot_import_share.rejected, (state, action) => {
+        state.boot_share_import_loading = false
+        state.boot_share_import_error = action.error.message ?? 'Failed to import shared repository'
       })
       .addCase(save_settings.fulfilled, (state, action) => {
         state.settings = action.payload

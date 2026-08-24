@@ -36,6 +36,9 @@ export const en_messages = {
   'app.nav.import_repository_confirm': 'Import',
   'app.nav.import_repository_importing': 'Importing…',
   'app.nav.import_repository_failed': 'Import failed',
+  'app.share_import_error': 'Could not import this shared repository.',
+  'app.share_import_error_hint':
+    'The link may be invalid or expired. You can try again with a different link — no GitHub account is required.',
   'home.empty_body': 'Add a GitHub repository to open its dashboard.',
   'home.my_repositories': 'My repositories',
   'home.imported_repositories': 'Imported',
