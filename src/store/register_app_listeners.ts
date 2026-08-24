@@ -22,6 +22,7 @@ import { play_sound } from '@/lib/cuelume'
 import {
   create_dashboard,
   delete_dashboard,
+  dismiss_import_job,
   load_available_repos,
   load_settings,
   import_repo_snapshot_from_link,
@@ -103,6 +104,16 @@ export function register_app_listeners(
   middleware: ListenerMiddlewareInstance<RootState, AppDispatch, ThunkExtra>,
 ) {
   middleware.startListening({
+    actionCreator: request_import_repo,
+    effect: async (_action, api) => {
+      const { import_job } = api.getState().settings
+      if (import_job && import_job.status !== 'running') {
+        api.dispatch(dismiss_import_job())
+      }
+    },
+  })
+
+  middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
       await api.dispatch(load_settings())
@@ -114,13 +125,6 @@ export function register_app_listeners(
     effect: async (action, api) => {
       const settings = action.payload
       api.dispatch(hydrate_locale_from_settings(settings))
-      if (!settings) return
-
-      await ensure_pr_facts(api.extra.repositories)
-      apply_active_repo_from_url_or_settings(api)
-      hydrate_filters_from_active_dashboard(api)
-      void api.dispatch(refresh_sync_states())
-      dispatch_refresh_pr_coverage(api)
 
       if (has_browser_navigator()) {
         const params = new URLSearchParams(window.location.search)
@@ -137,6 +141,14 @@ export function register_app_listeners(
           window.history.replaceState({}, '', next_url)
         }
       }
+
+      if (!settings) return
+
+      await ensure_pr_facts(api.extra.repositories)
+      apply_active_repo_from_url_or_settings(api)
+      hydrate_filters_from_active_dashboard(api)
+      void api.dispatch(refresh_sync_states())
+      dispatch_refresh_pr_coverage(api)
 
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))
