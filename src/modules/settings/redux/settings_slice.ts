@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { ShareImportStatus } from '@/lib/app_gate'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
 import { GitHubClient, type GitHubRepoOption } from '@/lib/github-client'
@@ -35,6 +36,9 @@ export type SettingsState = {
   available_repos_loading: boolean
   available_repos_error: string | null
   available_repos_token: string | null
+  share_import_status: ShareImportStatus
+  share_import_error: string | null
+  share_import_repo: string | null
 }
 
 const initial_state: SettingsState = {
@@ -49,6 +53,9 @@ const initial_state: SettingsState = {
   available_repos_loading: false,
   available_repos_error: null,
   available_repos_token: null,
+  share_import_status: 'idle',
+  share_import_error: null,
+  share_import_repo: null,
 }
 
 export const load_settings = create_app_async_thunk<AppSettings | null, void>(
@@ -481,6 +488,20 @@ const settings_slice = createSlice({
         state.available_repos_error = action.error.message ?? 'Failed to load repositories'
         state.available_repos = []
         state.available_repos_token = null
+      })
+      .addCase(import_repo_snapshot_from_link.pending, (state) => {
+        state.share_import_status = 'pending'
+        state.share_import_error = null
+      })
+      .addCase(import_repo_snapshot_from_link.fulfilled, (state, action) => {
+        state.share_import_status = 'success'
+        state.share_import_error = null
+        state.share_import_repo = action.payload.repo_full_name
+      })
+      .addCase(import_repo_snapshot_from_link.rejected, (state, action) => {
+        state.share_import_status = 'error'
+        state.share_import_error = action.error.message ?? 'Import failed'
+        state.share_import_repo = null
       })
   },
 })

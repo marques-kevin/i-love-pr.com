@@ -297,6 +297,9 @@ async function migrate_to_snake_case(tx: Transaction): Promise<void> {
 
 export const LEGACY_WORKSPACE_DB_NAME = 'ilovepr'
 
+/** Reserved Dexie workspace for no-token / share-import sessions. Not a GitHub login. */
+export const GUEST_WORKSPACE_LOGIN = 'guest'
+
 export class IlovePrDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>
   repos!: EntityTable<RepoRecord, 'full_name'>

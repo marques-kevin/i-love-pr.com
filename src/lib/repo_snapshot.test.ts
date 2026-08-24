@@ -8,6 +8,7 @@ import {
   import_repo_snapshot,
   parse_repo_snapshot,
   parse_share_id_from_url,
+  share_id_from_path_and_search,
   RepoSnapshotError,
   serialize_repo_snapshot,
   validate_repo_snapshot,
@@ -150,8 +151,12 @@ describe('repo_snapshot', () => {
 
   it('extracts share ids from urls', () => {
     expect(parse_share_id_from_url('https://i-love-pr.com/?import=abc123')).toBe('abc123')
+    expect(parse_share_id_from_url('https://i-love-pr.com/?share=abc123')).toBe('abc123')
     expect(parse_share_id_from_url('https://i-love-pr.com/share/xyz789')).toBe('xyz789')
     expect(parse_share_id_from_url('raw-share-id')).toBe('raw-share-id')
+    expect(share_id_from_path_and_search('/', '?import=abc123')).toBe('abc123')
+    expect(share_id_from_path_and_search('/share/xyz789', '')).toBe('xyz789')
+    expect(share_id_from_path_and_search('/', '')).toBeNull()
   })
 
   it('keeps the importer ignored_bots, test_file_globs, and business_hours', async () => {
@@ -191,6 +196,50 @@ describe('repo_snapshot', () => {
     expect(settings?.test_file_globs).toEqual(['**/*.spec.ts'])
     expect(settings?.business_hours).toEqual(importer_settings.business_hours)
     expect(settings?.repos).toContain(repo)
+    const repo_settings = await target.repo_settings.get(repo)
+    expect(repo_settings.ignored_bots).toEqual(['exporter-bot'])
+    expect(repo_settings.test_file_globs).toEqual(['**/*.exporter.ts'])
+    expect(repo_settings.business_hours.time_zone).toBe('America/New_York')
+  })
+
+  it('creates empty-token settings when importing with no prior settings', async () => {
+    const repo = 'acme/widgets'
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: repo,
+      repos: [],
+      pull_requests: [sample_pr(repo)],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: ['share-bot'],
+        test_file_globs: ['**/*.test.ts'],
+        business_hours: { ...DEFAULT_BUSINESS_HOURS, enabled: true, time_zone: 'Europe/Paris' },
+      },
+    }
+    const target = create_memory_repositories()
+    expect(await target.settings.get()).toBeUndefined()
+
+    const result = await import_repo_snapshot(target, snapshot)
+    expect(result.repo_full_name).toBe(repo)
+    expect(result.pr_count).toBe(1)
+
+    const settings = await target.settings.get()
+    expect(settings?.token).toBe('')
+    expect(settings?.repos).toEqual([repo])
+    expect(settings?.imported_repos).toEqual([repo])
+    expect(settings?.active_repo).toBe(repo)
+
+    const facts = await target.pr_facts.list_by_repos([repo])
+    expect(facts).toHaveLength(1)
+
+    const repo_settings = await target.repo_settings.get(repo)
+    expect(repo_settings.ignored_bots).toEqual(['share-bot'])
+    expect(repo_settings.test_file_globs).toEqual(['**/*.test.ts'])
+    expect(repo_settings.business_hours.time_zone).toBe('Europe/Paris')
   })
 
   it('exports dashboards with layout and skips empty layouts', async () => {

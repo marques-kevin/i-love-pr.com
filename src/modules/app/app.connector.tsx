@@ -6,6 +6,9 @@ export const map_state_to_props = (state: RootState) => ({
   settings_loading: state.settings.loading,
   accounts: state.accounts.accounts,
   adding_account: state.accounts.adding_account,
+  share_import_status: state.settings.share_import_status,
+  share_import_error: state.settings.share_import_error,
+  share_import_repo: state.settings.share_import_repo,
 })
 
 export const map_dispatch_to_props = {}

@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DEFAULT_BUSINESS_HOURS } from '@/lib/business-hours'
 import { DEFAULT_IGNORED_BOTS } from '@/lib/bots'
+import type { RepoSnapshotV1 } from '@/lib/repo_snapshot'
 import { create_memory_repositories } from '@/repositories'
 import { create_mock_session } from '@/store/create_mock_session'
-import { create_store, load_repo_settings, load_settings, save_settings } from '@/store'
+import {
+  create_store,
+  import_repo_snapshot_from_link,
+  load_repo_settings,
+  load_settings,
+  save_settings,
+} from '@/store'
 
 describe('settings thunks with memory repositories', () => {
   it('loads null when empty', async () => {
@@ -138,4 +146,53 @@ describe('settings thunks with memory repositories', () => {
     expect(state.current_repo_settings?.ignored_bots).toEqual([...DEFAULT_IGNORED_BOTS])
     expect(state.current_repo_settings_repo).toBe('org/b')
   })
+
+  it('imports a share snapshot into an empty workspace', async () => {
+    const snapshot: RepoSnapshotV1 = {
+      schema_version: 1,
+      exported_at: '2026-01-01T00:00:00.000Z',
+      repo_full_name: 'acme/widgets',
+      repos: [],
+      pull_requests: [],
+      reviews: [],
+      pr_changed_files: [],
+      settings_subset: {
+        teams: [],
+        dashboards: [],
+        ignored_bots: [],
+        test_file_globs: [],
+        business_hours: DEFAULT_BUSINESS_HOURS,
+      },
+    }
+    vi.stubGlobal('navigator', { language: 'en' })
+    vi.stubGlobal('window', { location: { origin: 'https://i-love-pr.com' } })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        text: async () => JSON.stringify(snapshot),
+      })),
+    )
+
+    const repositories = create_memory_repositories()
+    const store = create_store({
+      repositories,
+      session: create_mock_session({ get_active_login: () => null }),
+    })
+
+    const result = await store
+      .dispatch(import_repo_snapshot_from_link({ share_link: 'abc123' }))
+      .unwrap()
+    expect(result.repo_full_name).toBe('acme/widgets')
+    expect(store.getState().settings.share_import_status).toBe('success')
+    expect(store.getState().settings.share_import_repo).toBe('acme/widgets')
+
+    const settings = await repositories.settings.get()
+    expect(settings?.token).toBe('')
+    expect(settings?.imported_repos).toEqual(['acme/widgets'])
+  })
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
 })

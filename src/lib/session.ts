@@ -1,6 +1,7 @@
 import Dexie from 'dexie'
 import {
   IlovePrDatabase,
+  GUEST_WORKSPACE_LOGIN,
   LEGACY_WORKSPACE_DB_NAME,
   open_workspace_db,
   workspace_db_name,
@@ -278,9 +279,17 @@ export class SessionManager {
   }): Promise<void> {
     this.demo_mode = false
     this.remount_generation += 1
+    const generation = this.remount_generation
     await this.close_workspace()
     const accounts = options?.accounts ?? (await list_saved_accounts())
-    const repositories = create_memory_repositories()
+    const workspace = open_workspace_db(GUEST_WORKSPACE_LOGIN)
+    await workspace.open()
+    if (generation !== this.remount_generation) {
+      await workspace.close()
+      return
+    }
+    this.workspace = workspace
+    const repositories = create_dexie_repositories(workspace)
     const store = this.build_store(repositories, {
       login: null,
       accounts,
@@ -435,10 +444,13 @@ export class SessionManager {
 
   async wipe_active_account(): Promise<void> {
     const login = this.snapshot.login
-    if (!login) return
     await this.close_workspace()
-    await Dexie.delete(workspace_db_name(login))
-    await delete_saved_account(login)
+    if (login) {
+      await Dexie.delete(workspace_db_name(login))
+      await delete_saved_account(login)
+    } else {
+      await Dexie.delete(workspace_db_name(GUEST_WORKSPACE_LOGIN))
+    }
     await set_active_login(null)
     await this.mount_guest({ adding_account: false })
   }

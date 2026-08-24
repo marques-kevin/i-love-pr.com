@@ -1,5 +1,9 @@
 export const en_messages = {
   'app.loading': 'Loading…',
+  'app.import_share.loading': 'Importing shared repository…',
+  'app.import_share.failed_title': 'Couldn’t import this share link',
+  'app.import_share.failed_body':
+    'The snapshot could not be downloaded or was invalid. Check the link and try again.',
   'app.settings': 'Settings',
   'app.nav.repositories': 'Repositories',
   'app.nav.select_repository': 'Select repository',

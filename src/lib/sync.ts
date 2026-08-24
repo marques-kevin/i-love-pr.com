@@ -18,8 +18,8 @@ export async function sync_all_repos(options: {
   on_progress?: SyncProgressCallback
 }): Promise<{ rate_limit: RateLimitInfo | null; sync_completed: boolean }> {
   const settings = await options.repositories.settings.get()
-  if (!settings?.token) {
-    throw new Error('Missing GitHub token')
+  if (!settings?.token?.trim()) {
+    return { rate_limit: null, sync_completed: false }
   }
 
   const client = new GitHubClient(settings.token)

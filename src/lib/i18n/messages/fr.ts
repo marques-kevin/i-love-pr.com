@@ -2,6 +2,10 @@ import { define_locale_messages } from '../define_locale_messages'
 
 export const fr_messages = define_locale_messages({
   'app.loading': 'Chargement…',
+  'app.import_share.loading': 'Import du dépôt partagé…',
+  'app.import_share.failed_title': 'Impossible d’importer ce lien de partage',
+  'app.import_share.failed_body':
+    'L’instantané n’a pas pu être téléchargé ou est invalide. Vérifiez le lien et réessayez.',
   'app.settings': 'Paramètres',
   'app.nav.repositories': 'Dépôts',
   'app.nav.select_repository': 'Choisir un dépôt',

@@ -44,39 +44,48 @@ export const refresh_pr_coverage = create_app_async_thunk<
 export const run_sync = create_app_async_thunk<
   { rate_limit: RateLimitInfo | null; sync_completed: boolean },
   { force?: boolean; repos?: string[] }
->('sync/run', async ({ force = false, repos }, { extra, dispatch, getState }) => {
-  if (sync_lock) {
-    return { rate_limit: null, sync_completed: false }
-  }
-  sync_lock = true
-  try {
-    let last_coverage_refresh_at = 0
-    const result = await sync_all_repos({
-      repositories: extra.repositories,
-      force,
-      repos,
-      on_progress: (progress) => {
-        dispatch(set_progress(progress))
-        if (progress.rate_limit) {
-          dispatch(set_rate_limit(progress.rate_limit))
-        }
-        const now = Date.now()
-        if (now - last_coverage_refresh_at < 800) return
-        last_coverage_refresh_at = now
-        void dispatch(refresh_sync_states())
-        const { active_repo } = getState().dashboard
-        void dispatch(refresh_pr_coverage({ repos: active_repo ? [active_repo] : [] }))
-      },
-    })
-    await dispatch(refresh_sync_states())
-    if (result.sync_completed) {
-      track_umami_event('sync_completed')
+>(
+  'sync/run',
+  async ({ force = false, repos }, { extra, dispatch, getState }) => {
+    if (sync_lock) {
+      return { rate_limit: null, sync_completed: false }
     }
-    return result
-  } finally {
-    sync_lock = false
-  }
-})
+    sync_lock = true
+    try {
+      let last_coverage_refresh_at = 0
+      const result = await sync_all_repos({
+        repositories: extra.repositories,
+        force,
+        repos,
+        on_progress: (progress) => {
+          dispatch(set_progress(progress))
+          if (progress.rate_limit) {
+            dispatch(set_rate_limit(progress.rate_limit))
+          }
+          const now = Date.now()
+          if (now - last_coverage_refresh_at < 800) return
+          last_coverage_refresh_at = now
+          void dispatch(refresh_sync_states())
+          const { active_repo } = getState().dashboard
+          void dispatch(refresh_pr_coverage({ repos: active_repo ? [active_repo] : [] }))
+        },
+      })
+      await dispatch(refresh_sync_states())
+      if (result.sync_completed) {
+        track_umami_event('sync_completed')
+      }
+      return result
+    } finally {
+      sync_lock = false
+    }
+  },
+  {
+    condition: (_arg, { getState }) => {
+      const token = getState().settings.settings?.token?.trim() ?? ''
+      return Boolean(token)
+    },
+  },
+)
 
 const sync_slice = createSlice({
   name: 'sync',

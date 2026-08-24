@@ -11,10 +11,11 @@ import {
   hydrate_active_repo,
   clamp_active_repo_to_settings,
   refresh_metrics,
-  request_import_repo,
 } from '@/modules/dashboard/redux/dashboard_slice'
+import { has_github_token } from '@/lib/app_gate'
 import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
+import { parse_share_id_from_url } from '@/lib/repo_snapshot'
 import { active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
@@ -22,6 +23,7 @@ import { play_sound } from '@/lib/cuelume'
 import {
   create_dashboard,
   delete_dashboard,
+  import_repo_snapshot_from_link,
   load_available_repos,
   load_settings,
   remove_repo,
@@ -104,6 +106,20 @@ export function register_app_listeners(
   middleware.startListening({
     actionCreator: global_app_initialized,
     effect: async (_action, api) => {
+      if (has_browser_navigator()) {
+        const share_id = parse_share_id_from_url(window.location.href)
+        if (share_id) {
+          const share_link = window.location.href.includes('://')
+            ? window.location.href
+            : `${window.location.origin}/?import=${share_id}`
+          try {
+            await api.dispatch(import_repo_snapshot_from_link({ share_link })).unwrap()
+          } catch {
+            await api.dispatch(load_settings())
+            return
+          }
+        }
+      }
       await api.dispatch(load_settings())
     },
   })
@@ -121,22 +137,6 @@ export function register_app_listeners(
       void api.dispatch(refresh_sync_states())
       dispatch_refresh_pr_coverage(api)
 
-      if (has_browser_navigator()) {
-        const params = new URLSearchParams(window.location.search)
-        const import_param = params.get('import') ?? params.get('share')
-        if (import_param) {
-          const link = import_param.includes('://')
-            ? import_param
-            : `${window.location.origin}/?import=${import_param}`
-          api.dispatch(request_import_repo(link))
-          params.delete('import')
-          params.delete('share')
-          const next_search = params.toString()
-          const next_url = `${window.location.pathname}${next_search ? `?${next_search}` : ''}${window.location.hash}`
-          window.history.replaceState({}, '', next_url)
-        }
-      }
-
       if (is_demo_mode()) {
         api.dispatch(set_bootstrapped(true))
         void api.dispatch(refresh_metrics())
@@ -144,12 +144,17 @@ export function register_app_listeners(
         return
       }
 
-      void api.dispatch(load_available_repos())
+      const can_use_github = has_github_token(settings)
+      if (can_use_github) {
+        void api.dispatch(load_available_repos())
+      }
       dispatch_load_gallery_stats(api)
 
       if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
-        void api.dispatch(run_sync({ force: false }))
+        if (can_use_github) {
+          void api.dispatch(run_sync({ force: false }))
+        }
       }
     },
   })
@@ -165,11 +170,14 @@ export function register_app_listeners(
       hydrate_filters_from_active_dashboard(api)
       dispatch_refresh_pr_coverage(api)
       dispatch_load_gallery_stats(api)
-      void api.dispatch(load_available_repos({ token: settings.token }))
-
-      if (!api.getState().sync.bootstrapped) {
+      if (has_github_token(settings)) {
+        void api.dispatch(load_available_repos({ token: settings.token }))
+        if (!api.getState().sync.bootstrapped) {
+          api.dispatch(set_bootstrapped(true))
+          void api.dispatch(run_sync({ force: false }))
+        }
+      } else if (!api.getState().sync.bootstrapped) {
         api.dispatch(set_bootstrapped(true))
-        void api.dispatch(run_sync({ force: false }))
       }
     },
   })

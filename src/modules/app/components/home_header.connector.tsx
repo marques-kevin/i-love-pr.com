@@ -10,6 +10,7 @@ import type { AppDispatch, RootState } from '@/store'
 export const map_state_to_props = (state: RootState) => ({
   add_repository_requested: state.dashboard.add_repository_requested,
   import_repo_requested: state.dashboard.import_repo_requested,
+  can_add_github_repo: Boolean(state.settings.settings?.token?.trim()),
 })
 
 export const map_dispatch_to_props = (dispatch: AppDispatch) => ({

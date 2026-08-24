@@ -13,6 +13,7 @@ export function Wrapper({
   sync_states,
   error,
   active_repo,
+  can_refresh,
   run_sync,
 }: ConnectorProps) {
   const intl = useIntl()
@@ -62,7 +63,7 @@ export function Wrapper({
                     repos: active_repo ? [active_repo] : [],
                   })
                 }
-                disabled={syncing || !active_repo}
+                disabled={syncing || !active_repo || !can_refresh}
                 aria-label={intl.formatMessage({ id: 'sync.tooltip' })}
               >
                 <HoverIcon

@@ -401,6 +401,18 @@ export function assert_snapshot_has_no_token(snapshot: RepoSnapshotV1): void {
   }
 }
 
+async function ensure_import_settings(
+  repositories: Repositories,
+): Promise<NonNullable<Awaited<ReturnType<Repositories['settings']['get']>>>> {
+  const existing = await repositories.settings.get()
+  if (existing) return existing
+  return repositories.settings.save({
+    token: '',
+    repos: [],
+    imported_repos: [],
+  })
+}
+
 export async function import_repo_snapshot(
   repositories: Repositories,
   snapshot: RepoSnapshotV1,
@@ -408,10 +420,7 @@ export async function import_repo_snapshot(
   assert_snapshot_has_no_token(snapshot)
 
   const repo_full_name = snapshot.repo_full_name
-  const settings = await repositories.settings.get()
-  if (!settings) {
-    throw new RepoSnapshotError('Settings not initialized')
-  }
+  const settings = await ensure_import_settings(repositories)
 
   if (snapshot.pull_requests.length > 0) {
     await repositories.pull_requests.put_many(snapshot.pull_requests)
@@ -462,11 +471,17 @@ export async function import_repo_snapshot(
     imported_repos: merged_imported_repos,
     dashboards: merged_dashboards,
     teams: merged_teams,
+    active_repo: repo_full_name,
     ignored_bots: settings.ignored_bots,
     test_file_globs: settings.test_file_globs,
     business_hours: settings.business_hours,
   })
   await repositories.settings.upsert_repos(merged_repos)
+  await repositories.repo_settings.save(repo_full_name, {
+    ignored_bots: snapshot.settings_subset.ignored_bots,
+    test_file_globs: snapshot.settings_subset.test_file_globs,
+    business_hours: snapshot.settings_subset.business_hours,
+  })
   await rebuild_pr_facts_for_repos(repositories, [repo_full_name])
 
   return { repo_full_name, pr_count: snapshot.pull_requests.length }
@@ -494,17 +509,22 @@ export function download_repo_snapshot(snapshot: RepoSnapshotV1): void {
   URL.revokeObjectURL(url)
 }
 
+export function share_id_from_path_and_search(pathname: string, search: string): string | null {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+  const from_query = params.get('import') ?? params.get('share')
+  if (from_query?.trim()) return from_query.trim()
+  const parts = pathname.split('/').filter(Boolean)
+  const share_index = parts.indexOf('share')
+  if (share_index >= 0 && parts[share_index + 1]) {
+    return parts[share_index + 1]!
+  }
+  return null
+}
+
 export function parse_share_id_from_url(raw_url: string): string | null {
   try {
     const url = new URL(raw_url.trim())
-    const from_query = url.searchParams.get('import') ?? url.searchParams.get('share')
-    if (from_query?.trim()) return from_query.trim()
-    const parts = url.pathname.split('/').filter(Boolean)
-    const share_index = parts.indexOf('share')
-    if (share_index >= 0 && parts[share_index + 1]) {
-      return parts[share_index + 1]!
-    }
-    return null
+    return share_id_from_path_and_search(url.pathname, url.search)
   } catch {
     return raw_url.trim() || null
   }

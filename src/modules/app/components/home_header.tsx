@@ -15,6 +15,7 @@ import { connector, type ConnectorProps } from './home_header.connector'
 export function Wrapper({
   add_repository_requested,
   import_repo_requested,
+  can_add_github_repo,
   set_show_settings,
   load_available_repos,
   clear_add_repository_request,
@@ -65,17 +66,19 @@ export function Wrapper({
             <HoverIcon icon={Download01Icon} size={16} />
             <span className="hidden sm:inline">{intl.formatMessage({ id: 'app.nav.import' })}</span>
           </Button>
-          <Button
-            type="button"
-            className="btn-primary btn-sm rounded-full"
-            aria-label={intl.formatMessage({ id: 'app.nav.add_repository' })}
-            onClick={open_add_repo}
-          >
-            <HoverIcon icon={PlusSignIcon} size={16} />
-            <span className="hidden sm:inline">
-              {intl.formatMessage({ id: 'app.nav.add_repository' })}
-            </span>
-          </Button>
+          {can_add_github_repo ? (
+            <Button
+              type="button"
+              className="btn-primary btn-sm rounded-full"
+              aria-label={intl.formatMessage({ id: 'app.nav.add_repository' })}
+              onClick={open_add_repo}
+            >
+              <HoverIcon icon={PlusSignIcon} size={16} />
+              <span className="hidden sm:inline">
+                {intl.formatMessage({ id: 'app.nav.add_repository' })}
+              </span>
+            </Button>
+          ) : null}
           <div
             className="tooltip tooltip-bottom"
             data-tip={intl.formatMessage({ id: 'app.settings' })}
