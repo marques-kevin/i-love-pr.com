@@ -1,10 +1,13 @@
 import { connect, type ConnectedProps } from 'react-redux'
-import { dashboard_chrome_flags } from '@/lib/is_imported_repo'
+import { dashboard_chrome_flags_for_state } from '@/lib/is_imported_repo'
 import { load_repo_settings } from '@/store'
 import type { AppDispatch, RootState } from '@/store'
 
 export const map_state_to_props = (state: RootState) => {
-  const chrome = dashboard_chrome_flags(state.settings.settings, state.dashboard.active_repo)
+  const chrome = dashboard_chrome_flags_for_state(
+    state.settings.settings,
+    state.dashboard.active_repo,
+  )
   return {
     is_imported: !chrome.toolbar,
     chrome,
