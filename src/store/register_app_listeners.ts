@@ -17,7 +17,7 @@ import { has_browser_navigator } from '@/lib/boundary_parse'
 import { is_demo_mode } from '@/lib/demo_mode'
 import { active_repo_from_url_or_settings } from '@/lib/repo_path'
 import { should_navigate_home_after_remove_repo } from '@/lib/remove_repo'
-import { is_imported_repo } from '@/lib/is_imported_repo'
+import { active_repo_for_dashboard_view, is_imported_repo } from '@/lib/is_imported_repo'
 import { ensure_pr_facts } from '@/lib/rebuild_pr_facts'
 import { play_sound } from '@/lib/cuelume'
 import { share_link_from_browser_location } from '@/lib/repo_snapshot'
@@ -326,7 +326,10 @@ export function register_app_listeners(
           void api.dispatch(refresh_metrics())
           return
         }
-        const active_repo = api.getState().dashboard.active_repo ?? settings.active_repo
+        const active_repo = active_repo_for_dashboard_view(
+          settings,
+          api.getState().dashboard.active_repo,
+        )
         if (is_imported_repo(settings, active_repo)) {
           void api.dispatch(refresh_metrics())
           return

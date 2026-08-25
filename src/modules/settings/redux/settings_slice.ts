@@ -20,7 +20,7 @@ import {
 } from '@/lib/share_client'
 import { requestPersistentStorage } from '@/lib/storage'
 import { track_umami_event } from '@/lib/umami'
-import { is_imported_repo } from '@/lib/is_imported_repo'
+import { active_repo_for_dashboard_view, is_imported_repo } from '@/lib/is_imported_repo'
 import type { AppSettings, BusinessHoursConfig, RepoSettings } from '@/lib/types'
 import type { SaveSettingsInput } from '@/repositories'
 import { create_app_async_thunk } from '@/store/create_app_async_thunk'
@@ -31,7 +31,7 @@ function settings_for_read_only_active_repo(getState: () => RootState): AppSetti
   const state = getState()
   const settings = state.settings.settings
   if (!settings) return null
-  const repo = state.dashboard.active_repo ?? settings.active_repo
+  const repo = active_repo_for_dashboard_view(settings, state.dashboard.active_repo)
   return is_imported_repo(settings, repo) ? settings : null
 }
 

@@ -48,7 +48,7 @@ export function Wrapper({
             animate={window_motion.animate}
             exit={window_motion.exit}
           >
-            <DashboardEditProvider>
+            <DashboardEditProvider read_only={!chrome.customize}>
               <div className="shrink-0">
                 <DashboardHeader on_close_window={() => set_close_pending(true)} />
                 {chrome.toolbar ? <DashboardToolbar /> : null}
